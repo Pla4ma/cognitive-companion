@@ -7,6 +7,7 @@ import { StateCreator } from 'zustand'
 import type { MissionSession } from '../../types'
 import type { CrossSliceActions } from '../types'
 import { uid } from '../../utils/uid'
+import { updateSessionAnalytics } from '../../services/analytics'
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
@@ -39,6 +40,11 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
     sessionCount: 0,
 
     startSession: (missionId, microMissionId, mode = 'focus', plannedMinutes = 25) => {
+      // Guard: salvage existing active session before starting new one
+      const existing = get().activeSession
+      if (existing && existing.status === 'active') {
+        get().salvageSession()
+      }
       const session: MissionSession = {
         id: uid(), user_id: '',
         mission_id: missionId ?? null, micro_mission_id: microMissionId ?? null,
@@ -91,6 +97,7 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
       state.addMomentumEvent('session_completed', 15, undefined, session.mission_id ?? undefined)
       const minutes = Math.round(session.actual_seconds / 60)
       state.recordRetention('rescue_completed', { state: session.mode, minutes: minutes || session.planned_minutes, protocol: 'session' })
+      updateSessionAnalytics(true, session.mode, 'session', minutes || session.planned_minutes)
       // Fire analytics feedback event
       try {
         const { trackSystemEvent } = require('../../services/analytics')
@@ -163,6 +170,7 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
       state.addMomentumEvent('session_salvaged', 20, notes ?? undefined, session.mission_id ?? undefined)
       const minutes = Math.round(session.actual_seconds / 60)
       state.recordRetention('rescue_salvaged', { state: session.mode, minutes: minutes || session.planned_minutes, protocol: 'salvage' })
+      updateSessionAnalytics(false, session.mode, 'salvage', minutes || session.planned_minutes)
     },
 
     getSessionsToday: () => {

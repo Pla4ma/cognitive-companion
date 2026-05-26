@@ -19,10 +19,23 @@ import {
   UserState, MissionSession, ResistancePattern, Distraction,
   MomentumEvent, Mission, MicroMission, BrainDump, BlockerType,
 } from '../types'
+import type { SessionAnalytics } from '../services/analytics'
 
 /** Checks if a session drifted (was abandoned or salvaged). */
 export function isDriftedSession(s: { status: string }): boolean {
   return s.status === 'abandoned' || s.status === 'salvaged'
+}
+
+// ── Analytics Insight ────────────────────────────────────────
+
+export function getAnalyticsInsight(analytics: SessionAnalytics): string | null {
+  if (analytics.totalSessions < 5) return null
+  const bestSlot = Object.entries(analytics.completionRates)
+    .sort(([, a], [, b]) => b - a)[0]
+  if (bestSlot && bestSlot[1] > 0.6) {
+    return `You complete ${Math.round(bestSlot[1] * 100)}% of sessions in the ${bestSlot[0]}`
+  }
+  return null
 }
 
 // ── Types ────────────────────────────────────────────────────
