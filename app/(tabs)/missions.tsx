@@ -208,19 +208,26 @@ export default function MissionsScreen() {
       {abandonedMissions.length > 0 && (
         <>
           <SectionHeader title="Abandoned" subtitle={`${abandonedMissions.length} missions`} icon={<AlertTriangle size={16} color={colors.text.tertiary} />} />
-          {abandonedMissions.map(mission => (
-            <Card key={mission.id} variant="subtle" style={styles.abandonedCard}>
-              <Text style={styles.abandonedTitle}>{mission.title}</Text>
-              <View style={styles.abandonedActions}>
-                <TouchableOpacity onPress={() => {/* reactivate */}}>
-                  <Text style={styles.reactivateText}>Reactivate</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteMission(mission.id)}>
-                  <Trash2 size={14} color={colors.error} />
-                </TouchableOpacity>
-              </View>
-            </Card>
-          ))}
+          <View style={{ height: abandonedMissions.length * 80 }}>
+            <FlashList
+              data={abandonedMissions}
+              estimatedItemSize={80}
+              renderItem={({ item: mission }) => (
+                <Card variant="subtle" style={styles.abandonedCard}>
+                  <Text style={styles.abandonedTitle}>{mission.title}</Text>
+                  <View style={styles.abandonedActions}>
+                    <TouchableOpacity onPress={() => {/* reactivate */}}>
+                      <Text style={styles.reactivateText}>Reactivate</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => deleteMission(mission.id)}>
+                      <Trash2 size={14} color={colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                </Card>
+              )}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
         </>
       )}
 
