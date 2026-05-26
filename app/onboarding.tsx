@@ -9,9 +9,15 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   Dimensions, ScrollView, KeyboardAvoidingView, Platform, AppState,
 } from 'react-native'
+import Animated, {
+  useSharedValue, withTiming, withDelay,
+  useAnimatedStyle, Easing,
+} from 'react-native-reanimated'
+import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { Play, ChevronRight, Zap } from 'lucide-react-native'
+import LottieView from 'lottie-react-native'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { getProtocolForState, RESCUE_PROTOCOLS } from '../src/types/rescue'
 import { compileMission } from '../src/engine/missionCompiler'
@@ -36,6 +42,31 @@ const STATE_OPTIONS: { id: UserState; emoji: string; label: string; color: strin
 // ── Helpers ─────────────────────────────────────────────────
 // uid and formatTime imported from shared utilities
 
+// ── Celebration emoji component ─────────────────────────────
+function CelebrationEmoji({ emoji, delay }: { emoji: string; delay: number }) {
+  const translateY = useSharedValue(0)
+  const opacity = useSharedValue(0)
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }))
+    translateY.value = withDelay(
+      delay,
+      withTiming(-20, { duration: 800, easing: Easing.out(Easing.cubic) }),
+    )
+    const timeout = setTimeout(() => {
+      opacity.value = withDelay(500, withTiming(0, { duration: 500 }))
+    }, delay + 800)
+    return () => clearTimeout(timeout)
+  }, [])
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }))
+
+  return <Animated.Text style={[{ fontSize: 28 }, style]}>{emoji}</Animated.Text>
+}
+
 // ══════════════════════════════════════════════════════════════
 // COMPONENT
 // ══════════════════════════════════════════════════════════════
@@ -58,6 +89,7 @@ export default function Onboarding() {
   const [timerActive, setTimerActive] = useState(false)
   const [missionStored, setMissionStored] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pausedAtRef = useRef<number>(0)
 
   // ── Cleanup timer on unmount ───────────────────────────────
   useEffect(() => {
@@ -66,11 +98,15 @@ export default function Onboarding() {
     }
   }, [])
 
-  // ── Pause timer when app goes to background ─────────────
+  // ── Pause timer when app goes to background, resume on return ──
   useEffect(() => {
     const sub = AppState.addEventListener('change', state => {
       if (state === 'background' && timerActive) {
         setTimerActive(false)
+        pausedAtRef.current = Date.now()
+      } else if (state === 'active' && pausedAtRef.current > 0) {
+        pausedAtRef.current = 0
+        setTimerActive(true)
       }
     })
     return () => sub.remove()
@@ -548,6 +584,12 @@ export default function Onboarding() {
   if (step === 4) {
     const stateLabel = STATE_OPTIONS.find(s => s.id === selectedState)?.label ?? selectedState
 
+    // Haptic celebration on mount
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    }, [])
+
     return (
       <View style={styles.container}>
         <LinearGradient
@@ -564,9 +606,28 @@ export default function Onboarding() {
           </View>
 
           <View style={styles.completeCenter}>
+            {/* Celebration animation */}
+            <LottieView
+              source={require('../assets/animations/celebration.json')}
+              autoPlay
+              loop={false}
+              style={{ width: 200, height: 200, alignSelf: 'center' }}
+            />
+
+            {/* Celebration emojis */}
+            <View style={styles.celebrationRow}>
+              <CelebrationEmoji emoji="🎉" delay={0} />
+              <CelebrationEmoji emoji="✨" delay={100} />
+              <CelebrationEmoji emoji="🔥" delay={200} />
+              <CelebrationEmoji emoji="💪" delay={300} />
+            </View>
+
             <Text style={styles.completeHeadline}>You did it.</Text>
             <Text style={styles.completeSubheadline}>
               You just rescued 2 minutes from {stateLabel?.toLowerCase()}.
+            </Text>
+            <Text style={styles.completeMotivation}>
+              You just proved you can start. That's the hardest part.
             </Text>
 
             <View style={styles.rescuedBadge}>
@@ -826,6 +887,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
     paddingTop: spacing.xl,
   },
+  celebrationRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
   completeHeadline: {
     ...typography.hero,
     color: colors.text.primary,
@@ -835,7 +902,15 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text.secondary,
     textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  completeMotivation: {
+    ...typography.bodyMedium,
+    color: colors.text.tertiary,
+    textAlign: 'center',
+    fontStyle: 'italic',
     marginBottom: spacing.xl,
+    lineHeight: 22,
   },
   rescuedBadge: {
     alignItems: 'center',
