@@ -14,6 +14,7 @@ import {
   type RetentionState as RetentionEngineState,
 } from '../services/retention/retentionEngine'
 
+import { syncStoreData } from '../services/sync'
 import { createUserSlice, UserSlice } from './slices/userSlice'
 import { createSessionSlice, SessionSlice } from './slices/sessionSlice'
 import { createMissionSlice, MissionSlice } from './slices/missionSlice'
@@ -135,3 +136,34 @@ export const useAppStore = create<AppState>()(
     },
   ),
 )
+
+// ── Cloud Sync Subscription (Pro Users) ────────────────────
+// After every session completion (sessionCount changes), sync
+// the partialized store state to secure cloud storage for Pro users.
+let _lastSessionCount = useAppStore.getState().sessionCount
+useAppStore.subscribe((state) => {
+  if (state.sessionCount !== _lastSessionCount) {
+    _lastSessionCount = state.sessionCount
+    const plan = state.user?.plan ?? 'free'
+    if (plan === 'pro' || plan === 'lifetime') {
+      // Fire-and-forget; sync errors are silent
+      const partialized = {
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        missions: state.missions,
+        microMissions: state.microMissions,
+        sessions: state.sessions,
+        activeSession: state.activeSession,
+        momentumEvents: state.momentumEvents,
+        resistancePatterns: state.resistancePatterns,
+        distractions: state.distractions,
+        brainDumps: state.brainDumps,
+        sessionCount: state.sessionCount,
+        consentLedger: state.consentLedger,
+        skipCount: state.skipCount,
+        retentionState: state.retentionState,
+      }
+      void syncStoreData(partialized)
+    }
+  }
+})

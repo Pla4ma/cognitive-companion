@@ -16,8 +16,10 @@ import { GlobalErrorBoundary } from '../src/services/errorBoundary'
 import { initCrashReporting, setConsentMode } from '../src/services/crashReporting'
 import { useAppStore } from '../src/store'
 import { checkForUpdates } from '../src/services/updates'
+import { restoreFromCloud, getLastSyncTime } from '../src/services/sync'
 import { useAmbientEngine } from '../src/hooks/useAmbientEngine'
 import { useRouter } from 'expo-router'
+import * as Notifications from 'expo-notifications'
 import { buildIntelligenceProfile } from '../src/engine/predictiveEngine'
 import { scheduleDangerWindowNotifications } from '../src/services/notifications'
 
@@ -72,6 +74,37 @@ export default function RootLayout() {
     } catch { /* never crash from comeback detection */ }
   }, [])
 
+  // Cloud restore for Pro/Lifetime users on launch
+  useEffect(() => {
+    const state = useAppStore.getState()
+    const plan = state.user?.plan ?? 'free'
+    if (plan !== 'pro' && plan !== 'lifetime') return
+
+    ;(async () => {
+      try {
+        const [cloudData, lastSync] = await Promise.all([
+          restoreFromCloud(),
+          getLastSyncTime(),
+        ])
+        if (!cloudData) return
+
+        const parsed = JSON.parse(cloudData) as Record<string, unknown>
+        // Only merge if cloud data has more sessions than local
+        const localCount = (state.sessions as unknown[])?.length ?? 0
+        const cloudSessions = parsed.sessions as unknown[] | undefined
+        const cloudCount = cloudSessions?.length ?? 0
+        if (cloudCount > localCount) {
+          useAppStore.setState((s) => ({
+            ...s,
+            ...parsed,
+            // Preserve the local activeSession — don't overwrite with stale cloud state
+            activeSession: s.activeSession,
+          }))
+        }
+      } catch { /* never crash from cloud restore */ }
+    })()
+  }, [])
+
   // Schedule danger window notifications when enough data (5+ sessions)
   // Re-runs every 5 sessions
   useEffect(() => {
@@ -96,6 +129,17 @@ export default function RootLayout() {
     })
     return unsub
   }, [])
+
+  // Handle notification responses for deep links
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data as Record<string, string>
+      if (data?.deepLink) {
+        router.push(data.deepLink)
+      }
+    })
+    return () => subscription.remove()
+  }, [router])
 
   // Initialize crash reporting on mount, gated by consent
   useEffect(() => {
