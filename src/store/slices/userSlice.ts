@@ -11,18 +11,21 @@ export interface UserSlice {
   user: UserProfile | null
   isAuthenticated: boolean
   consentLedger: ConsentLedger
+  profilingState: Record<string, boolean>
   setUser: (user: UserProfile | null) => void
   updateProfile: (updates: Partial<UserProfile>) => void
   completeOnboarding: () => void
   signOut: () => void
-  updateConsent: (permissionId: PermissionId, granted: boolean, source: 'onboarding' | 'settings' | 'prompt' | 'system', context: string) => void
+  updateConsent: (permissionId: PermissionId, granted: boolean, source: 'onboarding' | 'settings' | 'prompt' | 'system' | 'post_rescue', context: string) => void
   checkConsent: (permissionId: PermissionId) => boolean
+  setProfilingShown: (questionType: string) => void
 }
 
 export const createUserSlice: StateCreator<UserSlice, [], [], UserSlice> = (set, get) => ({
   user: null,
   isAuthenticated: false,
   consentLedger: createConsentLedger(),
+  profilingState: {},
 
   setUser: (user) => set({ user, isAuthenticated: !!user }),
 
@@ -51,4 +54,8 @@ export const createUserSlice: StateCreator<UserSlice, [], [], UserSlice> = (set,
   checkConsent: (permissionId) => {
     return hasConsented(get().consentLedger, permissionId)
   },
+
+  setProfilingShown: (questionType) => set((s) => ({
+    profilingState: { ...s.profilingState, [questionType]: true },
+  })),
 })

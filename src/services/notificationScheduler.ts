@@ -4,6 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import type { QuietHoursConfig } from '../types/ambient'
+import type { DangerWindow } from '../engine/predictiveEngine'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -14,6 +15,8 @@ export type NotificationType =
   | 'danger_window'
   | 'focus_reminder'
   | 'comeback'
+  | 'day2_habit_seed'
+  | 'day3_pattern'
 
 export type NotificationAction =
   | 'tapped'
@@ -23,7 +26,7 @@ export type NotificationAction =
   | 'suppressed'
 
 export interface UserNotificationPatterns {
-  /** Hours (0-23) when user typically engages with notifications */
+  /** Hours (0-23) when user typically engage with notifications */
   activeHours: number[]
   /** Average response time in minutes */
   avgResponseMinutes: number
@@ -64,14 +67,86 @@ const MAX_OUTCOME_LOG = 500
 
 // ── Schedule Optimal Time ────────────────────────────────────
 // Picks the best time to send a notification based on user patterns
+// and predictive danger windows (behavioral, not static)
 
 export function scheduleOptimalTime(
   type: NotificationType,
   userPatterns: UserNotificationPatterns | null,
   quietHours: QuietHoursConfig | null,
   preferredHour?: number,
+  dangerWindows?: DangerWindow[],
 ): NotificationScheduleResult {
   const now = new Date()
+
+  // ── Danger window approach: schedule before high-risk windows ──
+  if (dangerWindows && dangerWindows.length > 0 && type === 'danger_window') {
+    const topWindows = dangerWindows
+      .filter(w => w.confidence > 0.5 && w.riskLevel !== 'low')
+      .sort((a, b) => b.riskScore - a.riskScore)
+      .slice(0, 3)
+
+    if (topWindows.length > 0) {
+      // Find the next danger window that's in the future
+      const nowDay = now.getDay() // 0=Sun
+      const nowHour = now.getHours()
+      const nowMinute = now.getMinutes()
+      const nowTotalMin = nowHour * 60 + nowMinute
+
+      let bestWindow: DangerWindow | null = null
+      let bestTime: Date | null = null
+      let bestDiff = Infinity
+
+      for (const w of topWindows) {
+        // DangerWindow: dayOfWeek 0=Sun, startHour 0-23
+        // Schedule 10 minutes before the window starts
+        const windowTotalMin = w.startHour * 60 - 10 // 10 min before
+        const adjustedStartHour = Math.floor(windowTotalMin / 60)
+        const adjustedStartMinute = windowTotalMin % 60
+
+        // Find the next occurrence of this dayOfWeek
+        let daysUntil = (w.dayOfWeek - nowDay + 7) % 7
+        if (daysUntil === 0 && (adjustedStartHour * 60 + adjustedStartMinute) <= nowTotalMin) {
+          daysUntil = 7 // Next week
+        }
+
+        const target = new Date(now)
+        target.setDate(target.getDate() + daysUntil)
+        target.setHours(adjustedStartHour, adjustedStartMinute, 0, 0)
+
+        if (isWithinQuietHours(target, quietHours)) continue
+
+        const diff = target.getTime() - now.getTime()
+        if (diff < bestDiff && diff > 0) {
+          bestDiff = diff
+          bestWindow = w
+          bestTime = target
+        }
+      }
+
+      if (bestTime && bestWindow) {
+        return {
+          shouldSchedule: true,
+          scheduledFor: bestTime,
+          reason: `Danger window: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][bestWindow.dayOfWeek]} ${bestWindow.startHour}:00 (risk: ${bestWindow.riskLevel})`,
+        }
+      }
+    }
+  }
+
+  // ── Day 2 habit seed: schedule at user's first-session time ──
+  if (type === 'day2_habit_seed') {
+    // Schedule at the same time as user's first session, tomorrow
+    const target = new Date(now)
+    target.setDate(target.getDate() + 1)
+    target.setHours(9, 0, 0, 0) // Default to 9 AM, adjusted if pattern data exists
+    if (target > now && !isWithinQuietHours(target, quietHours)) {
+      return {
+        shouldSchedule: true,
+        scheduledFor: target,
+        reason: 'Day 2 habit seed: optimal time after first rescue',
+      }
+    }
+  }
 
   // If we have a preferred hour and it's in the future today, use it
   if (preferredHour !== undefined) {

@@ -16,10 +16,11 @@ import {
 import { useAppStore } from '../src/store'
 import { colors, spacing, radius, typography, shadows, layout } from '../src/theme'
 import { Screen, Card } from '../src/components'
-import { runAntiDriftAgent } from '../src/agents/antiDriftAgent'
 import { compileMission } from '../src/engine/missionCompiler'
 import { getProtocolForState, RESCUE_PROTOCOLS } from '../src/types/rescue'
 import type { UserState, EnergyLevel } from '../src/types'
+import * as Haptics from 'expo-haptics'
+import { getHomeIntelligence, type HomeIntelligence } from '../src/services/systemBridge'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -33,6 +34,8 @@ const STATE_CHIPS: { id: UserState; emoji: string; label: string; color: string 
   { id: 'scattered', emoji: '🌪️', label: 'Scattered', color: '#14B8A6' },
   { id: 'ready', emoji: '🚀', label: 'Ready', color: '#10B981' },
 ]
+
+const riskColors: Record<string, string> = { critical: '#EF4444', high: '#F59E0B', moderate: '#F97316', low: '#10B981' }
 
 const QUICK_ACTIONS: { id: string; emoji: string; label: string; screen: Href }[] = [
   { id: 'before_scroll', emoji: '📱', label: 'Before I Scroll', screen: '/before-scroll' },
@@ -48,6 +51,7 @@ export default function HomeScreen() {
   const momentumEvents = store.momentumEvents
   const retentionState = store.retentionState
   const getComebackStatus = store.getComebackStatus
+  const brainDumps = store.brainDumps
 
   const [selectedState, setSelectedState] = useState<UserState | null>(null)
   const [selectedMinutes, setSelectedMinutes] = useState(5)
@@ -79,6 +83,33 @@ export default function HomeScreen() {
   // ── Comeback Detection ──
   const comeback = useMemo(() => getComebackStatus(), [sessions, retentionState.lastRescueDate])
 
+  // ── Pending Brain Dumps (Loop 6) ──
+  const pendingBrainDumps = useMemo(() => {
+    const { getPendingBrainDumpItems } = require('../src/services/retention/retentionEngine')
+    return getPendingBrainDumpItems(brainDumps)
+  }, [brainDumps])
+
+  // ── Day Tracking (Day 1/2/3/7/30 per audit Section 1.3) ──
+  const dayTrackingMessage = useMemo(() => {
+    const { getRetentionDay, getDaysSinceActivation } = require('../src/services/retention/retentionEngine')
+    const { shouldShowDay2HabitSeed, shouldShowDay3Pattern, shouldShowDay7Insight, shouldShowDay30Commitment } = require('../src/services/retention/retentionEngine')
+    if (!retentionState.activated) return null
+    const day = getRetentionDay(retentionState)
+    if (day === 2 && shouldShowDay2HabitSeed(retentionState)) {
+      return "Yesterday you rescued your first session. One small rescue today keeps the momentum."
+    }
+    if (day === 3 && shouldShowDay3Pattern(retentionState)) {
+      return `You've opened the app ${retentionState.totalRescues} times. A pattern is forming.`
+    }
+    if (day === 7 && shouldShowDay7Insight(retentionState)) {
+      return "A week of rescuing. Your weekly pattern is emerging."
+    }
+    if (day === 30 && shouldShowDay30Commitment(retentionState)) {
+      return 'A month of showing up. Ready to commit to a daily practice?'
+    }
+    return null
+  }, [retentionState])
+
   const weeklyMomentum = useMemo(() => {
     const weekAgo = Date.now() - 7 * 86400000
     return momentumEvents
@@ -86,31 +117,27 @@ export default function HomeScreen() {
       .reduce((sum, e) => sum + e.points, 0)
   }, [momentumEvents])
 
-  // ── Agent Insight ──
-  const agentInsight = useMemo(() => {
-    if (sessions.length < 3) return null
-    try {
-      const output = runAntiDriftAgent({
-        moment: null,
-        recentSignals: [],
-        driftGraph: null,
-        privacySettings: { localOnlyMode: false, remoteAiEnabled: false, analyticsEnabled: true, aiPersonalizationEnabled: false, memoryEnabled: true, contextProcessingEnabled: true, systemSurfacesEnabled: true, shareAnalyticsEnabled: false, crashReportingEnabled: true },
-        activeContext: null,
-        isComeback: false,
-        missionsCompletedToday: sessions.filter(s => s.status === 'completed').length,
-        focusMinutesToday: 0,
-        abandonCountToday: 0,
-        source: 'app_open',
-      })
-      return output.coachPulse
-    } catch {
-      return null
-    }
-  }, [sessions])
+  // ── System Intelligence ──
+  const homeIntel = useMemo(() => {
+    return getHomeIntelligence({
+      sessions,
+      retentionState,
+      patterns: store.resistancePatterns,
+      distractions: store.distractions,
+      momentumEvents,
+      missions: store.missions,
+      microMissions: store.microMissions,
+      brainDumps,
+      userPatterns: null,
+      quietHours: null,
+      userName: user?.display_name ?? null,
+    })
+  }, [sessions, retentionState, store.resistancePatterns, store.distractions, momentumEvents, store.missions, store.microMissions, brainDumps, user?.display_name])
 
   // ── Handlers ──
   const handleStateSelect = useCallback((state: UserState) => {
     setSelectedState(state)
+    Haptics.selectionAsync()
   }, [])
 
   const handleRescueMe = useCallback(() => {
@@ -130,11 +157,30 @@ export default function HomeScreen() {
       privacyPolicy: 'local_only',
     })
 
-    store.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
-    store.startSession(undefined, undefined, 'focus', selectedMinutes)
-    setRescueStarted(true)
+    // 1. Create the mission in the store so live screen can find it
+    const mission = store.addMission(
+      result.primaryMission.exactAction.slice(0, 60),
+      `Protocol: ${RESCUE_PROTOCOLS[protocolId].name} · State: ${selectedState}`,
+      STATE_CHIPS.find(c => c.id === selectedState)?.color ?? colors.brand[400],
+    )
 
-    // Navigate to live mission
+    // 2. Add the micro-mission so live screen shows exactAction
+    store.addMicroMission(
+      mission.id,
+      result.primaryMission.exactAction,
+      result.primaryMission.completionCriteria ?? undefined,
+      selectedMinutes,
+    )
+
+    // 3. Start the session linked to the mission
+    store.startSession(mission.id, undefined, 'focus', selectedMinutes)
+    store.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
+
+    // 4. Record retention event (activation path)
+    store.recordRetention('rescue_started', { state: selectedState, minutes: selectedMinutes, protocol: protocolId })
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+
+    setRescueStarted(true)
     router.push('/live')
   }, [selectedState, selectedMinutes, store, router])
 
@@ -188,6 +234,33 @@ export default function HomeScreen() {
           </Card>
         )}
 
+        {/* Day Tracking Message (Loop 4 - Momentum) */}
+        {dayTrackingMessage && !comeback.isComeback && (
+          <Card variant="subtle" style={styles.comebackCard}>
+            <Text style={styles.comebackText}>{dayTrackingMessage}</Text>
+          </Card>
+        )}
+
+        {/* Risk Indicator */}
+        {homeIntel.riskLevel && homeIntel.riskLevel !== 'low' && (
+          <Card variant="subtle" style={styles.riskCard}>
+            <View style={styles.riskRow}>
+              <Shield size={16} color={riskColors[homeIntel.riskLevel]} />
+              <Text style={[styles.riskText, { color: riskColors[homeIntel.riskLevel] }]}>
+                {homeIntel.riskLevel === 'critical' ? 'High drift risk right now'
+                  : homeIntel.riskLevel === 'high' ? 'Elevated drift risk'
+                  : 'Moderate drift risk'}
+              </Text>
+            </View>
+            {homeIntel.recommendedAction && (
+              <Text style={styles.riskAction}>{homeIntel.recommendedAction}</Text>
+            )}
+            {homeIntel.nextDangerWindow ? (
+              <Text style={styles.riskAction}>⚠ {homeIntel.nextDangerWindow.startHour}:00–{homeIntel.nextDangerWindow.endHour}:00 is your danger window</Text>
+            ) : null}
+          </Card>
+        )}
+
         {/* Main Question */}
         <View style={styles.mainQuestion}>
           <Text style={styles.mainQuestionTitle}>About to drift?</Text>
@@ -199,6 +272,9 @@ export default function HomeScreen() {
           {STATE_CHIPS.map(chip => (
             <TouchableOpacity
               key={chip.id}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedState === chip.id }}
+              accessibilityLabel={`${chip.label} state - tap to select`}
               style={[
                 styles.stateChip,
                 selectedState === chip.id && {
@@ -229,6 +305,9 @@ export default function HomeScreen() {
               {[1, 2, 5, 10, 15, 25].map(min => (
                 <TouchableOpacity
                   key={min}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: selectedMinutes === min }}
+                  accessibilityLabel={`${min} minutes`}
                   style={[styles.timeChip, selectedMinutes === min && styles.timeChipActive]}
                   onPress={() => setSelectedMinutes(min)}
                 >
@@ -240,7 +319,7 @@ export default function HomeScreen() {
             </View>
 
             {/* Rescue Me */}
-            <TouchableOpacity style={styles.rescueBtn} onPress={handleRescueMe}>
+            <TouchableOpacity style={styles.rescueBtn} onPress={handleRescueMe} accessibilityRole="button" accessibilityLabel="Start rescue session">
               <LinearGradient colors={colors.gradients.brand} style={styles.rescueGradient}>
                 <Zap size={22} color={colors.text.inverse} />
                 <Text style={styles.rescueText}>Rescue Me</Text>
@@ -259,6 +338,8 @@ export default function HomeScreen() {
           {QUICK_ACTIONS.map(action => (
             <TouchableOpacity
               key={action.id}
+              accessibilityRole="button"
+              accessibilityLabel={action.label}
               style={styles.quickAction}
               onPress={() => handleQuickAction(action.screen)}
             >
@@ -271,10 +352,34 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Tiny Insight */}
-        {agentInsight && (
+        {/* Pending Brain Dump — Enhanced (Loop 6: Context Loop) */}
+        {pendingBrainDumps.count > 0 && (
+          <TouchableOpacity
+            style={styles.pendingDumpCard}
+            onPress={() => router.push('/coach')}
+            accessibilityRole="button"
+            accessibilityLabel={`Turn ${pendingBrainDumps.count} brain dump items into missions`}
+          >
+            <View style={styles.pendingDumpIconWrap}>
+              <Brain size={18} color={colors.accent.orange} />
+              <View style={styles.pendingDumpBadge}>
+                <Text style={styles.pendingDumpBadgeText}>{pendingBrainDumps.count}</Text>
+              </View>
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+              <Text style={styles.pendingDumpLabel}>Turn thoughts into missions</Text>
+              <Text style={styles.pendingDumpPreview} numberOfLines={1}>
+                {pendingBrainDumps.items[0]}
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.brand[400]} />
+          </TouchableOpacity>
+        )}
+
+        {/* System Insight */}
+        {homeIntel.riskMessage && !homeIntel.riskLevel && (
           <Card variant="subtle" style={styles.insightCard}>
-            <Text style={styles.insightText}>{agentInsight?.message ?? agentInsight}</Text>
+            <Text style={styles.insightText}>{homeIntel.riskMessage}</Text>
           </Card>
         )}
 
@@ -293,6 +398,19 @@ export default function HomeScreen() {
             <Text style={styles.todayLabel}>Details</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Loop Status */}
+        <View style={styles.loopStatus}>
+          <Text style={styles.loopText}>{homeIntel.loopStatus.active}/{homeIntel.loopStatus.total} loops</Text>
+        </View>
+
+        {/* Weekly Narrative */}
+        {homeIntel.weeklyNarrative && (
+          <Card variant="subtle" style={styles.narrativeCard}>
+            <Text style={styles.narrativeLabel}>YOUR WEEK</Text>
+            <Text style={styles.narrativeText}>{homeIntel.weeklyNarrative}</Text>
+          </Card>
+        )}
 
         <View style={{ height: layout.tabBarHeight + spacing.lg }} />
       </ScrollView>
@@ -366,6 +484,23 @@ const styles = StyleSheet.create({
   quickActionEmoji: { fontSize: 18 },
   quickActionLabel: { ...typography.bodyMedium, color: colors.text.primary, flex: 1 },
 
+  // Pending Brain Dump (Enhanced)
+  pendingDumpCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.accent.orange + '10', borderRadius: radius.lg,
+    padding: spacing.md, marginBottom: spacing.lg,
+    borderWidth: 1, borderColor: colors.accent.orange + '25',
+  },
+  pendingDumpIconWrap: { position: 'relative' },
+  pendingDumpBadge: {
+    position: 'absolute', top: -6, right: -6,
+    backgroundColor: colors.accent.orange, borderRadius: 8,
+    width: 16, height: 16, justifyContent: 'center', alignItems: 'center',
+  },
+  pendingDumpBadgeText: { ...typography.caption, color: colors.text.inverse, fontSize: 10, fontWeight: '700' as const },
+  pendingDumpLabel: { ...typography.bodyMedium, color: colors.accent.orange, fontWeight: '600' as const },
+  pendingDumpPreview: { ...typography.bodySmall, color: colors.text.secondary, marginTop: 2 },
+
   // Insight
   insightCard: { padding: spacing.md, marginBottom: spacing.lg },
   insightText: { ...typography.bodySmall, color: colors.text.secondary, fontStyle: 'italic' },
@@ -385,4 +520,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand[400], borderRadius: radius.lg, padding: spacing.md, paddingHorizontal: spacing.xl,
   },
   goToMissionText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '600' },
+  pendingDumpCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.accent.orange + '10', borderRadius: radius.lg,
+    padding: spacing.md, marginBottom: spacing.lg,
+    borderWidth: 1, borderColor: colors.accent.orange + '20',
+  },
+  pendingDumpLabel: { ...typography.caption, color: colors.accent.orange, fontWeight: '600' },
+  pendingDumpPreview: { ...typography.bodySmall, color: colors.text.secondary, marginTop: 2 },
+
+  // Risk Indicator
+  riskCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
+  riskRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  riskText: { ...typography.bodyMedium, fontWeight: '600' },
+  riskAction: { ...typography.bodySmall, color: colors.text.secondary, marginTop: spacing.xs },
+
+  // Loop Status
+  loopStatus: { alignItems: 'center', padding: spacing.xs },
+  loopText: { ...typography.caption, color: colors.text.disabled },
+
+  // Narrative
+  narrativeCard: { padding: spacing.md, marginBottom: spacing.lg },
+  narrativeLabel: { ...typography.labelSmall, color: colors.brand[400], marginBottom: spacing.xs },
+  narrativeText: { ...typography.bodySmall, color: colors.text.secondary },
 })

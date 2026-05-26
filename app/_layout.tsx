@@ -6,26 +6,95 @@
 import { Stack } from 'expo-router'
 import { useEffect } from 'react'
 import * as SplashScreen from 'expo-splash-screen'
+import { useFonts } from 'expo-font'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { StyleSheet } from 'react-native'
 import { colors } from '../src/theme'
+import { useTheme } from '../src/theme/useTheme'
+import { setFontsLoaded } from '../src/theme/fonts'
 import { GlobalErrorBoundary } from '../src/services/errorBoundary'
 import { initCrashReporting, setConsentMode } from '../src/services/crashReporting'
 import { useAppStore } from '../src/store'
 import { checkForUpdates } from '../src/services/updates'
+import { useAmbientEngine } from '../src/hooks/useAmbientEngine'
+import { useRouter } from 'expo-router'
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://YOUR_SENTRY_DSN@sentry.io/YOUR_PROJECT_ID'
 
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
+  const theme = useTheme()
   const checkConsent = useAppStore(s => s.checkConsent)
+  const user = useAppStore(s => s.user)
+  const router = useRouter()
+  useAmbientEngine()
 
-  // Hide splash screen immediately since we don't require custom fonts
+  // Load custom fonts — falls back to system fonts on error
+  const [fontsReady, fontError] = useFonts({
+    'Inter-Regular': require('../assets/fonts/Inter-Regular.ttf'),
+    'Inter-Medium': require('../assets/fonts/Inter-Medium.ttf'),
+    'Inter-SemiBold': require('../assets/fonts/Inter-SemiBold.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
+    'JetBrainsMono-Bold': require('../assets/fonts/JetBrainsMono-Bold.ttf'),
+  })
+
+  // Hide splash screen once fonts are loaded (or on error, falling back to system fonts)
   useEffect(() => {
-    SplashScreen.hideAsync()
-    // Check for OTA updates after a short delay
-    setTimeout(() => void checkForUpdates(), 3000)
+    if (fontsReady || fontError) {
+      setFontsLoaded(!fontError)
+      SplashScreen.hideAsync()
+      // Check for OTA updates after a short delay
+      setTimeout(() => void checkForUpdates(), 3000)
+    }
+  }, [fontsReady, fontError])
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!user || !user.onboarding_complete) {
+        router.replace('/onboarding')
+      }
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [user?.onboarding_complete])
+
+  // Comeback detection and notification
+  useEffect(() => {
+    try {
+      const state = useAppStore.getState()
+      const comeback = state.getComebackStatus?.()
+      if (comeback?.isComeback && comeback?.daysAway >= 2) {
+        state.recordRetention?.('comeback_started', { state: 'returning', daysAway: comeback.daysAway })
+      }
+    } catch { /* never crash from comeback detection */ }
+  }, [])
+
+  // Schedule danger window notifications when enough data (5+ sessions)
+  // Re-runs every 5 sessions
+  useEffect(() => {
+    const unsub = useAppStore.subscribe((state) => {
+      const count = state.sessions.length
+      if (count >= 5 && count % 5 === 0) {
+        try {
+          const { buildIntelligenceProfile } = require('../src/engine/predictiveEngine')
+          const { scheduleDangerWindowNotifications } = require('../src/services/notifications')
+          const profile = buildIntelligenceProfile({
+            sessions: state.sessions,
+            patterns: state.resistancePatterns,
+            distractions: state.distractions,
+            momentumEvents: state.momentumEvents,
+            missions: state.missions,
+            microMissions: state.microMissions,
+            brainDumps: state.brainDumps,
+          })
+          if (profile.dangerWindows.length > 0) {
+            void scheduleDangerWindowNotifications(profile.dangerWindows, profile)
+          }
+        } catch { /* never crash from notification scheduling */ }
+      }
+    })
+    return unsub
   }, [])
 
   // Initialize crash reporting on mount, gated by consent
@@ -34,28 +103,13 @@ export default function RootLayout() {
     setConsentMode(checkConsent('crash_reporting'))
   }, [checkConsent])
 
-  // Wire notification system for danger windows after enough sessions
-  useEffect(() => {
-    const sessions = useAppStore.getState().sessions
-    if (sessions.length >= 5) {
-      try {
-        const { predictDrift } = require('../src/engine/predictiveEngine')
-        const { scheduleDangerWindowNotifications } = require('../src/services/notifications')
-        const prediction = predictDrift({ sessions })
-        if (prediction?.dangerWindows?.length > 0) {
-          void scheduleDangerWindowNotifications(prediction.dangerWindows, { totalSessions: sessions.length })
-        }
-      } catch {}
-    }
-  }, [])
-
   return (
     <GlobalErrorBoundary>
-     <GestureHandlerRootView style={styles.container}>
+     <GestureHandlerRootView style={[styles.container, { backgroundColor: theme.bg.base }]}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.bg.base },
+          contentStyle: { backgroundColor: theme.bg.base },
           animation: 'fade_from_bottom',
         }}
       >
@@ -81,6 +135,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.base,
   },
 })

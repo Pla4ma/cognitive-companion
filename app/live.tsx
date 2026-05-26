@@ -10,10 +10,14 @@ import { BlurView } from 'expo-blur'
 import { Pause, Play, Square, CheckCircle2, SkipForward, AlertTriangle, Brain, X } from 'lucide-react-native'
 import { useAppStore } from '../src/store'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
-import { Screen, Button, ProgressRing } from '../src/components'
-import { showSessionCompleteNotification } from '../src/services/notifications'
+import { Screen, Button, ProgressRing, ProPaywall } from '../src/components'
+import { showSessionCompleteNotification, requestNotificationPermissionsWithContext } from '../src/services/notifications'
 import { getSocialProofStat, getActivationCelebration } from '../src/services/retention/retentionEngine'
 import type { UserState } from '../src/types'
+import * as Haptics from 'expo-haptics'
+import { usePostSessionFlow } from '../src/hooks/usePostSessionFlow'
+import { useProgressiveProfiling } from '../src/hooks/useProgressiveProfiling'
+import { ProgressiveProfiling } from '../src/components/ProgressiveProfiling'
 
 export default function LiveMissionScreen() {
   const activeSession = useAppStore((s) => s.activeSession)
@@ -27,14 +31,23 @@ export default function LiveMissionScreen() {
   const captureDistraction = useAppStore((s) => s.captureDistraction)
   const missions = useAppStore((s) => s.missions)
   const microMissions = useAppStore((s) => s.microMissions)
+  const sessionCount = useAppStore((s) => s.sessionCount)
+  const plan = useAppStore((s) => s.user?.plan ?? 'free')
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [showSalvage, setShowSalvage] = useState(false)
   const [distractionInput, setDistractionInput] = useState('')
   const [showDistractionCapture, setShowDistractionCapture] = useState(false)
+  const [selectedDuration, setSelectedDuration] = useState(10)
   const [sessionNotes, setSessionNotes] = useState('')
   const [socialProof, setSocialProof] = useState<string | null>(null)
   const [activationCelebration, setActivationCelebration] = useState<{ show: boolean; message: string; submessage: string } | null>(null)
+  const [showPaywall, setShowPaywall] = useState(false)
+
+  const { postSessionState, startFlow, advanceMoment, skipToEnd } = usePostSessionFlow()
+
+  // ── Progressive Profiling ──
+  const profiling = useProgressiveProfiling()
 
   const pulseAnim = useRef(new Animated.Value(1)).current
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -77,6 +90,7 @@ export default function LiveMissionScreen() {
   const handleComplete = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
     completeSession(sessionNotes)
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     showSessionCompleteNotification(Math.round(elapsedSeconds / 60), 0)
 
     // Show social proof stat after completion
@@ -91,8 +105,20 @@ export default function LiveMissionScreen() {
     const celebration = getActivationCelebration(retentionState)
     if (celebration.show && retentionState.totalRescues <= 1) {
       setActivationCelebration(celebration)
+      // First rescue: request notification permission after celebration
+      setTimeout(() => {
+        void requestNotificationPermissionsWithContext()
+      }, 3500)
     }
-  }, [completeSession, sessionNotes, elapsedSeconds, activeSession])
+
+    // Paywall trigger: session 5 on free plan
+    if (sessionCount >= 5 && plan === 'free') {
+      setTimeout(() => setShowPaywall(true), 2000)
+    }
+
+    // Start post-session flow
+    startFlow(activeSession ?? { mode: 'focus', actual_seconds: elapsedSeconds, planned_minutes: selectedDuration, status: 'completed' })
+  }, [completeSession, sessionNotes, elapsedSeconds, activeSession, sessionCount, plan, startFlow, selectedDuration])
 
   const handleAbandon = () => {
     Alert.alert(
@@ -109,9 +135,9 @@ export default function LiveMissionScreen() {
   const handleCaptureDistraction = () => {
     if (distractionInput.trim()) {
       captureDistraction(distractionInput.trim())
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       setDistractionInput('')
       setShowDistractionCapture(false)
-      void 0
     }
   }
 
@@ -139,15 +165,22 @@ export default function LiveMissionScreen() {
         <Text style={styles.durationLabel}>DURATION</Text>
         <View style={styles.durationRow}>
           {[2, 5, 10, 15, 25, 45, 60].map(d => (
-            <TouchableOpacity key={d} style={styles.durationChip}>
-              <Text style={styles.durationChipText}>{d}m</Text>
+            <TouchableOpacity
+              key={d}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedDuration === d }}
+              accessibilityLabel={`${d} minutes`}
+              style={[styles.durationChip, selectedDuration === d && styles.durationChipActive]}
+              onPress={() => { setSelectedDuration(d); Haptics.selectionAsync() }}
+            >
+              <Text style={[styles.durationChipText, selectedDuration === d && styles.durationChipTextActive]}>{d}m</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <Button
           title="Start Mission"
-          onPress={() => startSession(undefined, undefined, 'focus', 10)}
+          onPress={() => startSession(activeMission?.id, activeMicro?.id, 'focus', selectedDuration)}
           variant="gradient"
           size="lg"
           style={{ width: '100%', marginTop: spacing.lg }}
@@ -155,7 +188,7 @@ export default function LiveMissionScreen() {
 
         <Button
           title="Just Show Me the Timer"
-          onPress={() => startSession(undefined, undefined, 'focus', 5)}
+          onPress={() => startSession(undefined, undefined, 'focus', Math.min(selectedDuration, 5))}
           variant="ghost"
           size="sm"
           style={{ width: '100%', marginTop: spacing.sm }}
@@ -194,7 +227,8 @@ export default function LiveMissionScreen() {
         <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
           <ProgressRing progress={progress} size={220} strokeWidth={8} color={colors.brand[500]}>
             <View style={styles.timerDisplay}>
-              <Text style={[typography.mono, { color: colors.text.primary, fontSize: 48 }]}>
+              <Text accessibilityRole="timer" accessibilityLabel={`${Math.floor(timeLeft / 60)} minutes and ${timeLeft % 60} seconds remaining`} style={[typography.mono, { color: colors.text.primary, fontSize: 48 }]}
+                adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1}>
                 {formatTime(timeLeft)}
               </Text>
               <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
@@ -216,23 +250,23 @@ export default function LiveMissionScreen() {
 
         {/* Controls */}
         <View style={styles.controls}>
-          <Button title="End" onPress={handleAbandon} variant="ghost" size="sm" />
+          <Button title="End" onPress={handleAbandon} variant="ghost" size="sm" accessibilityLabel="End session early" />
           {isActive ? (
-            <Button title="" onPress={pauseSession} variant="primary" size="lg"
+            <Button title="" onPress={pauseSession} variant="primary" size="lg" accessibilityLabel="Pause session"
               style={[styles.mainBtn, { width: 72, height: 72, borderRadius: 36 }]}
               icon={<Pause size={28} color={colors.text.inverse} />} />
           ) : (
-            <Button title="" onPress={resumeSession} variant="primary" size="lg"
+            <Button title="" onPress={resumeSession} variant="primary" size="lg" accessibilityLabel="Resume session"
               style={[styles.mainBtn, { width: 72, height: 72, borderRadius: 36 }]}
               icon={<Play size={28} color={colors.text.inverse} />} />
           )}
-          <Button title="Done" onPress={() => setShowSalvage(true)} variant="secondary" size="sm"
+          <Button title="Done" onPress={() => setShowSalvage(true)} variant="secondary" size="sm" accessibilityLabel="Complete session"
             icon={<CheckCircle2 size={16} color={colors.accent.green} />} />
         </View>
 
         {/* Capture Distraction */}
         {!showDistractionCapture ? (
-          <TouchableOpacity style={styles.captureBtn} onPress={() => setShowDistractionCapture(true)}>
+          <TouchableOpacity style={styles.captureBtn} onPress={() => setShowDistractionCapture(true)} accessibilityLabel="Capture a distraction">
             <Brain size={16} color={colors.text.tertiary} />
             <Text style={styles.captureBtnText}>Capture a distraction</Text>
           </TouchableOpacity>
@@ -280,6 +314,19 @@ export default function LiveMissionScreen() {
         </View>
       )}
 
+      {/* Post-Session Flow */}
+      {postSessionState.currentMoment && !showSalvage && (
+        <View style={styles.postSessionOverlay}>
+          <PostSessionMomentRenderer
+            moment={postSessionState.currentMoment}
+            onAdvance={advanceMoment}
+            onSkip={skipToEnd}
+            onGoHome={() => { skipToEnd(); router.push('/') }}
+            onAnotherRescue={() => { skipToEnd(); router.push('/') }}
+          />
+        </View>
+      )}
+
       {/* Salvage Modal */}
       {showSalvage && (
         <BlurView intensity={40} style={styles.salvageOverlay}>
@@ -306,7 +353,139 @@ export default function LiveMissionScreen() {
           </View>
         </BlurView>
       )}
+
+      {showPaywall && (
+        <ProPaywall
+          trigger="session_5"
+          visible={showPaywall}
+          onDismiss={() => setShowPaywall(false)}
+          onSuccess={() => setShowPaywall(false)}
+        />
+      )}
+
+      {/* Progressive Profiling Modal */}
+      {profiling.shouldShow && profiling.questionType && (
+        <ProgressiveProfiling
+          questionType={profiling.questionType as 'work_type' | 'struggle_time' | 'biggest_project'}
+          onComplete={profiling.handleAnswer}
+          onDismiss={profiling.handleDismiss}
+        />
+      )}
     </Screen>
+  )
+}
+
+// ── Post-Session Moment Renderer ─────────────────────────────
+
+function PostSessionMomentRenderer({ moment, onAdvance, onSkip, onGoHome, onAnotherRescue }: {
+  moment: import('../src/hooks/usePostSessionFlow').PostSessionMomentConfig
+  onAdvance: () => void
+  onSkip: () => void
+  onGoHome: () => void
+  onAnotherRescue: () => void
+}) {
+  const renderContent = () => {
+    switch (moment.moment) {
+      case 'activation_celebration':
+        return (
+          <>
+            <Text style={styles.momentTitle}>{(moment.data.message as string) ?? 'You did it!'}</Text>
+            <Text style={styles.momentSub}>{(moment.data.submessage as string) ?? 'First rescue complete.'}</Text>
+          </>
+        )
+      case 'social_proof':
+        return (
+          <>
+            <Text style={styles.momentProof}>{(moment.data.proof as string) ?? ''}</Text>
+          </>
+        )
+      case 'comeback_acknowledgment':
+        return (
+          <>
+            <Text style={styles.momentTitle}>Welcome back.</Text>
+            <Text style={styles.momentSub}>{(moment.data.message as string) ?? ''}</Text>
+          </>
+        )
+      case 'momentum_update':
+        return (
+          <>
+            <Text style={styles.momentTitle}>Momentum building.</Text>
+            <Text style={styles.momentSub}>{(moment.data.summary as string) ?? ''}</Text>
+          </>
+        )
+      case 'next_action_prompt':
+        return (
+          <>
+            <Text style={styles.momentTitle}>What's next?</Text>
+            <Text style={styles.momentSub}>{(moment.data.prompt as string) ?? 'Another rescue, or close for now.'}</Text>
+          </>
+        )
+      case 'brain_dump_prompt':
+        return (
+          <>
+            <Text style={styles.momentTitle}>Brain dump?</Text>
+            <Text style={styles.momentSub}>
+              {(moment.data.message as string) ?? 'You have pending items. Turn them into missions?'}
+            </Text>
+          </>
+        )
+      case 'weekly_narrative':
+        return (
+          <>
+            <Text style={styles.momentTitle}>Your week</Text>
+            <Text style={styles.momentSub}>{(moment.data.message as string) ?? ''}</Text>
+          </>
+        )
+      case 'day_milestone':
+        return (
+          <>
+            <Text style={styles.momentTitle}>{(moment.data.message as string) ?? ''}</Text>
+            <Text style={styles.momentSub}>{(moment.data.submessage as string) ?? ''}</Text>
+          </>
+        )
+      case 'activation_celebration':
+        return (
+          <>
+            <Text style={styles.momentTitle}>{(moment.data.message as string) ?? 'You did it!'}</Text>
+            <Text style={styles.momentSub}>{(moment.data.submessage as string) ?? 'First rescue complete.'}</Text>
+          </>
+        )
+      default:
+        return (
+          <>
+            <Text style={styles.momentTitle}>{(moment.data.title as string) ?? ''}</Text>
+            <Text style={styles.momentSub}>{(moment.data.body as string) ?? ''}</Text>
+          </>
+        )
+    }
+  }
+
+  return (
+    <View style={styles.momentContainer}>
+      {renderContent()}
+      <View style={styles.momentActions}>
+        {moment.moment === 'next_action_prompt' ? (
+          <>
+            <TouchableOpacity onPress={onGoHome} style={styles.momentBtn}>
+              <Text style={styles.momentBtnText}>Go Home</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onAnotherRescue} style={[styles.momentBtn, { backgroundColor: colors.accent.green }]}>
+              <Text style={styles.momentBtnText}>Another Rescue</Text>
+            </TouchableOpacity>
+          </>
+        ) : moment.requiresInteraction ? (
+          <TouchableOpacity onPress={onAdvance} style={styles.momentBtn}>
+            <Text style={styles.momentBtnText}>Continue</Text>
+          </TouchableOpacity>
+        ) : null}
+        {moment.moment !== 'next_action_prompt' && (
+          <TouchableOpacity onPress={onSkip} style={styles.momentSkip}>
+            <Text style={styles.momentSkipText}>Skip</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <Text style={styles.momentProgress}>{(moment.data.currentIndex as number ?? 0) + 1} / {moment.data.totalCount ?? 1}</Text>
+    </View>
   )
 }
 
@@ -326,6 +505,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border.subtle,
   },
   durationChipText: { ...typography.bodyMedium, color: colors.text.tertiary },
+  durationChipActive: { borderColor: colors.brand[400], backgroundColor: colors.brand[400] + '15' },
+  durationChipTextActive: { color: colors.brand[400], fontWeight: '600' },
   bodyDoubleHint: { ...typography.caption, color: colors.text.disabled },
 
   liveContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
@@ -392,4 +573,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl, paddingVertical: spacing.md,
   },
   activationDismissText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '700' },
+
+  // Post-Session Flow
+  postSessionOverlay: {
+    ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center',
+    padding: spacing.xl, backgroundColor: 'rgba(0,0,0,0.75)',
+  },
+  momentContainer: { alignItems: 'center', padding: spacing.xl },
+  momentTitle: { ...typography.h2, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.md },
+  momentSub: { ...typography.bodyMedium, color: colors.text.secondary, textAlign: 'center', marginBottom: spacing.xl },
+  momentProof: { ...typography.bodyLarge, color: colors.text.primary, textAlign: 'center', fontStyle: 'italic', marginBottom: spacing.xl },
+  momentActions: { flexDirection: 'row', gap: spacing.md },
+  momentBtn: { backgroundColor: colors.brand[500], borderRadius: radius.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
+  momentBtnText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '700' },
+  momentSkip: { padding: spacing.md },
+  momentSkipText: { ...typography.bodySmall, color: colors.text.disabled },
+  momentProgress: { ...typography.caption, color: colors.text.disabled, marginTop: spacing.md },
 })

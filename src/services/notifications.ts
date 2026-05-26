@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
 import * as TaskManager from 'expo-task-manager'
 import { Platform } from 'react-native'
+import { logger } from './logger'
 import type { MicroMission } from '../types/mission'
 import type { DangerWindow } from '../types/ambient'
 import type { DangerWindow as PredictiveDangerWindow, UserIntelligenceProfile } from '../engine/predictiveEngine'
@@ -42,11 +43,61 @@ Notifications.setNotificationHandler({
   }),
 })
 
+// ── Notification Permission Strategy (Audit Section 2.3) ──────
+// Ask AFTER first rescue, not before. Show in-app context before OS dialog.
+
+import { Alert } from 'react-native'
+import { useAppStore } from '../store'
+
+/**
+ * Request notification permissions with user-facing context.
+ * Shows an in-app alert explaining WHY before triggering the OS permission dialog.
+ * Should be called after first successful rescue session.
+ */
+export async function requestNotificationPermissionsWithContext(): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Stay Ahead of Your Hardest Hours',
+      "INTENT can warn you before your drift windows — the times you usually lose focus.\n\nNo marketing. No streaks. Just 'your 2pm is coming.'\n\nAllow notifications?",
+      [
+        {
+          text: 'Not Now',
+          style: 'cancel',
+          onPress: () => {
+            // Record the decline for analytics
+            try {
+              const state = useAppStore.getState()
+              state.recordRetention?.('notification_declined_post_rescue', {})
+            } catch {}
+            resolve(false)
+          },
+        },
+        {
+          text: 'Allow',
+          style: 'default',
+          onPress: async () => {
+            const granted = await requestNotificationPermissions()
+            if (granted) {
+              // Mark notification consent in consent ledger
+              try {
+                const state = useAppStore.getState()
+                state.updateConsent?.('notifications_smart', true, 'post_rescue', 'Granted after first rescue')
+                state.recordRetention?.('notification_accepted_post_rescue', {})
+              } catch {}
+            }
+            resolve(granted)
+          },
+        },
+      ],
+    )
+  })
+}
+
 // ── Permissions ────────────────────────────────────────────
 
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (!Device.isDevice) {
-    console.log('Push notifications require a physical device')
+    logger.log('Push notifications require a physical device')
     return false
   }
 
@@ -59,7 +110,7 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Notification permission denied')
+    logger.log('Notification permission denied')
     return false
   }
 
@@ -570,7 +621,7 @@ export async function requestNotificationPermissionsWithContext(
   contextMessage: string,
 ): Promise<'granted' | 'denied' | 'undetermined'> {
   if (!Device.isDevice) {
-    console.log('Push notifications require a physical device')
+    logger.log('Push notifications require a physical device')
     return 'denied'
   }
 
@@ -581,7 +632,7 @@ export async function requestNotificationPermissionsWithContext(
   // Log the context message — the calling UI should display this
   // to the user before invoking this function (e.g. via an Alert or modal).
   // We include it here so the message is co-located with the permission flow.
-  console.log(`[NotificationPermission] Context: ${contextMessage}`)
+  logger.log(`[NotificationPermission] Context: ${contextMessage}`)
 
   const result = await Notifications.requestPermissionsAsync()
 
@@ -619,13 +670,13 @@ const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND_NOTIFICATION_TASK'
 
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => {
   if (error) {
-    console.error('[NotificationBackground] Task error:', error)
+    logger.error('[NotificationBackground] Task error:', error)
     return
   }
 
   if (data) {
     // Process background notification data
-    console.log('[NotificationBackground] Processing background notification')
+    logger.log('[NotificationBackground] Processing background notification')
   }
 })
 
@@ -637,7 +688,7 @@ export async function registerBackgroundNotificationTask(): Promise<boolean> {
     }
     return true
   } catch (err) {
-    console.error('[NotificationBackground] Failed to register task:', err)
+    logger.error('[NotificationBackground] Failed to register task:', err)
     return false
   }
 }
@@ -649,6 +700,6 @@ export async function unregisterBackgroundNotificationTask(): Promise<void> {
       await Notifications.unregisterTaskAsync(BACKGROUND_NOTIFICATION_TASK)
     }
   } catch (err) {
-    console.error('[NotificationBackground] Failed to unregister task:', err)
+    logger.error('[NotificationBackground] Failed to unregister task:', err)
   }
 }

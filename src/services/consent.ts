@@ -250,7 +250,7 @@ export interface ConsentReceipt {
   granted: boolean
   timestamp: string
   version: string // Permission spec version
-  source: 'onboarding' | 'settings' | 'prompt' | 'system'
+  source: 'onboarding' | 'settings' | 'prompt' | 'system' | 'post_rescue'
   contextDescription: string // What the user was doing when they consented
 }
 
