@@ -1,0 +1,6 @@
+appId: com.intent.app
+---
+- tapOn: "Avoiding"
+- tapOn: "5 min"
+- tapOn: "Rescue Me"
+- assertVisible: "Finish Early"

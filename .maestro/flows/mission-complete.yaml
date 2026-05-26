@@ -1,0 +1,7 @@
+appId: com.intent.app
+---
+- tapOn: "Missions"
+- tapOn: "Add"
+- inputText: "Finish quarterly report"
+- tapOn: "Create"
+- assertVisible: "Finish quarterly report"

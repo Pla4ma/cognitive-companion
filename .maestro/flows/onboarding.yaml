@@ -1,0 +1,11 @@
+appId: com.intent.app
+---
+- launchApp
+- clearState
+- tapOn: "Show me how"
+- inputText: "Test User"
+- tapOn: "Continue"
+- tapOn: "Avoiding"
+- tapOn: "Build my rescue"
+- tapOn: "Start rescue"
+- assertVisible: "YOUR RESCUE"
