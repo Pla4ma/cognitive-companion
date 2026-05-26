@@ -7,6 +7,10 @@ module.exports = {
   moduleNameMapper: {
     '^react-native$': 'react-native-web',
     '^react-native-reanimated$': '<rootDir>/src/__tests__/__mocks__/react-native-reanimated.js',
+    '^expo-secure-store$': '<rootDir>/src/__tests__/__mocks__/expo-secure-store.js',
+    '^react-native-svg$': '<rootDir>/src/__tests__/__mocks__/react-native-svg.js',
+    '^react-native-mmkv$': '<rootDir>/src/__tests__/__mocks__/react-native-mmkv.js',
+    '^react-native-view-shot$': '<rootDir>/src/__tests__/__mocks__/react-native-view-shot.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^~/(.*)$': '<rootDir>/$1',
   },

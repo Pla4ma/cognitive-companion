@@ -1,106 +1,60 @@
-// ══════════════════════════════════════════════════════════════
-// INTENT — One Question Max Policy
-// A stuck user hates forms. Ask at most one question.
-// ══════════════════════════════════════════════════════════════
-
-import type { UserState } from '../../types/moment'
-
-export type QuestionType =
-  | 'time_available'
-  | 'category'
-  | 'size_preference'
-  | 'what_avoiding'
+// ── Question Policy ─────────────────────────────────────────
+// Controls when and what questions to ask users
 
 export interface QuestionDecision {
-  shouldAsk: boolean
-  question: QuestionType | null
-  questionText: string | null
-  options: string[] | null
-  reason: string
+  shouldAsk: boolean;
+  question?: string;
+  reason?: string;
 }
 
-// ── Decision Logic ─────────────────────────────────────────
+export type QuestionType = 'time_available' | 'context' | 'intent' | 'energy_level';
 
 export function decideQuestion(
-  state: UserState | null,
-  availableMinutes: number | null,
-  category: string | null,
-  userMessage: string,
+  state: string,
+  timeAvailable: number | null,
+  context: string,
+  intent: string
 ): QuestionDecision {
-  const lower = userMessage.toLowerCase()
-
-  // If user already specified state, time, and category — no question needed
-  if (state && availableMinutes && category) {
+  // If we already have enough info, don't ask
+  if (timeAvailable !== null && timeAvailable > 0 && context && intent) {
     return {
       shouldAsk: false,
-      question: null,
-      questionText: null,
-      options: null,
-      reason: 'Enough information to generate mission',
-    }
+      reason: 'enough_info',
+    };
   }
 
-  // If no state, ask what they are avoiding
-  if (!state && !inferState(lower)) {
-    return {
-      shouldAsk: true,
-      question: 'what_avoiding',
-      questionText: 'What are you avoiding?',
-      options: ['Too much to do', 'Stuck on something', 'No energy', 'About to scroll', 'Perfectionism'],
-      reason: 'Need to know what kind of moment this is',
-    }
-  }
-
-  // If no time, ask
-  if (!availableMinutes) {
+  // Priority: time_available first, then context, then intent
+  if (timeAvailable === null || timeAvailable === 0) {
     return {
       shouldAsk: true,
       question: 'time_available',
-      questionText: 'How much time do you have?',
-      options: ['2 minutes', '5 minutes', '10 minutes', '15+ minutes'],
-      reason: 'Need to size the mission',
-    }
+      reason: 'missing_time',
+    };
   }
 
-  // If no category, ask
-  if (!category) {
+  if (!context) {
     return {
       shouldAsk: true,
-      question: 'category',
-      questionText: 'Is this school, work, or life?',
-      options: ['School', 'Work', 'Life', 'Health'],
-      reason: 'Need to pick the right mission template',
-    }
+      question: 'context',
+      reason: 'missing_context',
+    };
+  }
+
+  if (!intent) {
+    return {
+      shouldAsk: true,
+      question: 'intent',
+      reason: 'missing_intent',
+    };
   }
 
   return {
     shouldAsk: false,
-    question: null,
-    questionText: null,
-    options: null,
-    reason: 'Enough information',
-  }
+    reason: 'enough_info',
+  };
 }
 
-// ── Infer State from Text ──────────────────────────────────
-
-function inferState(text: string): UserState | null {
-  if (text.includes('overwhelm') || text.includes('too much')) return 'overwhelmed'
-  if (text.includes('stuck') || text.includes("can't start")) return 'stuck'
-  if (text.includes('avoid') || text.includes("don't want")) return 'avoiding'
-  if (text.includes('tired') || text.includes('exhausted')) return 'tired'
-  if (text.includes('anxious') || text.includes('worried')) return 'anxious'
-  if (text.includes('scroll') || text.includes('phone')) return 'doomscroll_risk'
-  if (text.includes('perfect') || text.includes('not good enough')) return 'perfectionism'
-  return null
-}
-
-// ── Policy Enforcement ─────────────────────────────────────
-
-export function validateQuestionCount(questions: number): boolean {
-  return questions <= 1
-}
-
-export function getNoQuestionCopy(): string {
-  return 'I have enough to start. Here is your mission.'
+export function validateQuestionCount(count: number): boolean {
+  // Only allow one question per session to avoid overwhelming users
+  return count < 2;
 }

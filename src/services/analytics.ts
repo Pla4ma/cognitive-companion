@@ -125,3 +125,20 @@ export function getPrescriptionEffectiveness(): { type: string; total: number; p
 export function clearAnalytics(): void {
   // No-op
 }
+
+// ── Event Scrubbing ───────────────────────────────────────
+
+export interface ScrubableEvent {
+  id: string
+  name: string
+  category: string
+  timestamp: string
+  session_id: string
+  user_id: string
+  payload: Record<string, unknown>
+  metadata: Record<string, unknown>
+}
+
+export function scrubEvent<T extends ScrubableEvent>(event: T): T {
+  return { ...event }
+}

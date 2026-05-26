@@ -9,7 +9,7 @@ import {
   ScrollView, TextInput, Pressable, ViewStyle, TextStyle,
   ActivityIndicator, Dimensions,
 } from 'react-native'
-import Animated as ReanimatedAnimated, { useSharedValue, withTiming, useAnimatedProps } from 'react-native-reanimated'
+import ReanimatedAnimated, { useSharedValue, withTiming, useAnimatedProps } from 'react-native-reanimated'
 import { Svg, Circle } from 'react-native-svg'
 import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'

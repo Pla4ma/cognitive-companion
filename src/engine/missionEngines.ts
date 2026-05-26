@@ -161,22 +161,17 @@ export function generateCandidates(
   return candidates
 }
 
-export function selectBestCandidate(candidates: MissionCandidate[]): {
-  best: MissionCandidate | null
-  fallback: MissionCandidate | null
-  rejected: MissionCandidate[]
-} {
-  if (candidates.length === 0) return { best: null, fallback: null, rejected: [] }
+export function selectBestCandidate(candidates: MissionCandidate[]): MissionCandidate | null {
+  if (candidates.length === 0) return null
   const safe = candidates.filter((c) => c.scores.privacySafety >= 0.8)
   if (safe.length === 0) {
-    const fallback = candidates.find((c) => c.source === 'fallback') ?? candidates[0]
-    return { best: null, fallback, rejected: candidates }
+    return candidates.find((c) => c.source === 'fallback') ?? candidates[0]
   }
   const sorted = [...safe].sort((a, b) => b.totalScore - a.totalScore)
-  return { best: sorted[0], fallback: sorted.find((c) => c.source === 'fallback') ?? sorted[sorted.length - 1], rejected: sorted.slice(1) }
+  return sorted[0]
 }
 
-export function explainCandidateChoice(candidate: MissionCandidate): string {
+export function explainCandidateChoice(candidate: MissionCandidate, allCandidates?: MissionCandidate[]): string {
   const reasons: string[] = []
   if (candidate.scores.priorSuccess > 0.7) reasons.push('worked before')
   if (candidate.scores.stateFit > 0.7) reasons.push('matches your state')

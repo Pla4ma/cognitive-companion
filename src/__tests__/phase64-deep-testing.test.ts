@@ -107,13 +107,13 @@ describe('EmergencyStart', () => {
   test('returns a mission', () => {
     const result = getEmergencyStartMission()
     expect(result.mission).toBeDefined()
-    expect(result.mission.duration).toBeGreaterThan(0)
+    expect(result.mission.estimatedMinutes).toBeGreaterThan(0)
     expect(result.mission.exactAction.length).toBeGreaterThan(0)
   })
 
   test('returns state-specific mission', () => {
     const result = getEmergencyStartForState('overwhelmed')
-    expect(result.mission.duration).toBeLessThanOrEqual(5)
+    expect(result.mission.estimatedMinutes).toBeLessThanOrEqual(5)
   })
 })
 

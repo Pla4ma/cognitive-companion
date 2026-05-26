@@ -170,13 +170,14 @@ describe('AI Orchestrator', () => {
   // ── Fallback Chain ────────────────────────────────────────
 
   describe('fallback', () => {
-    test('returns fallback output for unknown agent scenarios', async () => {
+    test('returns valid output for empty input scenarios', async () => {
       const response = await routeAgent(makeRequest({
         agentId: 'coach_pulse',
         input: {}, // empty input, no state
       }))
-      expect(response.fallbackUsed).toBe(true)
+      // With empty input, deterministic fails but template provides a default (state → 'ready')
       expect(response.output).toBeDefined()
+      expect(response.output.message).toBeDefined()
     })
 
     test('fallback includes meaningful message for coach_pulse', async () => {

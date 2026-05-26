@@ -7,7 +7,7 @@ import { extractFromText, createContextCapsule, contextToMission } from '../serv
 import { generateSalvagePlan } from '../engine/missionEngines'
 import { scrubEvent } from '../services/analytics'
 import { executeAction, isPermissionGranted, grantPermission, revokePermission } from '../services/tools/toolExecutor'
-import { recordRetentionEvent, getComebackMessage, shouldShowPaywall } from '../services/retention/retentionEngine'
+import { recordRetentionEvent, getComebackMessage, shouldShowPaywall, createEmptyRetentionState } from '../services/retention/retentionEngine'
 import { compactArray, estimateSizeBytes } from '../services/performance/storageCompaction'
 import { selectBodyDoubleMode, getNextCheckIn, createBodyDoubleSession } from '../engine/bodyDoubleEngine'
 import { generateWeeklyStory } from '../services/weeklyStory/weeklyStoryEngine'
@@ -167,34 +167,38 @@ describe('Tool Executor', () => {
 describe('Retention Engine', () => {
   test('activates on first rescue', () => {
     let state = recordRetentionEvent(
-      { totalRescues: 0, activated: false, activationDate: null, totalSalvages: 0, totalComebacks: 0, currentStreak: 0, longestStreak: 0, lastRescueDate: null, retentionEvents: [] },
-      'rescue_completed'
+      createEmptyRetentionState(),
+      'rescue_completed',
+      [],
     )
     expect(state.activated).toBe(true)
-    expect(state.activationDate).toBeDefined()
+    expect(state.activationData).toBeDefined()
   })
 
   test('tracks streak', () => {
     let state = recordRetentionEvent(
-      { totalRescues: 0, activated: false, activationDate: null, totalSalvages: 0, totalComebacks: 0, currentStreak: 0, longestStreak: 0, lastRescueDate: null, retentionEvents: [] },
-      'rescue_completed'
+      createEmptyRetentionState(),
+      'rescue_completed',
+      [],
     )
-    state = recordRetentionEvent(state, 'rescue_completed')
+    state = recordRetentionEvent(state, 'rescue_completed', [])
     expect(state.totalRescues).toBe(2)
   })
 
   test('generates comeback message', () => {
-    const msg = getComebackMessage({ totalRescues: 5, totalComebacks: 2, lastRescueDate: '2025-01-01', activated: true, activationDate: '2025-01-01', totalSalvages: 0, currentStreak: 0, longestStreak: 3, retentionEvents: [] })
+    const state = createEmptyRetentionState()
+    const msg = getComebackMessage({ ...state, totalRescues: 5, totalComebacks: 2, lastRescueDate: '2025-01-01', activated: true })
     expect(msg).toContain('2')
   })
 
   test('does not show paywall before first rescue', () => {
-    const result = shouldShowPaywall({ totalRescues: 0, activated: false, activationDate: null, totalSalvages: 0, totalComebacks: 0, currentStreak: 0, longestStreak: 0, lastRescueDate: null, retentionEvents: [] }, 'premium_ai_missions')
+    const result = shouldShowPaywall(createEmptyRetentionState(), 'mission_limit')
     expect(result).toBe(false)
   })
 
   test('shows paywall after 3 rescues for premium feature', () => {
-    const result = shouldShowPaywall({ totalRescues: 5, activated: true, activationDate: '2025-01-01', totalSalvages: 0, totalComebacks: 0, currentStreak: 0, longestStreak: 0, lastRescueDate: '2025-01-01', retentionEvents: [] }, 'premium_ai_missions')
+    const state = createEmptyRetentionState()
+    const result = shouldShowPaywall({ ...state, totalRescues: 5, activated: true, lastRescueDate: '2025-01-01', activationData: { activatedAt: '2025-01-01', firstRescueState: 'stuck', firstRescueMinutes: 5, firstRescueProtocol: 'default', completedVsSalvaged: 'completed', timeFromInstallToActivation: 0 } }, 'mission_limit')
     expect(result).toBe(true)
   })
 })

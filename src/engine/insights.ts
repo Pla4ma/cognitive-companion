@@ -293,7 +293,7 @@ export function detectPlanningLoop(activities: AppActivity[]): PlanningLoopSigna
 
   if (urgentEdits >= 2 && !hasStartedUrgent) {
     indicators.push(`Edited ${urgentEdits}x in 5 min, no start`)
-    if (urgentEdits >= 4) severity = 'high'; else severity = 'medium'
+    if (urgentEdits >= 6) severity = 'high'; else severity = 'medium'
   }
   if (urgentGoals >= 2 && !hasStartedUrgent) {
     indicators.push(`Created ${urgentGoals} goals in 5 min, no action`)
@@ -331,7 +331,7 @@ export function detectPlanningLoop(activities: AppActivity[]): PlanningLoopSigna
   const timeSinceAction = lastAction ? (now - lastAction.timestamp) / 60000 : 999
   if (timeSinceAction >= LOOP_INDICATORS.minutesWithoutAction) {
     indicators.push(`${Math.round(timeSinceAction)} minutes without starting`)
-    if (timeSinceAction > 10) severity = 'high'
+    if (timeSinceAction > 10 && severity === 'low') severity = 'medium'
   }
 
   const detected = indicators.length >= 2

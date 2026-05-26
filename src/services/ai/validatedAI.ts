@@ -303,3 +303,102 @@ function buildFallback<T>(
     latencyMs,
   }
 }
+
+// ── Simple Output Validation ────────────────────────────────
+
+export interface OutputValidationResult {
+  accepted: boolean
+  usedFallback: boolean
+  sanitized: string
+  failureReason: string | null
+}
+
+/**
+ * Validate a simple AI output string.
+ * Returns whether the output is accepted or a fallback should be used.
+ */
+export function validateAIOutput(
+  output: string,
+  fallback: string,
+  options: { requiredStructure?: string },
+): OutputValidationResult {
+  // Empty output → use fallback
+  if (!output || output.trim().length === 0) {
+    return { accepted: false, usedFallback: true, sanitized: fallback, failureReason: 'empty_output' }
+  }
+
+  // Shame language check
+  if (checkForShameLanguage(output)) {
+    return { accepted: false, usedFallback: true, sanitized: fallback, failureReason: 'unsafe_language' }
+  }
+
+  // Accusatory/blame language check
+  if (/\b(you (are|'re) (avoiding|procrastinating|ignoring|neglecting|wasting|ruining|destroying))\b/i.test(output)) {
+    return { accepted: false, usedFallback: true, sanitized: fallback, failureReason: 'unsafe_language' }
+  }
+
+  // Structure check (if required)
+  if (options.requiredStructure === 'mission') {
+    const q = validateMissionQuality(output)
+    if (q.quality === 'low') {
+      return { accepted: false, usedFallback: true, sanitized: fallback, failureReason: 'vague_mission' }
+    }
+  }
+
+  return { accepted: true, usedFallback: false, sanitized: output, failureReason: null }
+}
+
+// ── Mission Quality Validation ─────────────────────────────
+
+export interface MissionQualityResult {
+  quality: 'high' | 'medium' | 'low'
+  issues: string[]
+}
+
+const VAGUE_PATTERNS = [
+  /^do your best$/i,
+  /^try hard$/i,
+  /^just do it$/i,
+  /^good luck$/i,
+  /^you can do it$/i,
+]
+
+const SPECIFIC_INDICATORS = [
+  /\b(open|write|read|type|click|send|create|make|put|take|grab|find|start)\b/i,
+  /\b(minute|seconds?|timer)\b/i,
+  /\b(sentence|paragraph|line|word|page|document|essay|email)\b/i,
+  /\b(one|two|three|first|single)\b/i,
+]
+
+/**
+ * Validate the quality of a mission string.
+ * High quality = specific, actionable, concrete.
+ */
+export function validateMissionQuality(mission: string): MissionQualityResult {
+  if (!mission || mission.trim().length === 0) {
+    return { quality: 'low', issues: ['Empty mission'] }
+  }
+
+  const issues: string[] = []
+  let specificityScore = 0
+
+  // Check for vague patterns
+  for (const pattern of VAGUE_PATTERNS) {
+    if (pattern.test(mission.trim())) {
+      issues.push('Mission is too vague')
+      return { quality: 'low', issues }
+    }
+  }
+
+  // Score specificity
+  for (const indicator of SPECIFIC_INDICATORS) {
+    if (indicator.test(mission)) specificityScore++
+  }
+
+  if (mission.length < 10) issues.push('Mission is too short')
+  if (specificityScore === 0) issues.push('Mission lacks specific action words')
+
+  if (specificityScore >= 2 && mission.length >= 15) return { quality: 'high', issues }
+  if (specificityScore >= 1) return { quality: 'medium', issues }
+  return { quality: 'low', issues }
+}
