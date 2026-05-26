@@ -49,7 +49,11 @@
           }
         ]
       },
-      "associatedDomains": []
+      "associatedDomains": [],
+      "widgetExtension": {
+        "name": "IntentWidget",
+        "bundleIdentifier": "com.intent.app.widget"
+      }
     },
     "android": {
       "adaptiveIcon": {
