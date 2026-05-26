@@ -9,8 +9,12 @@ import {
   ScrollView, TextInput, Pressable, ViewStyle, TextStyle,
   ActivityIndicator, Dimensions,
 } from 'react-native'
+import Animated as ReanimatedAnimated, { useSharedValue, withTiming, useAnimatedProps } from 'react-native-reanimated'
+import { Svg, Circle } from 'react-native-svg'
 import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
+
+const AnimatedCircle = ReanimatedAnimated.createAnimatedComponent(Circle)
 import { colors, spacing, radius, typography, shadows, animation, glass } from '../theme'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
@@ -377,35 +381,48 @@ export function ProgressRing({
   color = colors.brand[500], backgroundColor = colors.border.subtle,
   children,
 }: ProgressRingProps) {
-  const animatedValue = useRef(new Animated.Value(0)).current
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
+  const progressValue = useSharedValue(0)
 
   useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: Math.min(Math.max(progress, 0), 1),
-      duration: animation.slow,
-      useNativeDriver: false,
-    }).start()
+    progressValue.value = withTiming(Math.min(Math.max(progress, 0), 1), { duration: 950 })
   }, [progress])
-  // Animated border segments based on progress using animatedValue
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: circumference * (1 - progressValue.value),
+  }))
+
   return (
-    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={{
-        position: 'absolute',
-        width: size, height: size, borderRadius: size / 2,
-        borderWidth: strokeWidth, borderColor: backgroundColor,
-      }} />
-      <Animated.View style={{
-        position: 'absolute',
-        width: size, height: size, borderRadius: size / 2,
-        borderWidth: strokeWidth, borderColor: color,
-        borderTopColor: 'transparent',
-        borderRightColor: animatedValue.interpolate({ inputRange: [0, 0.25, 0.2501], outputRange: ['transparent', 'transparent', color] }) as any,
-        borderBottomColor: animatedValue.interpolate({ inputRange: [0, 0.5, 0.501], outputRange: ['transparent', 'transparent', color] }) as any,
-        borderLeftColor: animatedValue.interpolate({ inputRange: [0, 0.75, 0.7501], outputRange: ['transparent', 'transparent', color] }) as any,
-        transform: [{ rotate: '-90deg' }],
-      }} />
+    <View
+      accessible={true}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
+      accessibilityLabel={`Session progress: ${Math.round(progress * 100)}% complete`}
+      style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute' }}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          animatedProps={animatedProps}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
       {children}
     </View>
   )
