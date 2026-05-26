@@ -17,7 +17,7 @@ export interface UISlice {
 
 export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
   isLoading: false,
-  currentRoute: '/',
+  currentRoute: '/(tabs)',
   skipCount: 0,
 
   setIsLoading: (v) => set({ isLoading: v }),

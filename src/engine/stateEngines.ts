@@ -250,7 +250,12 @@ interface EmergencyStartResult {
 
 interface ProtocolSuccess { state: UserState; action: string; duration: number; successCount: number }
 
+/** Module-level: tracks the last successful protocol for emergency start fallback.
+ *  Use `resetLastSuccessfulProtocol()` (exported) to clear between test runs. */
 let lastSuccessfulProtocol: ProtocolSuccess | null = null
+
+/** Clear the cached last-successful protocol. Useful for tests and fresh sessions. */
+export function resetLastSuccessfulProtocol(): void { lastSuccessfulProtocol = null }
 
 export function recordProtocolSuccess(state: UserState, action: string, duration: number): void {
   if (lastSuccessfulProtocol?.state === state && lastSuccessfulProtocol?.action === action) {

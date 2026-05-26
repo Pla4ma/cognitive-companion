@@ -29,7 +29,8 @@ import {
   getUserPatternsFromHistory,
   type NotificationType,
 } from './notificationScheduler'
-import { checkPermission } from './consent'
+import { checkPermission, type ConsentLedger } from './consent'
+import type { UserProfile } from '../types'
 
 // ── Configure notification handler ────────────────────────
 
@@ -46,52 +47,7 @@ Notifications.setNotificationHandler({
 // ── Notification Permission Strategy (Audit Section 2.3) ──────
 // Ask AFTER first rescue, not before. Show in-app context before OS dialog.
 
-import { Alert } from 'react-native'
-import { useAppStore } from '../store'
 
-/**
- * Request notification permissions with user-facing context.
- * Shows an in-app alert explaining WHY before triggering the OS permission dialog.
- * Should be called after first successful rescue session.
- */
-export async function requestNotificationPermissionsWithContext(): Promise<boolean> {
-  return new Promise((resolve) => {
-    Alert.alert(
-      'Stay Ahead of Your Hardest Hours',
-      "INTENT can warn you before your drift windows — the times you usually lose focus.\n\nNo marketing. No streaks. Just 'your 2pm is coming.'\n\nAllow notifications?",
-      [
-        {
-          text: 'Not Now',
-          style: 'cancel',
-          onPress: () => {
-            // Record the decline for analytics
-            try {
-              const state = useAppStore.getState()
-              state.recordRetention?.('notification_declined_post_rescue', {})
-            } catch {}
-            resolve(false)
-          },
-        },
-        {
-          text: 'Allow',
-          style: 'default',
-          onPress: async () => {
-            const granted = await requestNotificationPermissions()
-            if (granted) {
-              // Mark notification consent in consent ledger
-              try {
-                const state = useAppStore.getState()
-                state.updateConsent?.('notifications_smart', true, 'post_rescue', 'Granted after first rescue')
-                state.recordRetention?.('notification_accepted_post_rescue', {})
-              } catch {}
-            }
-            resolve(granted)
-          },
-        },
-      ],
-    )
-  })
-}
 
 // ── Permissions ────────────────────────────────────────────
 
@@ -282,17 +238,13 @@ export async function setupNotificationCategories() {
 // ── Consent Gate ─────────────────────────────────────────────
 // All smart notifications require 'notifications_smart' consent
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _consentLedger: any = null
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _userProfile: any = null
+let _consentLedger: ConsentLedger | null = null
+let _userProfile: UserProfile | null = null
 
 /** Inject consent dependencies — call once at app startup */
 export function setNotificationConsentContext(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ledger: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  user: any,
+  ledger: ConsentLedger,
+  user: UserProfile,
 ): void {
   _consentLedger = ledger
   _userProfile = user
@@ -702,4 +654,45 @@ export async function unregisterBackgroundNotificationTask(): Promise<void> {
   } catch (err) {
     logger.error('[NotificationBackground] Failed to unregister task:', err)
   }
+}
+
+/**
+ * Schedule a weekly narrative notification for Sunday at 7pm.
+ * Shows the first sentence of the user's weekly narrative.
+ */
+export async function scheduleWeeklyNarrative(
+  narrative: string,
+  userName: string | null,
+): Promise<string | null> {
+  if (!hasSmartNotificationConsent()) return null
+
+  const now = new Date()
+  const daysUntilSunday = (7 - now.getDay()) % 7 || 7
+  const target = new Date()
+  target.setDate(now.getDate() + daysUntilSunday)
+  target.setHours(19, 0, 0, 0)
+
+  // If it's already Sunday past 7pm, schedule for next week
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 7)
+  }
+
+  const firstSentence = narrative.split('.')[0] + '.'
+  const title = userName ? `${userName}'s week →` : 'Your week →'
+
+  const identifier = await Notifications.scheduleNotificationAsync({
+    content: {
+      title,
+      body: firstSentence,
+      data: { screen: 'progress', type: 'weekly_narrative' },
+      sound: 'default',
+      categoryIdentifier: 'weekly_narrative',
+    },
+    trigger: {
+      date: target,
+      channelId: 'focus-reminders',
+    },
+  })
+
+  return identifier
 }

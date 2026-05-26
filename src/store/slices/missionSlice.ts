@@ -5,10 +5,7 @@
 
 import { StateCreator } from 'zustand'
 import type { Mission, MicroMission, MissionStatus, MicroMissionStatus } from '../../types'
-
-function uid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
-}
+import { uid } from '../../utils/uid'
 
 export interface MissionSlice {
   missions: Mission[]

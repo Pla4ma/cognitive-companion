@@ -6,58 +6,6 @@
 import type { FallbackTier } from './types'
 import type { UserState, EnergyLevel, BlockerType } from '../../types'
 
-/**
- * Fallback hierarchy for any agent output.
- * Always produces a usable result — never returns null/undefined.
- */
-export function resolveWithFallback<T>(context: {
-  tier: FallbackTier
-  deterministicFn: () => T | null
-  templateFn: () => T | null
-  cachedFn: () => T | null
-  onDeviceAIFn: (() => T | null) | null
-  remoteAIFn: (() => Promise<T | null>) | null
-  userChoiceFn: (() => T | null) | null
-  defaultValue: T
-}): T {
-  // Tier 1: Deterministic rules (always available)
-  const deterministic = context.deterministicFn()
-  if (deterministic !== null) return deterministic
-
-  // Tier 2: Local templates
-  if (context.tier === 'local_templates' || context.tier === 'cached_patterns' ||
-      context.tier === 'on_device_ai' || context.tier === 'remote_ai' || context.tier === 'user_choice') {
-    const template = context.templateFn()
-    if (template !== null) return template
-  }
-
-  // Tier 3: Cached patterns
-  if (context.tier === 'cached_patterns' || context.tier === 'on_device_ai' ||
-      context.tier === 'remote_ai' || context.tier === 'user_choice') {
-    const cached = context.cachedFn()
-    if (cached !== null) return cached
-  }
-
-  // Tier 4: On-device AI (if available)
-  if ((context.tier === 'on_device_ai' || context.tier === 'remote_ai' || context.tier === 'user_choice')
-      && context.onDeviceAIFn) {
-    const onDevice = context.onDeviceAIFn()
-    if (onDevice !== null) return onDevice
-  }
-
-  // Tier 5: Remote AI (async — caller must handle)
-  // This is handled separately since it's async
-
-  // Tier 6: User choice
-  if (context.tier === 'user_choice' && context.userChoiceFn) {
-    const userChoice = context.userChoiceFn()
-    if (userChoice !== null) return userChoice
-  }
-
-  // Ultimate fallback: default value
-  return context.defaultValue
-}
-
 // ── Coach Pulse Fallbacks ───────────────────────────────────
 
 export function getDeterministicCoachPulse(

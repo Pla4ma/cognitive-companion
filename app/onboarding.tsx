@@ -7,7 +7,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Dimensions, ScrollView, KeyboardAvoidingView, Platform,
+  Dimensions, ScrollView, KeyboardAvoidingView, Platform, AppState,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -17,7 +17,10 @@ import { getProtocolForState, RESCUE_PROTOCOLS } from '../src/types/rescue'
 import { compileMission } from '../src/engine/missionCompiler'
 import { useAppStore } from '../src/store'
 import type { UserState, MicroMission, CompiledMission } from '../src/types'
+import { processSystemEvent } from '../src/services/systemBridge'
 
+import { uid } from '../src/utils/uid'
+import { formatTime } from '../src/utils/formatTime'
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 // ── State options for step 3 ────────────────────────────────
@@ -31,15 +34,7 @@ const STATE_OPTIONS: { id: UserState; emoji: string; label: string; color: strin
 ]
 
 // ── Helpers ─────────────────────────────────────────────────
-function uid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
-}
-
-function formatTimer(totalSeconds: number): string {
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
+// uid and formatTime imported from shared utilities
 
 // ══════════════════════════════════════════════════════════════
 // COMPONENT
@@ -70,6 +65,16 @@ export default function Onboarding() {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [])
+
+  // ── Pause timer when app goes to background ─────────────
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'background' && timerActive) {
+        setTimerActive(false)
+      }
+    })
+    return () => sub.remove()
+  }, [timerActive])
 
   // ── Timer countdown ────────────────────────────────────────
   useEffect(() => {
@@ -102,7 +107,7 @@ export default function Onboarding() {
     if (user) {
       // Update existing user name if provided
       if (displayName) {
-        updateProfile({ display_name: displayName, onboarding_step: 1 })
+        updateProfile({ display_name: displayName, onboarding_step: 0 })
       }
       return
     }
@@ -114,7 +119,7 @@ export default function Onboarding() {
       avatar_url: null,
       push_style: 'gentle' as const,
       onboarding_complete: false,
-      onboarding_step: 1 as const,
+      onboarding_step: 0 as const,
       plan: 'free' as const,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
       body_double_enabled: false,
@@ -216,6 +221,29 @@ export default function Onboarding() {
     // Add momentum
     addMomentumEvent('session_completed', 15, 'Onboarding first rescue')
 
+    // Fire system event for coordinated response
+    try {
+      const session = useAppStore.getState().sessions[useAppStore.getState().sessions.length - 1]
+      if (session) {
+        processSystemEvent(
+          { type: 'session_completed', session },
+          {
+            retentionState: useAppStore.getState().retentionState,
+            sessions: useAppStore.getState().sessions,
+            patterns: [],
+            distractions: [],
+            momentumEvents: useAppStore.getState().momentumEvents,
+            missions: useAppStore.getState().missions,
+            microMissions: useAppStore.getState().microMissions,
+            brainDumps: [],
+            userPatterns: null,
+            quietHours: null,
+            userName: useAppStore.getState().user?.display_name ?? null,
+          },
+        )
+      }
+    } catch {}
+
     // Update onboarding progress
     updateProfile({ onboarding_step: 4 })
 
@@ -235,6 +263,27 @@ export default function Onboarding() {
   }, [updateConsent])
 
   const finishOnboarding = useCallback(() => {
+    // Fire app-open event for ambient engine activation
+    try {
+      const state = useAppStore.getState()
+      processSystemEvent(
+        { type: 'app_opened', source: 'cold_start' },
+        {
+          retentionState: state.retentionState,
+          sessions: state.sessions,
+          patterns: [],
+          distractions: [],
+          momentumEvents: state.momentumEvents,
+          missions: state.missions,
+          microMissions: state.microMissions,
+          brainDumps: [],
+          userPatterns: null,
+          quietHours: null,
+          userName: state.user?.display_name ?? null,
+        },
+      )
+    } catch {}
+
     completeOnboarding()
     router.replace('/(tabs)/')
   }, [completeOnboarding, router])
@@ -315,7 +364,7 @@ export default function Onboarding() {
                 <View key={i} style={[styles.dot, i <= 1 && styles.dotActive]} />
               ))}
             </View>
-            <TouchableOpacity onPress={handleSkipName}>
+            <TouchableOpacity onPress={handleSkipName} style={{ padding: 16, minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}>
               <Text style={styles.skipLink}>Skip</Text>
             </TouchableOpacity>
           </View>
@@ -457,7 +506,7 @@ export default function Onboarding() {
           {/* Timer */}
           <View style={styles.timerContainer}>
             <Text style={[styles.timerText, timerSeconds <= 10 && timerActive && styles.timerUrgent]}>
-              {formatTimer(timerSeconds)}
+              {formatTime(timerSeconds)}
             </Text>
             <Text style={styles.timerLabel}>
               {timerActive

@@ -5,6 +5,7 @@
 
 import type {
   PersonalDriftGraph, DriftGraphEdge, DriftGraphInsight, DriftConfidence,
+  DriftGraphNode,
   UserState, EnergyLevel, RescueProtocolId,
 } from '../types'
 import { RESCUE_PROTOCOLS } from '../types/rescue'
@@ -24,13 +25,13 @@ export interface GraphEvent {
 
 export function createEmptyGraph(userId: string): PersonalDriftGraph {
   return {
-    userId, nodes: new Map(), edges: [], insights: [],
+    userId, nodes: {}, edges: [], insights: [],
     lastComputed: new Date().toISOString(), totalEvents: 0,
   }
 }
 
 export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): PersonalDriftGraph {
-  const newNodes = new Map(graph.nodes)
+  const newNodes: Record<string, DriftGraphNode> = { ...graph.nodes }
   const newEdges = [...graph.edges]
   const now = new Date().toISOString()
   const eventHour = new Date(event.timestamp).getHours()
@@ -46,17 +47,17 @@ export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): Perso
   const hourKey = `hour:${String(eventHour).padStart(2, '0')}`
   const dayKindKey = isWeekend ? 'day_kind:weekend' : 'day_kind:weekday'
 
-  if (!newNodes.has(stateKey)) newNodes.set(stateKey, { kind: 'state', value: event.state })
-  if (!newNodes.has(protocolKey)) newNodes.set(protocolKey, { kind: 'protocol', value: event.protocolId })
-  if (!newNodes.has(outcomeKey)) newNodes.set(outcomeKey, { kind: 'outcome', value: event.outcome })
-  if (!newNodes.has(energyKey)) newNodes.set(energyKey, { kind: 'energy', value: event.energy })
-  if (!newNodes.has(surfaceKey)) newNodes.set(surfaceKey, { kind: 'surface', value: event.surface })
-  if (!newNodes.has(durationKey)) newNodes.set(durationKey, { kind: 'duration', value: event.durationMinutes })
-  if (!newNodes.has(hourKey)) newNodes.set(hourKey, { kind: 'time_of_day', value: `${String(eventHour).padStart(2, '0')}:00` })
-  if (!newNodes.has(dayKindKey)) newNodes.set(dayKindKey, { kind: 'time_of_day', value: isWeekend ? 'weekend' : 'weekday' })
+  if (!(stateKey in newNodes)) newNodes[stateKey] = { kind: 'state', value: event.state }
+  if (!(protocolKey in newNodes)) newNodes[protocolKey] = { kind: 'protocol', value: event.protocolId }
+  if (!(outcomeKey in newNodes)) newNodes[outcomeKey] = { kind: 'outcome', value: event.outcome }
+  if (!(energyKey in newNodes)) newNodes[energyKey] = { kind: 'energy', value: event.energy }
+  if (!(surfaceKey in newNodes)) newNodes[surfaceKey] = { kind: 'surface', value: event.surface }
+  if (!(durationKey in newNodes)) newNodes[durationKey] = { kind: 'duration', value: event.durationMinutes }
+  if (!(hourKey in newNodes)) newNodes[hourKey] = { kind: 'time_of_day', value: `${String(eventHour).padStart(2, '0')}:00` }
+  if (!(dayKindKey in newNodes)) newNodes[dayKindKey] = { kind: 'time_of_day', value: isWeekend ? 'weekend' : 'weekday' }
   if (event.blocker) {
     const blockerKey = `blocker:${event.blocker}`
-    if (!newNodes.has(blockerKey)) newNodes.set(blockerKey, { kind: 'blocker', value: event.blocker })
+    if (!(blockerKey in newNodes)) newNodes[blockerKey] = { kind: 'blocker', value: event.blocker }
   }
 
   const updateEdge = (from: string, to: string, label: string) => {
@@ -184,18 +185,17 @@ export function analyzeDriftChains(graph: PersonalDriftGraph): DriftChain[] {
   const chains: DriftChain[] = []
 
   // Find state→blocker→outcome:abandoned patterns
-  const stateBlockers = new Map<string, Map<string, number>>()
+  const stateBlockers: Record<string, Record<string, number>> = {}
   for (const edge of graph.edges) {
     if (edge.from.startsWith('state:') && edge.to.startsWith('blocker:')) {
       const state = edge.from.replace('state:', '')
       const blocker = edge.to.replace('blocker:', '')
-      if (!stateBlockers.has(state)) stateBlockers.set(state, new Map())
-      stateBlockers.get(state)!.set(blocker, (stateBlockers.get(state)!.get(blocker) || 0) + edge.eventCount)
+      if (!(state in stateBlockers)) stateBlockers[state] = {}
+      stateBlockers[state][blocker] = (stateBlockers[state][blocker] || 0) + edge.eventCount
     }
   }
-
-  for (const [state, blockers] of stateBlockers) {
-    for (const [blocker, freq] of blockers) {
+  for (const [state, blockers] of Object.entries(stateBlockers)) {
+    for (const [blocker, freq] of Object.entries(blockers)) {
       // Find what protocol follows this state+blocker pair
       const protocolEdges = graph.edges.filter(e =>
         e.from === `state:${state}` && e.to.startsWith('protocol:')
@@ -267,9 +267,11 @@ export function computeInsights(graph: PersonalDriftGraph): DriftGraphInsight[] 
         const existing = durMap.find(x => x[0] === dur)
         if (existing) {
           existing[1].total += edge.eventCount
-          if (edge.to === 'outcome:completed') existing[1].completed += edge.eventCount
+          const completedCount = graph.edges.filter(e => e.from === edge.to && e.to === 'outcome:completed').reduce((s, e) => s + e.eventCount, 0)
+          existing[1].completed += completedCount
         } else {
-          durMap.push([dur, { completed: 0, total: edge.eventCount }])
+          const completedCount = graph.edges.filter(e => e.from === edge.to && e.to === 'outcome:completed').reduce((s, e) => s + e.eventCount, 0)
+          durMap.push([dur, { completed: completedCount, total: edge.eventCount }])
         }
       }
       let bestDur: number | null = null
@@ -385,7 +387,14 @@ export function getBestDuration(graph: PersonalDriftGraph, state: UserState): nu
     const dur = parseInt(edge.to.replace('duration:', ''), 10)
     if (isNaN(dur)) continue
     const existing = durMap.find(x => x[0] === dur)
-    if (existing) { existing[1].total += edge.eventCount } else { durMap.push([dur, { completed: 0, total: edge.eventCount }]) }
+    if (existing) {
+      existing[1].total += edge.eventCount
+      const completedCount = graph.edges.filter(e => e.from === edge.to && e.to === 'outcome:completed').reduce((s, e) => s + e.eventCount, 0)
+      existing[1].completed += completedCount
+    } else {
+      const completedCount = graph.edges.filter(e => e.from === edge.to && e.to === 'outcome:completed').reduce((s, e) => s + e.eventCount, 0)
+      durMap.push([dur, { completed: completedCount, total: edge.eventCount }])
+    }
   }
   let bestDur: number | null = null
   let bestRate = -1
@@ -399,7 +408,7 @@ export function getBestDuration(graph: PersonalDriftGraph, state: UserState): nu
 export function getStrongestSignal(graph: PersonalDriftGraph): string | null {
   const counts: [string, number][] = []
   for (const edge of graph.edges) {
-    if (edge.to === 'outcome:abandoned') {
+    if (edge.from.startsWith('state:') && edge.to === 'outcome:abandoned') {
       const state = edge.from.replace('state:', '')
       const existing = counts.find(x => x[0] === state)
       if (existing) existing[1] += edge.eventCount; else counts.push([state, edge.eventCount])

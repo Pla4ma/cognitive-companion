@@ -30,6 +30,7 @@ import { useAppStore } from '../src/store'
 import { FOCUS_TYPES, FocusType } from '../src/types'
 import { colors, spacing, radius, typography, shadows, animation, layout } from '../src/theme'
 import { Screen, Button, ProgressRing } from '../src/components'
+import { formatTime } from '../src/utils/formatTime'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -306,11 +307,7 @@ export default function FocusScreen() {
     }
   }, [distractionInput, captureDistraction])
 
-  const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60)
-    const secs = totalSeconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
+  // formatTime imported from shared utility
 
   // ── Completion View ──
   if (showComplete && activeSession) {

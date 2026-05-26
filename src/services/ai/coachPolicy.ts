@@ -228,7 +228,7 @@ export function adaptResponse(
   return adapted.trim()
 }
 
-function applyPushStyle(text: string, style: PushStyle): string {
+export function applyPushStyle(text: string, style: PushStyle): string {
   switch (style) {
     case 'gentle':
       return text
@@ -281,9 +281,11 @@ export function decideCoachResponse(
   missionAttemptCount: number,
 ): CoachPolicyDecision {
   const lower = userMessage.toLowerCase()
+  const hasWord = (word: string) => new RegExp(`\\b${word}\\b`).test(lower)
+  const hasNegation = (word: string) => new RegExp(`\\b(?:not|don't|doesn't|didn't|can't|won't|never)\\s+${word}`).test(lower)
 
   // Safety check — emotional spiral
-  if (state === 'shame_spiral' || lower.includes('hate myself') || lower.includes('worthless')) {
+  if (state === 'shame_spiral' || lower.includes('hate myself') || hasWord('worthless')) {
     return {
       responseType: 'safety_redirect',
       maxSentences: 3,
@@ -309,7 +311,7 @@ export function decideCoachResponse(
   }
 
   // Overwhelmed → shrink scope
-  if (state === 'overwhelmed' || lower.includes('too much') || lower.includes('overwhelm')) {
+  if (state === 'overwhelmed' || lower.includes('too much') || hasWord('overwhelm')) {
     return {
       responseType: 'shrink_scope',
       maxSentences: 2,
@@ -322,7 +324,7 @@ export function decideCoachResponse(
   }
 
   // Distracted → capture and return
-  if (lower.includes('distracted') || lower.includes('went off') || lower.includes('lost focus')) {
+  if (hasWord('distracted') || lower.includes('went off') || lower.includes('lost focus')) {
     return {
       responseType: 'capture_return',
       maxSentences: 2,
@@ -335,7 +337,7 @@ export function decideCoachResponse(
   }
 
   // Tired → rest or tiny action
-  if (state === 'tired' || lower.includes('exhausted') || lower.includes('no energy')) {
+  if (state === 'tired' || hasWord('exhausted') || lower.includes('no energy')) {
     return {
       responseType: 'rest_offer',
       maxSentences: 2,
@@ -348,7 +350,7 @@ export function decideCoachResponse(
   }
 
   // Motivation → 1 sentence + CTA
-  if (lower.includes('motivat') || lower.includes('inspire') || lower.includes('can\'t do')) {
+  if (/\bmotivat/i.test(lower) || hasWord('inspire') || lower.includes("can't do")) {
     return {
       responseType: 'motivation_one',
       maxSentences: 1,
@@ -361,7 +363,7 @@ export function decideCoachResponse(
   }
 
   // Plan → minimum to start
-  if (lower.includes('plan') || lower.includes('organize') || lower.includes('think about')) {
+  if ((hasWord('plan') || hasWord('organize') || lower.includes('think about')) && !hasNegation('plan')) {
     return {
       responseType: 'plan_minimum',
       maxSentences: 3,
@@ -374,7 +376,7 @@ export function decideCoachResponse(
   }
 
   // Big help → mission thread
-  if (lower.includes('help me') || lower.includes('big task') || lower.includes('project')) {
+  if (lower.includes('help me') || hasWord('task') || hasWord('project')) {
     return {
       responseType: 'mission_thread',
       maxSentences: 3,
@@ -515,20 +517,21 @@ export function decideCoachResponseV2(
   memory: CoachMemory,
 ): CoachPolicyDecision {
   const base = decideCoachResponse(state, userMessage, hasActiveMission, missionAttemptCount)
+  const result = { ...base }
 
   // 1. If body double is active, always offer it
   if (memory.sessionContext.bodyDoubleActive) {
-    base.shouldOfferBodyDouble = true
+    result.shouldOfferBodyDouble = true
   }
 
   // 2. If user is in a session and distracted, use capture_return
   if (memory.sessionContext.isInSession && state === 'distracted') {
-    base.responseType = 'capture_return'
-    base.buttons = ['Back to session', 'Capture distraction', 'End session']
+    result.responseType = 'capture_return'
+    result.buttons = ['Back to session', 'Capture distraction', 'End session']
   }
 
   // 3. Avoid advice types user has repeatedly ignored
-  if (memory.ignoredAdviceTypes.has(base.responseType)) {
+  if (memory.ignoredAdviceTypes.has(result.responseType)) {
     const alternatives: Record<CoachResponseType, CoachResponseType> = {
       tiny_action: 'motivation_one',
       shrink_scope: 'plan_minimum',
@@ -539,36 +542,36 @@ export function decideCoachResponseV2(
       mission_thread: 'plan_minimum',
       safety_redirect: 'tiny_action',
     }
-    const altType = alternatives[base.responseType]
+    const altType = alternatives[result.responseType]
     if (altType && !memory.ignoredAdviceTypes.has(altType)) {
-      base.responseType = altType
-      base.cta = 'Try this approach'
-      base.buttons = ['Try this approach', 'Something else', 'Make smaller']
+      result.responseType = altType
+      result.cta = 'Try this approach'
+      result.buttons = ['Try this approach', 'Something else', 'Make smaller']
     }
   }
 
   // 4. Protocol-aware adaptation
   if (memory.sessionContext.currentProtocol === '2-minute-start' && missionAttemptCount > 0) {
-    base.responseType = 'motivation_one'
-    base.maxSentences = 1
-    base.cta = 'Just start'
-    base.buttons = ['Just start', 'Shrink further', 'Body double']
+    result.responseType = 'motivation_one'
+    result.maxSentences = 1
+    result.cta = 'Just start'
+    result.buttons = ['Just start', 'Shrink further', 'Body double']
   }
 
   if (memory.sessionContext.currentProtocol === 'brain-dump' && missionAttemptCount > 0) {
-    base.responseType = 'plan_minimum'
-    base.cta = 'Pick one item'
-    base.buttons = ['Pick one item', 'Dump more', 'Start timer']
+    result.responseType = 'plan_minimum'
+    result.cta = 'Pick one item'
+    result.buttons = ['Pick one item', 'Dump more', 'Start timer']
   }
 
   // 5. If last action was missed, adjust
   if (memory.sessionContext.lastMissedAction) {
-    base.shouldOfferShrink = true
-    base.cta = 'Make it even smaller'
+    result.shouldOfferShrink = true
+    result.cta = 'Make it even smaller'
   }
 
   // 6. If user has preferred actions, bias toward them
-  if (memory.preferredActionTypes.length > 0 && !memory.ignoredAdviceTypes.has(base.responseType)) {
+  if (memory.preferredActionTypes.length > 0 && !memory.ignoredAdviceTypes.has(result.responseType)) {
     // Try preferred type if it's different but applicable
     const preferred = memory.preferredActionTypes[0] as CoachResponseType
     const preferredTemplates: Partial<Record<CoachResponseType, UserState[]>> = {
@@ -580,11 +583,11 @@ export function decideCoachResponseV2(
     }
     const applicableStates = preferredTemplates[preferred]
     if (applicableStates?.includes(state)) {
-      base.responseType = preferred
+      result.responseType = preferred
     }
   }
 
-  return base
+  return result
 }
 
 // v4: Generate body-double-specific coaching adaptation

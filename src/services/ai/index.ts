@@ -10,6 +10,12 @@ import { hasConsented } from '../consent'
 import { decideCoachResponse, getResponseTemplate } from './coachPolicy'
 import { streamChat } from '../ai'
 
+const VALID_USER_STATES: ReadonlySet<string> = new Set<UserState>([
+  'avoiding', 'overwhelmed', 'stuck', 'tired', 'distracted', 'anxious',
+  'scattered', 'ready', 'bored', 'perfectionism', 'unclear', 'time_pressure',
+  'low_confidence', 'shame_spiral', 'fake_productivity', 'planning_loop', 'doomscroll_risk',
+])
+
 // Orchestrator — deterministic-first routing pipeline
 export {
   routeAgent,
@@ -194,5 +200,8 @@ function inferUserState(message: string, recentAvoidance: AvoidanceState | null)
   }
 
   // Fall back to recent avoidance state or 'ready'
-  return (recentAvoidance as UserState) || 'ready'
+  if (recentAvoidance && VALID_USER_STATES.has(recentAvoidance)) {
+    return recentAvoidance as UserState
+  }
+  return 'ready'
 }

@@ -115,7 +115,7 @@ describe('Personal Drift Graph', () => {
     const graph = createEmptyGraph('user1')
     expect(graph.userId).toBe('user1')
     expect(graph.totalEvents).toBe(0)
-    expect(graph.nodes.size).toBe(0)
+    expect(Object.keys(graph.nodes).length).toBe(0)
   })
 
   test('records events and updates nodes', () => {
@@ -132,8 +132,8 @@ describe('Personal Drift Graph', () => {
     }
     graph = recordEvent(graph, event)
     expect(graph.totalEvents).toBe(1)
-    expect(graph.nodes.has('state:avoiding')).toBe(true)
-    expect(graph.nodes.has('protocol:two_minute_ignition')).toBe(true)
+    expect('state:avoiding' in graph.nodes).toBe(true)
+    expect('protocol:two_minute_ignition' in graph.nodes).toBe(true)
     expect(graph.edges.length).toBeGreaterThan(0)
   })
 

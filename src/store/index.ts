@@ -90,11 +90,13 @@ export const useAppStore = create<AppState>()(
       name: 'intent-storage',
       storage: createJSONStorage(() => mmkvStorage),
       version: 2,
-      migrate: (persistedState: any, version: number) => {
+      // TODO: Type `persistedState` properly — it's the partialized subset of AppState.
+      // Using `Partial<AppState>` would be more precise but requires careful migration typing.
+      migrate: (persistedState: Record<string, unknown>, version: number) => {
         const state = { ...persistedState }
         if (version < 1) {
           // v0 → v1: sessions had no 'mode' field
-          state.sessions = (state.sessions ?? []).map((s: any) => ({
+          state.sessions = ((state.sessions ?? []) as Array<Record<string, unknown>>).map((s) => ({
             ...s,
             mode: s.mode ?? 'focus',
           }))
@@ -110,6 +112,9 @@ export const useAppStore = create<AppState>()(
         }
         return state
       },
+      // ⚠️ PERSISTENCE INCLUDE-LIST: when adding new state fields to any slice,
+      // add them here if they should survive app restarts. Fields not listed here
+      // (e.g., isLoading, currentRoute) are ephemeral and reset on launch.
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,

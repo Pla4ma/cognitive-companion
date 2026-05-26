@@ -4,17 +4,19 @@
 // ══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert, ViewStyle } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert, ViewStyle, AccessibilityInfo } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BlurView } from 'expo-blur'
 import { Pause, Play, Square, CheckCircle2, SkipForward, AlertTriangle, Brain, X } from 'lucide-react-native'
 import { useAppStore } from '../src/store'
+import { formatTime } from '../src/utils/formatTime'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { Screen, Button, ProgressRing, ProPaywall } from '../src/components'
 import { showSessionCompleteNotification, requestNotificationPermissionsWithContext } from '../src/services/notifications'
 import { getSocialProofStat, getActivationCelebration } from '../src/services/retention/retentionEngine'
 import type { UserState } from '../src/types'
 import * as Haptics from 'expo-haptics'
+import { useRouter } from 'expo-router'
 import { usePostSessionFlow } from '../src/hooks/usePostSessionFlow'
 import { useProgressiveProfiling } from '../src/hooks/useProgressiveProfiling'
 import { ProgressiveProfiling } from '../src/components/ProgressiveProfiling'
@@ -33,6 +35,7 @@ export default function LiveMissionScreen() {
   const microMissions = useAppStore((s) => s.microMissions)
   const sessionCount = useAppStore((s) => s.sessionCount)
   const plan = useAppStore((s) => s.user?.plan ?? 'free')
+  const router = useRouter()
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [showSalvage, setShowSalvage] = useState(false)
@@ -52,6 +55,7 @@ export default function LiveMissionScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionStartRef = useRef<number>(0)
+  const handleCompleteRef = useRef<(() => void) | null>(null)
 
   const activeMission = missions.find(m => m.status === 'active')
   const activeMicro = microMissions.find(mm => mm.status === 'in_progress' || mm.status === 'pending')
@@ -65,7 +69,7 @@ export default function LiveMissionScreen() {
         setElapsedSeconds(elapsed)
         updateSessionTimer(activeSession.id, elapsed)
         if (elapsed >= activeSession.planned_minutes * 60) {
-          handleComplete()
+          handleCompleteRef.current?.()
         }
       }, 1000)
     } else {
@@ -76,26 +80,39 @@ export default function LiveMissionScreen() {
 
   useEffect(() => {
     if (activeSession?.status === 'active') {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.02, duration: 2000, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        ])
-      ).start()
+      // Respect reduce motion preference
+      AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+        if (!reduceMotion) {
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseAnim, { toValue: 1.02, duration: 2000, useNativeDriver: true }),
+              Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+            ])
+          ).start()
+        }
+      })
     } else {
       pulseAnim.setValue(1)
     }
   }, [activeSession?.status])
 
+  // Keep handleCompleteRef in sync with latest handleComplete
+  useEffect(() => {
+    handleCompleteRef.current = handleComplete
+  }, [handleComplete])
+
   const handleComplete = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
     completeSession(sessionNotes)
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    // Triple pulse haptic for completion celebration
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 100)
+    setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 200)
     showSessionCompleteNotification(Math.round(elapsedSeconds / 60), 0)
 
     // Show social proof stat after completion
     const proof = getSocialProofStat(
-      (activeSession?.mode as string as UserState) ?? null,
+      (typeof activeSession?.mode === 'string' ? activeSession.mode as UserState : null),
       true,
     )
     if (proof) setSocialProof(proof)
@@ -111,8 +128,8 @@ export default function LiveMissionScreen() {
       }, 3500)
     }
 
-    // Paywall trigger: session 5 on free plan
-    if (sessionCount >= 5 && plan === 'free') {
+    // Paywall trigger: session 20 on free plan
+    if (sessionCount >= 20 && plan === 'free') {
       setTimeout(() => setShowPaywall(true), 2000)
     }
 
@@ -141,11 +158,7 @@ export default function LiveMissionScreen() {
     }
   }
 
-  const formatTime = (s: number) => {
-    const mins = Math.floor(s / 60)
-    const secs = s % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
+  // formatTime imported from shared utility
 
   // ── No active session → Setup ──
   if (!activeSession) {
@@ -227,7 +240,7 @@ export default function LiveMissionScreen() {
         <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
           <ProgressRing progress={progress} size={220} strokeWidth={8} color={colors.brand[500]}>
             <View style={styles.timerDisplay}>
-              <Text accessibilityRole="timer" accessibilityLabel={`${Math.floor(timeLeft / 60)} minutes and ${timeLeft % 60} seconds remaining`} style={[typography.mono, { color: colors.text.primary, fontSize: 48 }]}
+              <Text accessibilityRole="timer" accessibilityLiveRegion="polite" accessibilityLabel={`${Math.floor(timeLeft / 60)} minutes and ${timeLeft % 60} seconds remaining`} style={[typography.mono, { color: colors.text.primary, fontSize: 48 }]}
                 adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1}>
                 {formatTime(timeLeft)}
               </Text>
@@ -443,13 +456,6 @@ function PostSessionMomentRenderer({ moment, onAdvance, onSkip, onGoHome, onAnot
             <Text style={styles.momentSub}>{(moment.data.submessage as string) ?? ''}</Text>
           </>
         )
-      case 'activation_celebration':
-        return (
-          <>
-            <Text style={styles.momentTitle}>{(moment.data.message as string) ?? 'You did it!'}</Text>
-            <Text style={styles.momentSub}>{(moment.data.submessage as string) ?? 'First rescue complete.'}</Text>
-          </>
-        )
       default:
         return (
           <>
@@ -582,7 +588,7 @@ const styles = StyleSheet.create({
   momentContainer: { alignItems: 'center', padding: spacing.xl },
   momentTitle: { ...typography.h2, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.md },
   momentSub: { ...typography.bodyMedium, color: colors.text.secondary, textAlign: 'center', marginBottom: spacing.xl },
-  momentProof: { ...typography.bodyLarge, color: colors.text.primary, textAlign: 'center', fontStyle: 'italic', marginBottom: spacing.xl },
+  momentProof: { ...typography.bodyMedium, color: colors.text.primary, textAlign: 'center', fontStyle: 'italic', marginBottom: spacing.xl },
   momentActions: { flexDirection: 'row', gap: spacing.md },
   momentBtn: { backgroundColor: colors.brand[500], borderRadius: radius.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
   momentBtnText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '700' },
@@ -590,3 +596,4 @@ const styles = StyleSheet.create({
   momentSkipText: { ...typography.bodySmall, color: colors.text.disabled },
   momentProgress: { ...typography.caption, color: colors.text.disabled, marginTop: spacing.md },
 })
+

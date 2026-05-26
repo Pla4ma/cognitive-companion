@@ -99,7 +99,7 @@ export function runAntiDriftAgent(input: AntiDriftInput): AntiDriftOutput {
     energy: moment.energy_level,
     signals: recentSignals,
     abandonCountToday,
-    hasActiveSession: false, // TODO: check from store
+    hasActiveSession: input.hasActiveSession,
     missionsCompletedToday: input.missionsCompletedToday,
     focusMinutesToday: input.focusMinutesToday,
     localOnlyMode: privacySettings.localOnlyMode,

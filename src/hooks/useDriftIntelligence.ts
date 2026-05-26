@@ -44,7 +44,7 @@ export function useDriftIntelligence(): DriftIntelligence {
     } catch {
       return null
     }
-  }, [hasEnoughData, sessions.length, resistancePatterns.length, distractions.length])
+  }, [hasEnoughData, sessions, resistancePatterns, distractions, momentumEvents, missions, microMissions, brainDumps])
 
   const profile = useMemo(() => {
     if (!hasEnoughData) return null
@@ -61,7 +61,7 @@ export function useDriftIntelligence(): DriftIntelligence {
     } catch {
       return null
     }
-  }, [hasEnoughData, sessions.length, resistancePatterns.length, distractions.length])
+  }, [hasEnoughData, sessions, resistancePatterns, distractions, momentumEvents, missions, microMissions, brainDumps])
 
   return { hasEnoughData, prediction, profile }
 }

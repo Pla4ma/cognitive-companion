@@ -4,6 +4,7 @@
 // Flow: Tap → Mission → Timer (with actions) → Intentional choice
 // ══════════════════════════════════════════════════════════════
 
+import { formatTime } from '../src/utils/formatTime'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput,
@@ -121,12 +122,6 @@ export default function BeforeYouScrollScreen() {
     setStep('choice')
   }, [])
 
-  const handleEarlyFinish = useCallback(() => {
-    setTimerActive(false)
-    setDidAnything(true)
-    setStep('choice')
-  }, [])
-
   const handleOpenBrainDump = useCallback(() => {
     setStep('braindump')
     setTimerActive(false)
@@ -164,11 +159,7 @@ export default function BeforeYouScrollScreen() {
     [router, handleStart],
   )
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
+  // formatTime imported from shared utility
 
   const progress = (TIMER_SECONDS - secondsRemaining) / TIMER_SECONDS
   const introCopy = getIntroCopy(skipCount)

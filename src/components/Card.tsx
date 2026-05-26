@@ -8,9 +8,10 @@ interface CardProps {
   style?: ViewStyle;
   variant?: 'default' | 'elevated' | 'subtle' | 'glow';
   onPress?: () => void;
+  accessibilityLabel?: string;
 }
 
-export function Card({ children, style, variant = 'default', onPress }: CardProps) {
+export function Card({ children, style, variant = 'default', onPress, accessibilityLabel }: CardProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handleIn = useCallback(() => {
@@ -29,7 +30,7 @@ export function Card({ children, style, variant = 'default', onPress }: CardProp
   };
 
   const content = (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View style={{ transform: [{ scale }] }} accessibilityLabel={accessibilityLabel}>
       <BlurView intensity={glass.medium.blur} style={[styles.base, variantMap[variant], style]}>
         {children}
       </BlurView>

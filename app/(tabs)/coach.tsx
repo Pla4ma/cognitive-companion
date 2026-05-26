@@ -23,17 +23,18 @@ import {
   Send, Trash2, Lightbulb, Target, Zap, Brain,
   Shield, TrendingUp, AlertTriangle, Clock, ChevronRight,
 } from 'lucide-react-native'
-import { useAppStore } from '../src/store'
-import { UserState, Mission, MicroMission } from '../src/types'
+import type { LucideIcon } from 'lucide-react-native'
+import { useAppStore } from '../../src/store'
+import { UserState, Mission, MicroMission } from '../../src/types'
 import {
   predictDrift, buildIntelligenceProfile, DriftPrediction,
   DangerWindow, UserIntelligenceProfile,
-} from '../src/engine'
-import { coachStreamResponse, CoachContext } from '../src/services/ai'
-import { DEFAULT_PRIVACY_SETTINGS } from '../src/types/privacy'
-import { useAIQuota } from '../src/hooks/useAIQuota'
-import { colors, spacing, radius, typography, shadows } from '../src/theme'
-import { Screen, Card, EmptyState } from '../src/components'
+} from '../../src/engine'
+import { coachStreamResponse, CoachContext } from '../../src/services/ai'
+import { DEFAULT_PRIVACY_SETTINGS } from '../../src/types/privacy'
+import { useAIQuota } from '../../src/hooks/useAIQuota'
+import { colors, spacing, radius, typography, shadows } from '../../src/theme'
+import { Screen, Card, EmptyState } from '../../src/components'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ interface ActionSuggestion {
   type: 'break_down' | 'start_session' | 'body_double' | 'brain_dump' | 'salvage' | 'simplify' | 'danger_alert'
   title: string
   subtitle: string
-  icon: any
+  icon: LucideIcon
   color: string
   priority: number
   onPress: () => void
@@ -59,19 +60,20 @@ interface CoachMessage {
 // ── Component ────────────────────────────────────────────────
 
 export default function CoachScreen() {
-  const store = useAppStore()
-  const user = store.user
-  const sessions = store.sessions
-  const missions = store.missions
-  const microMissions = store.microMissions
-  const momentumEvents = store.momentumEvents
-  const resistancePatterns = store.resistancePatterns
-  const distractions = store.distractions
-  const brainDumps = store.brainDumps
-  const features = store.getFeatures
-  const startSession = store.startSession
-  const addMission = store.addMission
-  const consentLedger = store.consentLedger
+  const user = useAppStore(s => s.user)
+  const sessions = useAppStore(s => s.sessions)
+  const missions = useAppStore(s => s.missions)
+  const microMissions = useAppStore(s => s.microMissions)
+  const momentumEvents = useAppStore(s => s.momentumEvents)
+  const resistancePatterns = useAppStore(s => s.resistancePatterns)
+  const distractions = useAppStore(s => s.distractions)
+  const brainDumps = useAppStore(s => s.brainDumps)
+  const getFeatures = useAppStore(s => s.getFeatures)
+  const features = getFeatures()
+  const startSession = useAppStore(s => s.startSession)
+  const addMission = useAppStore(s => s.addMission)
+  const addMicroMission = useAppStore(s => s.addMicroMission)
+  const consentLedger = useAppStore(s => s.consentLedger)
   const aiQuota = useAIQuota()
 
   const [messages, setMessages] = useState<CoachMessage[]>([])
@@ -81,6 +83,7 @@ export default function CoachScreen() {
   const [showActions, setShowActions] = useState(true)
   const scrollRef = useRef<ScrollView>(null)
   const fadeAnim = useRef(new Animated.Value(1)).current
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   // ── Predictive Intelligence ──
   const prediction = useMemo<DriftPrediction | null>(() => {
@@ -244,10 +247,10 @@ export default function CoachScreen() {
       'Do that one action — nothing else',
     ]
     steps.forEach((step, i) => {
-      store.addMicroMission(mission.id, step, '', 5)
+      addMicroMission(mission.id, step, '', 5)
     })
     addSystemMessage(`Created ${steps.length} micro-steps. Start with step 1 — just open the thing.`)
-  }, [store])
+  }, [addMicroMission, addSystemMessage])
 
   // ── AI Chat ──
   const contextData = useMemo(() => ({
@@ -275,6 +278,11 @@ export default function CoachScreen() {
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
     }
   }, [messages.length, isStreaming, streamingText])
+
+  // ── Cleanup streaming timeout on unmount ──
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [])
 
   const handleSend = useCallback(async () => {
     if (!inputText.trim() || isStreaming) return
@@ -329,6 +337,13 @@ export default function CoachScreen() {
     }
 
     try {
+      // 30-second streaming timeout
+      timeoutRef.current = setTimeout(() => {
+        setIsStreaming(false)
+        setStreamingText('')
+        setMessages(prev => [...prev, { id: (Date.now() + 2).toString(), role: 'assistant', content: 'I took too long. Try again?', timestamp: new Date().toISOString() }])
+      }, 30000)
+
       await coachStreamResponse(
         conversationHistory,
         userMessage,
@@ -337,6 +352,7 @@ export default function CoachScreen() {
         DEFAULT_PRIVACY_SETTINGS,
         (text) => setStreamingText(text),
         (fullText) => {
+          clearTimeout(timeoutRef.current)
           setMessages(prev => [...prev, {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
@@ -348,6 +364,7 @@ export default function CoachScreen() {
         },
       )
     } catch {
+      clearTimeout(timeoutRef.current)
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -419,6 +436,7 @@ export default function CoachScreen() {
             <TouchableOpacity
               style={styles.clearBtn}
               onPress={() => { setMessages([]); setShowActions(true) }}
+              accessibilityLabel="Clear conversation"
             >
               <Trash2 size={18} color={colors.text.tertiary} />
             </TouchableOpacity>
@@ -462,6 +480,8 @@ export default function CoachScreen() {
               {actionSuggestions.map((suggestion) => (
                 <TouchableOpacity
                   key={suggestion.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={suggestion.title}
                   style={styles.actionCard}
                   onPress={() => handleQuickAction(suggestion)}
                   activeOpacity={0.8}
@@ -474,176 +494,3 @@ export default function CoachScreen() {
                     <Text style={styles.actionSubtitle}>{suggestion.subtitle}</Text>
                   </View>
                   <ChevronRight size={18} color={colors.text.tertiary} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {/* System Messages */}
-          {messages.filter(m => m.role === 'system').map((msg) => (
-            <View key={msg.id} style={styles.systemMessage}>
-              <Text style={styles.systemMessageText}>{msg.content}</Text>
-            </View>
-          ))}
-
-          {/* Chat Messages */}
-          {messages.filter(m => m.role !== 'system').map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageBubble,
-                msg.role === 'user' ? styles.userBubble : styles.aiBubble,
-              ]}
-            >
-              <BlurView
-                intensity={msg.role === 'user' ? 15 : 25}
-                style={[
-                  styles.messageBlur,
-                  msg.role === 'user' ? styles.userBlur : styles.aiBlur,
-                ]}
-              >
-                <Text style={styles.messageText}>{msg.content}</Text>
-              </BlurView>
-            </View>
-          ))}
-
-          {/* Streaming */}
-          {isStreaming && (
-            <View style={[styles.messageBubble, styles.aiBubble]}>
-              <BlurView intensity={25} style={[styles.messageBlur, styles.aiBlur]}>
-                <Text style={styles.messageText}>{streamingText || 'Thinking...'}</Text>
-                <View style={styles.typingRow}>
-                  <View style={[styles.typingDot, { backgroundColor: colors.brand[500] }]} />
-                  <View style={[styles.typingDot, { backgroundColor: colors.brand[500], opacity: 0.6 }]} />
-                  <View style={[styles.typingDot, { backgroundColor: colors.brand[500], opacity: 0.3 }]} />
-                </View>
-              </BlurView>
-            </View>
-          )}
-
-          <View style={{ height: spacing.md }} />
-        </ScrollView>
-
-        {/* Input */}
-        <View style={styles.inputContainer}>
-          <BlurView intensity={30} style={styles.inputBlur}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Or type anything..."
-              placeholderTextColor={colors.text.disabled}
-              value={inputText}
-              onChangeText={setInputText}
-              onSubmitEditing={handleSend}
-              multiline
-              maxLength={1000}
-              editable={!isStreaming}
-            />
-            <TouchableOpacity
-              style={[styles.sendBtn, (!inputText.trim() || isStreaming) && { opacity: 0.3 }]}
-              onPress={handleSend}
-              disabled={!inputText.trim() || isStreaming}
-            >
-              <Send size={20} color={colors.text.inverse} />
-            </TouchableOpacity>
-          </BlurView>
-        </View>
-      </KeyboardAvoidingView>
-    </Screen>
-  )
-}
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  headerLeft: {},
-  title: { ...typography.headline, color: colors.text.primary },
-  subtitle: { ...typography.bodySmall, color: colors.text.tertiary, marginTop: 2 },
-  clearBtn: { padding: spacing.xs },
-  lockedContainer: { flex: 1, justifyContent: 'center' },
-
-  messagesContainer: { flex: 1 },
-  messagesContent: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
-
-  // Welcome
-  welcomeSection: { paddingBottom: spacing.lg },
-  predictionCard: { padding: spacing.md, marginBottom: spacing.lg },
-  predictionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
-  predictionLabel: { ...typography.labelSmall, color: colors.brand[400] },
-  predictionRisk: { ...typography.h3, color: colors.text.primary, marginBottom: spacing.xs },
-  predictionAction: { ...typography.bodyMedium, color: colors.text.secondary, lineHeight: 20 },
-  predictionWindow: { ...typography.caption, color: colors.text.tertiary, marginTop: spacing.xs },
-
-  actionsTitle: { ...typography.label, color: colors.text.tertiary, marginBottom: spacing.sm },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.bg.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border.subtle,
-  },
-  actionIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  actionContent: { flex: 1 },
-  actionTitle: { ...typography.bodyMedium, color: colors.text.primary, fontWeight: '600' },
-  actionSubtitle: { ...typography.caption, color: colors.text.tertiary, marginTop: 2 },
-
-  // Messages
-  systemMessage: {
-    alignSelf: 'center',
-    backgroundColor: colors.brand[500] + '10',
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.sm,
-    maxWidth: '80%',
-  },
-  systemMessageText: { ...typography.bodySmall, color: colors.brand[400], textAlign: 'center' },
-
-  messageBubble: { maxWidth: '85%', marginBottom: spacing.sm },
-  userBubble: { alignSelf: 'flex-end' },
-  aiBubble: { alignSelf: 'flex-start' },
-  messageBlur: { borderRadius: radius.xl, overflow: 'hidden' },
-  userBlur: { backgroundColor: colors.brand[500] + '20', borderWidth: 1, borderColor: colors.brand[500] + '30' },
-  aiBlur: { backgroundColor: colors.bg.card, borderWidth: 1, borderColor: colors.border.subtle },
-  messageText: { ...typography.bodyMedium, color: colors.text.primary, padding: spacing.md, lineHeight: 21 },
-  typingRow: { flexDirection: 'row', gap: 6, padding: spacing.md, paddingTop: 0 },
-  typingDot: { width: 8, height: 8, borderRadius: 4 },
-
-  // Input
-  inputContainer: { padding: spacing.sm },
-  inputBlur: {
-    borderRadius: radius.xxl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border.subtle,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: spacing.sm,
-  },
-  textInput: {
-    flex: 1,
-    color: colors.text.primary,
-    ...typography.bodyMedium,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    maxHeight: 100,
-  },
-  sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.brand[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: spacing.xs,
-    ...shadows.glow,
-  },
-})

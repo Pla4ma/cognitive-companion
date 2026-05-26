@@ -52,7 +52,7 @@ function getSeverityLabel(severity: number): 'low' | 'medium' | 'high' {
 }
 
 function stateToLabel(state: UserState): string {
-  const map: Record<string, string> = {
+  const map: Partial<Record<UserState, string>> = {
     overwhelmed: 'Overwhelmed', stuck: 'Stuck', avoiding: 'Avoiding',
     tired: 'Low energy', anxious: 'Tense', doomscroll_risk: 'About to scroll',
     perfectionism: 'Overthinking', scattered: 'Scattered',
@@ -312,8 +312,11 @@ export function updatePlaybookFromOutcome(
   const ageDays = (now - rule.lastOutcome) / 86400000
   const decay = decayWeight(ageDays)
   // Apply decay to old counts before adding new observation
-  const decayedAlpha = rule.alpha * decay + rule.alpha * (1 - decay) * 0.5
-  const decayedBeta = rule.beta * decay + rule.beta * (1 - decay) * 0.5
+  // Proper Bayesian decay toward a uniform prior Beta(1,1)
+  const priorAlpha = 1
+  const priorBeta = 1
+  const decayedAlpha = priorAlpha + (rule.alpha - priorAlpha) * decay
+  const decayedBeta = priorBeta + (rule.beta - priorBeta) * decay
 
   rule.alpha = decayedAlpha + (success ? 1 : 0)
   rule.beta = decayedBeta + (success ? 0 : 1)
@@ -321,15 +324,6 @@ export function updatePlaybookFromOutcome(
   rule.evidence++
   rule.lastOutcome = now
 
-  // Also update the starter rule with the same state (cross-state learning)
-  for (const otherRule of rules) {
-    if (otherRule.id === rule.id) continue
-    if (otherRule.category !== 'protocol') continue
-    const daysSince = (now - otherRule.lastOutcome) / 86400000
-    if (daysSince > RECENCY_HALF_LIFE_DAYS * 2) continue // only cross-learn fresh rules
-    const distanceAge = Math.abs(Date.now() - otherRule.createdAt) / 86400000
-    if (distanceAge > 60) continue // don't cross-pollinate very old rules
-  }
 
   return {
     ...playbook, rules, recentOutcomes,

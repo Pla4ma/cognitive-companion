@@ -20,6 +20,11 @@ import {
   MomentumEvent, Mission, MicroMission, BrainDump, BlockerType,
 } from '../types'
 
+/** Checks if a session drifted (was abandoned or salvaged). */
+export function isDriftedSession(s: { status: string }): boolean {
+  return s.status === 'abandoned' || s.status === 'salvaged'
+}
+
 // ── Types ────────────────────────────────────────────────────
 
 export interface TimeSlot {
@@ -73,7 +78,7 @@ export interface ResistanceMapEntry {
   avgDuration: number     // How long it typically lasts (minutes)
   bestStrategy: string     // What's worked before
   successRate: number      // 0-1, how often user recovers
-  lastOccurrd: string      // ISO date
+  lastOccurred: string      // ISO date
   trendDirection: 'improving' | 'stable' | 'worsening'
 }
 
@@ -107,7 +112,7 @@ export function analyzeTimeSlots(sessions: MissionSession[]): TimeSlot[] {
     const existing = slots.get(key)
     if (existing) {
       existing.totalSessions++
-      if (session.status === 'abandoned' || session.status === 'salvaged') {
+      if (isDriftedSession(session)) {
         existing.driftCount++
       }
       existing.driftRate = existing.totalSessions > 0
@@ -117,9 +122,9 @@ export function analyzeTimeSlots(sessions: MissionSession[]): TimeSlot[] {
       slots.set(key, {
         hour,
         dayOfWeek,
-        driftCount: (session.status === 'abandoned' || session.status === 'salvaged') ? 1 : 0,
+        driftCount: (isDriftedSession(session)) ? 1 : 0,
         totalSessions: 1,
-        driftRate: (session.status === 'abandoned' || session.status === 'salvaged') ? 1 : 0,
+        driftRate: (isDriftedSession(session)) ? 1 : 0,
         avgResistance: 5,
         topState: 'avoiding',
         topBlocker: 'unknown',
@@ -220,7 +225,7 @@ export function buildHourlyPattern(sessions: MissionSession[]): number[] {
   for (const session of sessions) {
     const hour = new Date(session.started_at).getHours()
     counts[hour]++
-    if (session.status === 'abandoned' || session.status === 'salvaged') {
+    if (isDriftedSession(session)) {
       hours[hour]++
     }
   }
@@ -235,7 +240,7 @@ export function buildDailyPattern(sessions: MissionSession[]): number[] {
   for (const session of sessions) {
     const day = new Date(session.started_at).getDay()
     counts[day]++
-    if (session.status === 'abandoned' || session.status === 'salvaged') {
+    if (isDriftedSession(session)) {
       days[day]++
     }
   }
@@ -276,7 +281,7 @@ export function buildResistanceMap(
       avgDuration: pattern.typical_duration_minutes,
       bestStrategy: pattern.successful_strategy || 'try a smaller step',
       successRate,
-      lastOccurrd: pattern.last_occurred,
+      lastOccurred: pattern.last_occurred,
       trendDirection,
     }
   }
@@ -318,10 +323,10 @@ export function calculateDriftVelocity(sessions: MissionSession[]): number {
     return age >= 7 * 86400000 && age < 14 * 86400000
   })
   const recentDriftRate = last7d.length > 0
-    ? last7d.filter(s => s.status === 'abandoned' || s.status === 'salvaged').length / last7d.length
+    ? last7d.filter(isDriftedSession).length / last7d.length
     : 0
   const priorDriftRate = prior7d.length > 0
-    ? prior7d.filter(s => s.status === 'abandoned' || s.status === 'salvaged').length / prior7d.length
+    ? prior7d.filter(isDriftedSession).length / prior7d.length
     : 0
   if (last7d.length < 3 || prior7d.length < 3) return 0 // not enough data
   return Math.round((recentDriftRate - priorDriftRate) * 100) / 100
@@ -362,7 +367,7 @@ export function buildDecayWeightedHourlyPattern(sessions: MissionSession[]): num
     const ageMs = now - new Date(session.started_at).getTime()
     const weight = Math.pow(0.5, ageMs / halfLifeMs)
     weightedTotal[hour] += weight
-    if (session.status === 'abandoned' || session.status === 'salvaged') {
+    if (isDriftedSession(session)) {
       weightedDrift[hour] += weight
     }
   }
@@ -383,10 +388,10 @@ export function analyzeWeekendPatterns(sessions: MissionSession[]): {
     const isWeekend = day === 0 || day === 6
     if (isWeekend) {
       weekendTotal++
-      if (session.status === 'abandoned' || session.status === 'salvaged') weekendDrift++
+      if (isDriftedSession(session)) weekendDrift++
     } else {
       weekdayTotal++
-      if (session.status === 'abandoned' || session.status === 'salvaged') weekdayDrift++
+      if (isDriftedSession(session)) weekdayDrift++
     }
   }
   return {
@@ -443,11 +448,8 @@ export function calculateStreakMomentum(sessions: MissionSession[]): number {
 export function predictDrift(context: {
   sessions: MissionSession[]
   patterns: ResistancePattern[]
-  distractions: Distraction[]
   momentumEvents: MomentumEvent[]
   missions: Mission[]
-  microMissions: MicroMission[]
-  brainDumps: BrainDump[]
   currentTime?: Date
 }): DriftPrediction {
   const { sessions, patterns, momentumEvents, missions, currentTime = new Date() } = context

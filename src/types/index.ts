@@ -48,8 +48,7 @@ export function getCoachPersona(id: PushStyle): CoachPersona {
 }
 
 export type PlanTier = 'free' | 'pro' | 'lifetime'
-export type OnboardingStep = 0 | 1 | 2 | 3 | 4 | 5
-export type AvoidanceState = import('./moment').UserState
+export type AvoidanceState = UserState
 
 // ── State Chip Configuration ────────────────────────────────
 
@@ -64,7 +63,7 @@ export interface StateChip {
   body_double_mode: BodyDoubleMode
 }
 
-export const STATE_CHIPS: Record<string, StateChip> = {
+export const STATE_CHIPS: Record<UserState, StateChip> = {
   avoiding: { id: 'avoiding', label: 'Avoiding', emoji: '🙈', color: '#EF4444', description: 'I know what I need to do but I can\'t start', rescue_strategy: '2-minute rule', suggested_duration: 2, body_double_mode: 'presence' },
   overwhelmed: { id: 'overwhelmed', label: 'Overwhelmed', emoji: '🌊', color: '#F59E0B', description: 'Too much on my plate', rescue_strategy: 'Brain dump, then smallest action', suggested_duration: 5, body_double_mode: 'voice' },
   stuck: { id: 'stuck', label: 'Stuck', emoji: '🫠', color: '#8B5CF6', description: 'Want to move but don\'t know how', rescue_strategy: 'Next physical action', suggested_duration: 10, body_double_mode: 'presence' },
@@ -93,12 +92,16 @@ export interface UserProfile {
   avatar_url: string | null
   push_style: PushStyle
   onboarding_complete: boolean
-  onboarding_step: OnboardingStep
+  onboarding_step: 0 | 1 | 2 | 3 | 4 | 5
   plan: PlanTier
   timezone: string
   body_double_enabled: boolean
   vault_enabled: boolean
   local_only: boolean
+  // Progressive profiling answers (optional)
+  work_type?: string
+  struggle_time?: string
+  biggest_project?: string
   created_at: string
   updated_at: string
 }
@@ -110,7 +113,7 @@ export interface Mission {
   description: string
   status: MissionStatus
   resistance_level: ResistanceLevel
-  avoidance_state: string | null
+  avoidance_state: UserState | null
   color: string
   icon: string
   deadline: string | null
@@ -142,7 +145,7 @@ export interface MissionSession {
 export interface MomentumEvent {
   id: string
   user_id: string
-  type: string
+  type: 'session_completed' | 'session_salvaged' | 'distraction_captured' | 'brain_dump_cleared' | 'rescue_started' | 'mission_completed' | 'mission_created'
   mission_id: string | null
   micro_mission_id: string | null
   points: number
@@ -150,19 +153,10 @@ export interface MomentumEvent {
   created_at: string
 }
 
-export interface MomentumScore {
-  current: number
-  best: number
-  this_week: number
-  last_week: number
-  trend: 'up' | 'down' | 'stable'
-  events: MomentumEvent[]
-}
-
 export interface ResistancePattern {
   id: string
   user_id: string
-  avoidance_state: string
+  avoidance_state: UserState
   mission_type: string
   frequency: number
   last_occurred: string
@@ -196,6 +190,7 @@ export interface BrainDump {
   processed: boolean
   created_at: string
   cleared_at: string | null
+  converted_at: string | null
 }
 
 export interface ChatMessage {
@@ -243,13 +238,4 @@ export function getFeatureGates(sessionCount: number, plan: PlanTier): Record<Fe
   }
 }
 
-export type FocusType = 'deep_work' | 'quick_win' | 'creative' | 'admin' | 'learning' | 'rest'
 
-export const FOCUS_TYPES: Record<FocusType, { label: string; emoji: string; color: string; description: string; defaultMinutes: number }> = {
-  deep_work: { label: 'Deep Work', emoji: '🧠', color: '#6366F1', description: 'Intense concentration', defaultMinutes: 45 },
-  quick_win: { label: 'Quick Win', emoji: '⚡', color: '#10B981', description: 'Small task, finish fast', defaultMinutes: 10 },
-  creative: { label: 'Creative', emoji: '🎨', color: '#EC4899', description: 'Brainstorming, creating', defaultMinutes: 30 },
-  admin: { label: 'Admin', emoji: '📋', color: '#F59E0B', description: 'Email, messages, planning', defaultMinutes: 15 },
-  learning: { label: 'Learning', emoji: '📚', color: '#8B5CF6', description: 'Reading, studying', defaultMinutes: 25 },
-  rest: { label: 'Rest', emoji: '😌', color: '#14B8A6', description: 'Intentional recovery', defaultMinutes: 10 },
-}

@@ -142,6 +142,9 @@ export function buildSafetyStatus(
 
   // Block unsafe missions
   for (const action of proposedActions) {
+    // Skip tool ID strings (e.g. 'create_mission', 'start_mission') —
+    // isMissionSafe checks mission text content, not action identifiers.
+    if (/^[a-z][a-z_]*$/.test(action) && !action.includes(' ')) continue
     const check = isMissionSafe(action)
     if (!check.safe) {
       blockedActions.push(action)

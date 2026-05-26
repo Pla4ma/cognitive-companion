@@ -23,9 +23,10 @@ import {
   detectAvoidanceState, generateMicroMission, categorizeDistraction,
 } from '../engine/antiAvoidance'
 import {
-  assessCrisis, classifyContent, checkSafetyBoundaries,
-  filterShameLanguage,
+ assessCrisis, classifyContent, checkSafetyBoundaries,
+ filterShameLanguage,
 } from '../engine/safety'
+import { uid } from '../utils/uid'
 
 // ── Drift Signal ────────────────────────────────────────────
 
@@ -412,6 +413,11 @@ export class DriftInterceptionOrchestrator {
       return { should: false, reason: `Daily limit reached for ${signal.suggestedInterception.type}` }
     }
 
+    return { should: true, reason: 'All checks passed' }
+  }
+
+  /** Apply side effects after shouldIntercept returns true. Call this only when should === true. */
+  prepareInterception(signal: DriftSignal): void {
     // Check escalation: count recent interceptions of any type
     const recentCount = this.agentState.activeInterceptions.filter(i => {
       const age = (Date.now() - new Date(i.created_at).getTime()) / 60000
@@ -433,8 +439,6 @@ export class DriftInterceptionOrchestrator {
       const filtered = filterShameLanguage(signal.suggestedInterception.message)
       signal.suggestedInterception.message = filtered.filtered
     }
-
-    return { should: true, reason: 'All checks passed' }
   }
 
   // ── DELIVER Phase ──────────────────────────────────────────
@@ -827,6 +831,4 @@ export class DriftInterceptionOrchestrator {
 
 // ── Utility ─────────────────────────────────────────────────
 
-function uid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
-}
+

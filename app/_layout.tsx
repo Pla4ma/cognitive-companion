@@ -18,8 +18,10 @@ import { useAppStore } from '../src/store'
 import { checkForUpdates } from '../src/services/updates'
 import { useAmbientEngine } from '../src/hooks/useAmbientEngine'
 import { useRouter } from 'expo-router'
+import { buildIntelligenceProfile } from '../src/engine/predictiveEngine'
+import { scheduleDangerWindowNotifications } from '../src/services/notifications'
 
-const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://YOUR_SENTRY_DSN@sentry.io/YOUR_PROJECT_ID'
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? null
 
 SplashScreen.preventAutoHideAsync()
 
@@ -77,8 +79,6 @@ export default function RootLayout() {
       const count = state.sessions.length
       if (count >= 5 && count % 5 === 0) {
         try {
-          const { buildIntelligenceProfile } = require('../src/engine/predictiveEngine')
-          const { scheduleDangerWindowNotifications } = require('../src/services/notifications')
           const profile = buildIntelligenceProfile({
             sessions: state.sessions,
             patterns: state.resistancePatterns,
@@ -99,7 +99,9 @@ export default function RootLayout() {
 
   // Initialize crash reporting on mount, gated by consent
   useEffect(() => {
-    initCrashReporting(SENTRY_DSN)
+    if (SENTRY_DSN) {
+      initCrashReporting(SENTRY_DSN)
+    }
     setConsentMode(checkConsent('crash_reporting'))
   }, [checkConsent])
 
@@ -113,15 +115,9 @@ export default function RootLayout() {
           animation: 'fade_from_bottom',
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Home' }} />
-        <Stack.Screen name="goals" options={{ title: 'Goals' }} />
-        <Stack.Screen name="goals/[id]" options={{ title: 'Goal Detail', presentation: 'card' }} />
+        <Stack.Screen name="(tabs)" options={{ title: 'Home' }} />
         <Stack.Screen name="focus" options={{ title: 'Focus' }} />
-        <Stack.Screen name="progress" options={{ title: 'Progress' }} />
-        <Stack.Screen name="coach" options={{ title: 'Coach' }} />
         <Stack.Screen name="live" options={{ title: 'Live Mission', presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="settings" options={{ title: 'Settings', presentation: 'modal' }} />
-        <Stack.Screen name="auth" options={{ title: 'Sign In', presentation: 'modal' }} />
         <Stack.Screen name="onboarding" options={{ title: 'Welcome', presentation: 'fullScreenModal' }} />
         <Stack.Screen name="before-scroll" options={{ title: 'Before You Scroll', presentation: 'fullScreenModal' }} />
         <Stack.Screen name="trust" options={{ title: 'Trust Center', presentation: 'modal' }} />

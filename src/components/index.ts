@@ -21,5 +21,9 @@ export { ProPaywall } from './ProPaywall';
 export { MissionCard } from './MissionCard';
 export { ProgressiveProfiling } from './ProgressiveProfiling';
 
+// ── Animated components ────────────────────────────────────
+export { AnimatedStateChip } from './AnimatedStateChip';
+export { AnimatedRescueButton } from './AnimatedRescueButton';
+
 // ── Legacy components (Screen, BarChart, StreakBadge, TabBar) ─
 export { Screen, BarChart, StreakBadge, TabBar } from './Legacy';

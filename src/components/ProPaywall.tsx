@@ -178,10 +178,19 @@ export function ProPaywall({
 
   // ── Helpers ─────────────────────────────────────────────
 
-  const getPackageLabel = (pkg: PurchasesPackage): string => {
+  type PackageType = 'annual' | 'monthly' | 'other'
+
+  const parsePackageType = (pkg: PurchasesPackage): PackageType => {
     const id = pkg.product.identifier.toLowerCase()
-    if (id.includes('annual') || id.includes('year')) return 'Annual'
-    if (id.includes('month')) return 'Monthly'
+    if (id.includes('annual') || id.includes('year')) return 'annual'
+    if (id.includes('month')) return 'monthly'
+    return 'other'
+  }
+
+  const getPackageLabel = (pkg: PurchasesPackage): string => {
+    const type = parsePackageType(pkg)
+    if (type === 'annual') return 'Annual'
+    if (type === 'monthly') return 'Monthly'
     return pkg.product.title ?? 'Plan'
   }
 
@@ -190,15 +199,14 @@ export function ProPaywall({
   }
 
   const getPackagePeriod = (pkg: PurchasesPackage): string => {
-    const id = pkg.product.identifier.toLowerCase()
-    if (id.includes('annual') || id.includes('year')) return '/year'
-    if (id.includes('month')) return '/month'
+    const type = parsePackageType(pkg)
+    if (type === 'annual') return '/year'
+    if (type === 'monthly') return '/month'
     return ''
   }
 
   const isAnnual = (pkg: PurchasesPackage): boolean => {
-    const id = pkg.product.identifier.toLowerCase()
-    return id.includes('annual') || id.includes('year')
+    return parsePackageType(pkg) === 'annual'
   }
 
   // ── Render ──────────────────────────────────────────────

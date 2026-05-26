@@ -6,7 +6,6 @@
 export {
   STATE_CHIPS,
   COACH_PERSONAS,
-  FOCUS_TYPES,
   getFeatureGates,
 } from '../types'
 export type {
@@ -17,7 +16,6 @@ export type {
   EnergyLevel,
   PushStyle,
   CoachPersona,
-  FocusType,
   AIActionPlan,
   AISalvagePlan,
   DriftSignal,
@@ -25,7 +23,6 @@ export type {
   Mission,
   MissionSession,
   MicroMission,
-  MomentumScore,
   ResistancePattern,
   Distraction,
   BrainDump,
@@ -42,7 +39,7 @@ export {
   analyzeResistancePatterns,
   categorizeDistraction,
   processBrainDump,
-  adaptMessageToPushStyle,
+  applyPushStyle,
 } from './antiAvoidance'
 
 // Agent functions

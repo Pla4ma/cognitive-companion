@@ -25,7 +25,29 @@
           }
         ],
         "LSApplicationQueriesSchemes": ["intent"],
-        "NSUserTrackingUsageDescription": "INTENT uses analytics to improve your focus experience. All data stays on-device unless you opt in to sharing."
+        "NSUserTrackingUsageDescription": "INTENT uses analytics to improve your focus experience. All data stays on-device unless you opt in to sharing.",
+        "UNNotificationCategories": [
+          {
+            "identifier": "rescue",
+            "actions": [
+              { "identifier": "RESCUE_NOW", "title": "2-min rescue", "options": ["foreground"] },
+              { "identifier": "LATER", "title": "Later" }
+            ]
+          },
+          {
+            "identifier": "weekly_narrative",
+            "actions": [
+              { "identifier": "VIEW_PROGRESS", "title": "See my week", "options": ["foreground"] }
+            ]
+          },
+          {
+            "identifier": "danger_window",
+            "actions": [
+              { "identifier": "RESCUE_NOW", "title": "Rescue me", "options": ["foreground"] },
+              { "identifier": "DISMISS", "title": "Not now" }
+            ]
+          }
+        ]
       },
       "associatedDomains": []
     },
@@ -81,7 +103,8 @@
           "faceIDPermission": "INTENT uses Face ID to protect your focus data."
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      "./plugins/withWidgetKit"
     ],
     "experiments": {
       "typedRoutes": true

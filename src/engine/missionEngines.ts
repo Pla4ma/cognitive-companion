@@ -41,6 +41,8 @@ export interface WeightSet {
   priorSuccess: number; friction: number
 }
 
+/** Module-level mutable state for adaptive weight learning.
+ *  Weights are re-learned from `outcomeHistory`. Use `resetWeights()` to restore defaults. */
 let activeWeights: WeightSet = { ...DEFAULT_WEIGHTS }
 
 export function resetWeights(): void { activeWeights = { ...DEFAULT_WEIGHTS } }
@@ -49,8 +51,13 @@ export function getActiveWeights(): WeightSet { return { ...activeWeights } }
 
 type ScoreDimension = keyof CandidateScores
 
-// Tracks whether each dimension was above-average for successful vs failed outcomes
+// Tracks whether each dimension was above-average for successful vs failed outcomes.
+// Module-level so relearnWeights() can accumulate across generateCandidates() calls.
+// Use `resetOutcomeHistory()` to clear between test runs.
 const outcomeHistory: Array<{ scores: CandidateScores; success: boolean }> = []
+
+/** Clear the outcome history used for adaptive weight learning. */
+export function resetOutcomeHistory(): void { outcomeHistory.length = 0 }
 
 export function recordOutcome(scores: CandidateScores, success: boolean): void {
   outcomeHistory.push({ scores, success })

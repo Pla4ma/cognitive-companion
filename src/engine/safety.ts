@@ -372,13 +372,14 @@ export function checkSafetyBoundaries(input: string): {
         boundary: boundary.id,
         reason: result.reason,
         modifiedInput: result.modifiedInput,
+        allowed: result.allowed,
       })
     }
     if (!result.allowed) break // Stop at first blocking boundary
   }
 
   return {
-    safe: violations.filter(v => v.reason && !v.modifiedInput).length === 0,
+    safe: !violations.some(v => v.allowed === false || (v.reason && !v.modifiedInput)),
     violations,
   }
 }

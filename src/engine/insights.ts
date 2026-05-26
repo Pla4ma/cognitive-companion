@@ -253,7 +253,9 @@ interface AppActivity {
   timestamp: number
 }
 
-// Persistent loop history for escalation tracking
+// Module-level loop history for escalation tracking.
+// Persists across detectPlanningLoop() calls within a session so we can
+// detect repeated planning loops. Use `resetLoopHistory()` (exported) to clear.
 let loopDetectionHistory: number[] = []
 
 export function resetLoopHistory(): void { loopDetectionHistory = [] }

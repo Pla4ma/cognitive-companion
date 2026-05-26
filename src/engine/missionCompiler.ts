@@ -17,6 +17,12 @@ import type { RescueProtocol } from '../types'
 import { RESCUE_PROTOCOLS, getFallbackProtocol } from '../types/rescue'
 import { MISSION_QUALITY_THRESHOLDS, VAGUE_MISSION_PATTERNS, SHAME_LANGUAGE_PATTERNS } from '../types/mission'
 
+let _missionIdCounter = 0
+function nextMissionId(prefix: string = 'mission'): string {
+  _missionIdCounter++
+  return `${prefix}_${Date.now()}_${_missionIdCounter}`
+}
+
 // ── Main Entry Point ────────────────────────────────────────
 
 export function compileMission(input: MissionCompilationInput): CompiledMission {
@@ -26,7 +32,7 @@ export function compileMission(input: MissionCompilationInput): CompiledMission 
   // Generate primary mission
   const primaryText = generatePrimaryMission(input, protocol)
   const primary: MicroMission = {
-    id: `mission_${Date.now()}`,
+    id: nextMissionId('mission'),
     threadId: input.threadId,
     title: primaryText.slice(0, 60),
     exactAction: primaryText,
@@ -53,7 +59,7 @@ export function compileMission(input: MissionCompilationInput): CompiledMission 
   const fallbackText = generateFallback(primaryText, protocol, input.energy)
   const fallback: MicroMission = {
     ...primary,
-    id: `mission_fallback_${Date.now()}`,
+    id: nextMissionId('mission_fallback'),
     title: fallbackText.slice(0, 60),
     exactAction: fallbackText,
     estimatedMinutes: Math.max(1, Math.min(2, input.availableMinutes)),
@@ -62,10 +68,10 @@ export function compileMission(input: MissionCompilationInput): CompiledMission 
   primary.fallbackMission = fallbackText
 
   // Generate salvage
-  const salvageText = generateSalvage(primaryText, protocol)
+  const salvageText = generateSalvage(primaryText, protocol, input.energy)
   const salvage: MicroMission = {
     ...primary,
-    id: `mission_salvage_${Date.now()}`,
+    id: nextMissionId('mission_salvage'),
     title: salvageText.slice(0, 60),
     exactAction: salvageText,
     estimatedMinutes: 1,
@@ -222,8 +228,20 @@ export function scoreMission(mission: string, context: MissionCompilationInput):
   const isLowEnergyMission = /\b(clear|open|write one|name|list|small|tiny|easy)\b/i.test(mission)
   const energyFit = (isLowEnergy && isLowEnergyMission) ? 0.9 : (!isLowEnergy && !isLowEnergyMission) ? 0.8 : 0.4
 
-  // State fit
-  const stateFit = 0.8 // Simplified — would check protocol match
+  // State fit — check if mission content matches known patterns for the user's state
+  const statePatterns: Partial<Record<UserState, RegExp>> = {
+    avoiding: /\b(open|start|begin|first step)\b/i,
+    overwhelmed: /\b(one thing|pick|smallest|list|write down)\b/i,
+    stuck: /\b(first step|name|sentence|don't know|because)\b/i,
+    tired: /\b(small|tiny|easy|low.energy|rest|one)\b/i,
+    perfectionism: /\b(worst|bad|ugly|intentionally|fix later|no editing)\b/i,
+    anxious: /\b(breath|breathe|one word|safe|calm)\b/i,
+    shame_spiral: /\b(here|showed up|counts|no guilt|present)\b/i,
+    distracted: /\b(close|phone|another room|sprint|timer)\b/i,
+    doomscroll_risk: /\b(tiny action|first|choose|before)\b/i,
+  }
+  const statePattern = statePatterns[context.state]
+  const stateFit = statePattern ? (statePattern.test(mission) ? 0.95 : 0.4) : 0.7
 
   // Clarity
   const wordCount = mission.split(/\s+/).length
@@ -307,12 +325,33 @@ export function rejectMission(mission: string): { rejected: boolean; reason: str
 export function rewriteMission(mission: string, targetMinutes: number, state: UserState): string {
   // Make it smaller
   if (targetMinutes <= 2) {
-    return `Open the thing and do one tiny action. That's it.`
+    // State-aware micro rewrite for 2-min sessions
+    const microRewrites: Partial<Record<UserState, string>> = {
+      perfectionism: `Write one intentionally bad sentence. That's it.`,
+      overwhelmed: `List one thing. Just one. Done.`,
+      anxious: `Take one breath. Type one word. That's enough.`,
+      tired: `Open the thing. Close your eyes for 5 seconds. That counts.`,
+      shame_spiral: `Show up. Open the tab. You're here now. That's it.`,
+    }
+    return microRewrites[state] || `Open the thing and do one tiny action. That's it.`
   }
   if (targetMinutes <= 5) {
-    return `Open the relevant document and do one small action in 5 minutes.`
+    // State-aware rewrite for 5-min sessions
+    const shortRewrites: Partial<Record<UserState, string>> = {
+      avoiding: `Open the thing you're avoiding. Name it. Set a 5-minute timer.`,
+      stuck: `Write: "I don't know where to start because _______." Then try 5 minutes.`,
+      perfectionism: `Write the worst version in 5 minutes. No editing.`,
+      distracted: `Phone in another room. 5-minute sprint. Go.`,
+    }
+    return shortRewrites[state] || `Open the relevant document and do one small action in 5 minutes.`
   }
-  return mission
+  // For longer sessions, keep original but add state-aware prefix if applicable
+  const statePrefix: Partial<Record<UserState, string>> = {
+    doomscroll_risk: `Before you scroll, `,
+    fake_productivity: `Stop planning. `,
+    planning_loop: `Close the planning app. `,
+  }
+  return (statePrefix[state] || '') + mission
 }
 
 export function generateFallback(mission: string, protocol: RescueProtocol, energy?: string): string {
@@ -335,8 +374,29 @@ export function generateFallback(mission: string, protocol: RescueProtocol, ener
   return `Set a ${fallbackMinutes}-minute timer. Do the smallest possible version.`
 }
 
-export function generateSalvage(mission: string, protocol: RescueProtocol): string {
-  return `This still counts if we learn from it. Want the 1-minute version?`
+export function generateSalvage(mission: string, protocol: RescueProtocol, energy?: string): string {
+  // Extract the core action from the mission text for a minimal salvage version
+  const hasOpen = /\bopen\b/i.test(mission)
+  const hasWrite = /\bwrite\b/i.test(mission)
+  const hasRead = /\bread\b/i.test(mission)
+
+  let salvageCore: string
+  if (hasOpen && hasWrite) {
+    salvageCore = `Open the document. Write one word. That counts.`
+  } else if (hasOpen) {
+    salvageCore = `Just open it. That's the salvage.`
+  } else if (hasWrite) {
+    salvageCore = `Write one word. Any word. That's done.`
+  } else if (hasRead) {
+    salvageCore = `Read one sentence. That's the whole salvage mission.`
+  } else {
+    salvageCore = `Do the tiniest piece of it. One minute only.`
+  }
+
+  if (energy === 'depleted') {
+    return `Rest. You showed up. That counts.`
+  }
+  return salvageCore
 }
 
 export function generateBodyDoubleScript(protocol: RescueProtocol, durationMinutes: number): string | null {

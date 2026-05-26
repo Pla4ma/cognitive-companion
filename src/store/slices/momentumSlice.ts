@@ -5,10 +5,7 @@
 
 import { StateCreator } from 'zustand'
 import type { MomentumEvent } from '../../types'
-
-function uid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
-}
+import { uid } from '../../utils/uid'
 
 export interface MomentumSlice {
   momentumEvents: MomentumEvent[]
@@ -30,8 +27,17 @@ export const createMomentumSlice: StateCreator<MomentumSlice, [], [], MomentumSl
   },
 
   getMomentumScore: () => {
-    const weekAgo = Date.now() - 7 * 86400000
-    return get().momentumEvents
+    const thirtyDaysAgo = Date.now() - 30 * 86_400_000
+    const events = get().momentumEvents
+    // Prune events older than 30 days to bound memory and keep score relevant.
+    // This mutates state via set() so the pruning persists.
+    const recent = events.filter((e) => new Date(e.created_at).getTime() >= thirtyDaysAgo)
+    if (recent.length < events.length) {
+      set({ momentumEvents: recent })
+    }
+    // Score still uses 7-day window for display
+    const weekAgo = Date.now() - 7 * 86_400_000
+    return recent
       .filter((e) => new Date(e.created_at).getTime() >= weekAgo)
       .reduce((sum, e) => sum + e.points, 0)
   },

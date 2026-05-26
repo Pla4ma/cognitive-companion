@@ -80,7 +80,7 @@ export const colors = {
 
   // Gradients (as color stops)
   gradients: {
-    brand: ['#6C3AED', '#8B5CF6', '#A78BFA'],
+    brand: ['#7C4FED', '#A78BFA'],
     success: ['#10B981', '#34D399'],
     warning: ['#F59E0B', '#FBBF24'],
     surface: ['#16161A', '#0E0E12'],
@@ -121,7 +121,26 @@ export const radius = {
 
 import { fonts } from './fonts'
 
-export const typography: Record<string, import('react-native').TextStyle> = {
+export type TypographyScale = {
+  hero: import('react-native').TextStyle
+  display: import('react-native').TextStyle
+  headline: import('react-native').TextStyle
+  h1: import('react-native').TextStyle
+  h2: import('react-native').TextStyle
+  h3: import('react-native').TextStyle
+  body: import('react-native').TextStyle
+  bodyMedium: import('react-native').TextStyle
+  bodySmall: import('react-native').TextStyle
+  label: import('react-native').TextStyle
+  labelSmall: import('react-native').TextStyle
+  caption: import('react-native').TextStyle
+  button: import('react-native').TextStyle
+  buttonSmall: import('react-native').TextStyle
+  mono: import('react-native').TextStyle
+  monoSmall: import('react-native').TextStyle
+}
+
+export const typography: TypographyScale = {
   hero: { fontSize: 40, lineHeight: 44, fontWeight: '800', letterSpacing: -1.5, fontFamily: fonts.display },
   display: { fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -1, fontFamily: fonts.display },
   headline: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.5, fontFamily: fonts.display },

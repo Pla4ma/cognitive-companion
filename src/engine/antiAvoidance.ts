@@ -552,11 +552,12 @@ export function generateContextAwareMission(params: ContextAwareMissionParams): 
 
 export function categorizeDistraction(content: string): Distraction['category'] {
   const lower = content.toLowerCase()
-  if (lower.includes('think') || lower.includes('wonder') || lower.includes('remember') || lower.includes('what if')) return 'thought'
-  if (lower.includes('want') || lower.includes('feel like') || lower.includes('crave') || lower.includes('urge')) return 'urge'
-  if (lower.includes('text') || lower.includes('message') || lower.includes('notification') || lower.includes('phone') || lower.includes('email')) return 'notification'
-  if (lower.includes('noise') || lower.includes('people') || lower.includes('room') || lower.includes('comfortable') || lower.includes('chair')) return 'environment'
-  if (lower.includes('anxious') || lower.includes('stressed') || lower.includes('worried') || lower.includes('scared') || lower.includes('frustrated')) return 'emotion'
+  const hasWord = (word: string) => new RegExp(`\\b${word}\\b`).test(lower)
+  if (hasWord('think') || hasWord('wonder') || hasWord('remember') || lower.includes('what if')) return 'thought'
+  if (hasWord('want') || lower.includes('feel like') || hasWord('crave') || hasWord('urge')) return 'urge'
+  if (hasWord('text') || hasWord('message') || hasWord('notification') || hasWord('phone') || hasWord('email')) return 'notification'
+  if (hasWord('noise') || hasWord('people') || hasWord('room') || hasWord('comfortable') || hasWord('chair')) return 'environment'
+  if (hasWord('anxious') || hasWord('stressed') || hasWord('worried') || hasWord('scared') || hasWord('frustrated')) return 'emotion'
   return 'other'
 }
 
@@ -567,48 +568,32 @@ export function processBrainDump(rawText: string): {
   action_items: string[]
   worries: string[]
   ideas: string[]
+  other: string[]
 } {
   const lines = rawText.split(/[.\n]/).map(l => l.trim()).filter(l => l.length > 0)
   const action_items: string[] = []
   const worries: string[] = []
   const ideas: string[] = []
-  
+  const other: string[] = []
+
+  const hasWord = (text: string, word: string) => new RegExp(`\\b${word}\\b`).test(text.toLowerCase())
+
   for (const line of lines) {
-    const lower = line.toLowerCase()
-    if (lower.includes('need to') || lower.includes('should') || lower.includes('have to') || lower.includes('must')) {
+    if (hasWord(line, 'need to') || hasWord(line, 'should') || hasWord(line, 'have to') || hasWord(line, 'must')) {
       action_items.push(line)
-    } else if (lower.includes('worried') || lower.includes('anxious') || lower.includes('scared') || lower.includes('what if') || lower.includes('afraid')) {
+    } else if (hasWord(line, 'worried') || hasWord(line, 'anxious') || hasWord(line, 'scared') || line.toLowerCase().includes('what if') || hasWord(line, 'afraid')) {
       worries.push(line)
-    } else if (lower.includes('idea') || lower.includes('what about') || lower.includes('could') || lower.includes('maybe')) {
+    } else if (hasWord(line, 'idea') || line.toLowerCase().includes('what about') || hasWord(line, 'could') || hasWord(line, 'maybe')) {
       ideas.push(line)
     } else {
-      action_items.push(line)
+      other.push(line)
     }
   }
-  
-  return { items: lines, action_items, worries, ideas }
+
+  return { items: lines, action_items, worries, ideas, other }
 }
 
 // ── Push Style Adapter ────────────────────────────────────
 
-export function adaptMessageToPushStyle(baseMessage: string, style: PushStyle): string {
-  switch (style) {
-    case 'gentle':
-      return baseMessage
-        .replace(/must/gi, 'could')
-        .replace(/need to/gi, 'might want to')
-        .replace(/should/gi, 'could consider')
-        .replace(/now/gi, 'when you\'re ready')
-        .replace(/!/g, '.')
-    case 'firm':
-      return baseMessage
-        .replace(/could/gi, 'need to')
-        .replace(/might want to/gi, 'must')
-        .replace(/when you're ready/gi, 'now')
-        .replace(/consider/gi, 'do')
-    case 'emergency':
-      return `🚨 ${baseMessage}\n\nThis is not optional. Your future self is counting on you right now. 2 minutes. Go.`
-    default:
-      return baseMessage
-  }
-}
+// Push style adapter — use applyPushStyle from coachPolicy (has proper word boundaries)
+export { applyPushStyle } from '../services/ai/coachPolicy'

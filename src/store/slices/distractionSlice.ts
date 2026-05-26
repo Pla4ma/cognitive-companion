@@ -6,10 +6,7 @@
 import { StateCreator } from 'zustand'
 import type { Distraction, BrainDump, ResistancePattern, AvoidanceState } from '../../types'
 import type { CrossSliceActions, CrossSliceState } from '../types'
-
-function uid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
-}
+import { uid } from '../../utils/uid'
 
 export interface DistractionSlice {
   distractions: Distraction[]
@@ -20,6 +17,7 @@ export interface DistractionSlice {
   getUnprocessedDistractions: () => Distraction[]
   createBrainDump: (content: string) => BrainDump
   clearBrainDump: (id: string) => void
+  convertBrainDumpToMission: (dumpId: string) => void
   getLatestBrainDump: () => BrainDump | undefined
   recordResistance: (state: AvoidanceState, missionType: string, duration: number, strategy: string | null) => void
   getResistancePatterns: () => ResistancePattern[]
@@ -60,7 +58,7 @@ export const createDistractionSlice: StateCreator<DistractionSlice, [], [], Dist
       const dump: BrainDump = {
         id: uid(), user_id: state.user?.id ?? '',
         content, items: content.split(/[.\n]/).map(l => l.trim()).filter(l => l.length > 0),
-        processed: false, created_at: new Date().toISOString(), cleared_at: null,
+        processed: false, created_at: new Date().toISOString(), cleared_at: null, converted_at: null,
       }
       set((s) => ({ brainDumps: [dump, ...s.brainDumps] }))
       state.addMomentumEvent('brain_dump_cleared', 10)
@@ -70,6 +68,33 @@ export const createDistractionSlice: StateCreator<DistractionSlice, [], [], Dist
     clearBrainDump: (id) => set((s) => ({
       brainDumps: s.brainDumps.map((bd) => bd.id === id ? { ...bd, processed: true, cleared_at: new Date().toISOString() } : bd),
     })),
+
+    convertBrainDumpToMission: (dumpId) => {
+      const state = cross()
+      const dump = state.brainDumps.find(bd => bd.id === dumpId)
+      if (!dump || dump.converted_at) return
+
+      // Use the first unprocessed item as the mission action, or the full content
+      const actionText = dump.items.find(item => item.length > 5) ?? dump.content.slice(0, 80)
+
+      // Create mission from brain dump
+      const mission = state.addMission(
+        actionText.length > 60 ? actionText.slice(0, 57) + '…' : actionText,
+        `From brain dump: ${dump.content.slice(0, 100)}`,
+        '#8B5CF6',  // purple to distinguish brain dump missions
+      )
+
+      state.addMicroMission(mission.id, actionText, undefined, 10)
+
+      // Mark brain dump as converted
+      set((s) => ({
+        brainDumps: s.brainDumps.map((bd) =>
+          bd.id === dumpId ? { ...bd, converted_at: new Date().toISOString(), processed: true } : bd
+        ),
+      }))
+
+      state.addMomentumEvent('brain_dump_cleared', 10)
+    },
 
     getLatestBrainDump: () => get().brainDumps[0],
 

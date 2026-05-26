@@ -13,14 +13,23 @@ import { useRouter, type Href } from 'expo-router'
 import {
   Zap, Shield, Brain, ChevronRight, Play, Flame, TrendingUp,
 } from 'lucide-react-native'
-import { useAppStore } from '../src/store'
-import { colors, spacing, radius, typography, shadows, layout } from '../src/theme'
-import { Screen, Card } from '../src/components'
-import { compileMission } from '../src/engine/missionCompiler'
-import { getProtocolForState, RESCUE_PROTOCOLS } from '../src/types/rescue'
-import type { UserState, EnergyLevel } from '../src/types'
+import { useAppStore } from '../../src/store'
+import { colors, spacing, radius, typography, shadows, layout } from '../../src/theme'
+import { Screen, Card } from '../../src/components'
+import { compileMission } from '../../src/engine/missionCompiler'
+import { getProtocolForState, RESCUE_PROTOCOLS } from '../../src/types/rescue'
+import {
+  getPendingBrainDumpItems,
+  getRetentionDay,
+  getDaysSinceActivation,
+  shouldShowDay2HabitSeed,
+  shouldShowDay3Pattern,
+  shouldShowDay7Insight,
+  shouldShowDay30Commitment,
+} from '../../src/services/retention/retentionEngine'
+import type { UserState, EnergyLevel } from '../../src/types'
 import * as Haptics from 'expo-haptics'
-import { getHomeIntelligence, type HomeIntelligence } from '../src/services/systemBridge'
+import { getHomeIntelligence, type HomeIntelligence } from '../../src/services/systemBridge'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -37,6 +46,13 @@ const STATE_CHIPS: { id: UserState; emoji: string; label: string; color: string 
 
 const riskColors: Record<string, string> = { critical: '#EF4444', high: '#F59E0B', moderate: '#F97316', low: '#10B981' }
 
+function truncateTitle(text: string, maxLen: number = 60): string {
+  if (text.length <= maxLen) return text
+  const truncated = text.slice(0, maxLen - 1)
+  const lastSpace = truncated.lastIndexOf(' ')
+  return (lastSpace > 30 ? truncated.slice(0, lastSpace) : truncated) + '…'
+}
+
 const QUICK_ACTIONS: { id: string; emoji: string; label: string; screen: Href }[] = [
   { id: 'before_scroll', emoji: '📱', label: 'Before I Scroll', screen: '/before-scroll' },
   { id: 'body_double', emoji: '🛡️', label: 'Body Double', screen: '/live' },
@@ -45,17 +61,19 @@ const QUICK_ACTIONS: { id: string; emoji: string; label: string; screen: Href }[
 
 export default function HomeScreen() {
   const router = useRouter()
-  const store = useAppStore()
-  const user = store.user
-  const sessions = store.sessions
-  const momentumEvents = store.momentumEvents
-  const retentionState = store.retentionState
-  const getComebackStatus = store.getComebackStatus
-  const brainDumps = store.brainDumps
+  const user = useAppStore(s => s.user)
+  const sessions = useAppStore(s => s.sessions)
+  const momentumEvents = useAppStore(s => s.momentumEvents)
+  const retentionState = useAppStore(s => s.retentionState)
+  const getComebackStatus = useAppStore(s => s.getComebackStatus)
+  const brainDumps = useAppStore(s => s.brainDumps)
+  const resistancePatterns = useAppStore(s => s.resistancePatterns)
+  const distractions = useAppStore(s => s.distractions)
+  const missions = useAppStore(s => s.missions)
+  const microMissions = useAppStore(s => s.microMissions)
 
   const [selectedState, setSelectedState] = useState<UserState | null>(null)
   const [selectedMinutes, setSelectedMinutes] = useState(5)
-  const [rescueStarted, setRescueStarted] = useState(false)
 
   // ── Derived Data ──
   const displayName = user?.display_name || 'there'
@@ -85,14 +103,11 @@ export default function HomeScreen() {
 
   // ── Pending Brain Dumps (Loop 6) ──
   const pendingBrainDumps = useMemo(() => {
-    const { getPendingBrainDumpItems } = require('../src/services/retention/retentionEngine')
     return getPendingBrainDumpItems(brainDumps)
   }, [brainDumps])
 
   // ── Day Tracking (Day 1/2/3/7/30 per audit Section 1.3) ──
   const dayTrackingMessage = useMemo(() => {
-    const { getRetentionDay, getDaysSinceActivation } = require('../src/services/retention/retentionEngine')
-    const { shouldShowDay2HabitSeed, shouldShowDay3Pattern, shouldShowDay7Insight, shouldShowDay30Commitment } = require('../src/services/retention/retentionEngine')
     if (!retentionState.activated) return null
     const day = getRetentionDay(retentionState)
     if (day === 2 && shouldShowDay2HabitSeed(retentionState)) {
@@ -122,17 +137,17 @@ export default function HomeScreen() {
     return getHomeIntelligence({
       sessions,
       retentionState,
-      patterns: store.resistancePatterns,
-      distractions: store.distractions,
+      patterns: resistancePatterns,
+      distractions,
       momentumEvents,
-      missions: store.missions,
-      microMissions: store.microMissions,
+      missions,
+      microMissions,
       brainDumps,
       userPatterns: null,
       quietHours: null,
       userName: user?.display_name ?? null,
     })
-  }, [sessions, retentionState, store.resistancePatterns, store.distractions, momentumEvents, store.missions, store.microMissions, brainDumps, user?.display_name])
+  }, [sessions.length, retentionState.totalRescues, resistancePatterns.length, distractions.length, momentumEvents.length, missions.length, microMissions.length, brainDumps.length, user?.display_name])
 
   // ── Handlers ──
   const handleStateSelect = useCallback((state: UserState) => {
@@ -157,15 +172,17 @@ export default function HomeScreen() {
       privacyPolicy: 'local_only',
     })
 
+    const storeActions = useAppStore.getState()
+
     // 1. Create the mission in the store so live screen can find it
-    const mission = store.addMission(
-      result.primaryMission.exactAction.slice(0, 60),
+    const mission = storeActions.addMission(
+      truncateTitle(result.primaryMission.exactAction),
       `Protocol: ${RESCUE_PROTOCOLS[protocolId].name} · State: ${selectedState}`,
       STATE_CHIPS.find(c => c.id === selectedState)?.color ?? colors.brand[400],
     )
 
     // 2. Add the micro-mission so live screen shows exactAction
-    store.addMicroMission(
+    storeActions.addMicroMission(
       mission.id,
       result.primaryMission.exactAction,
       result.primaryMission.completionCriteria ?? undefined,
@@ -173,36 +190,19 @@ export default function HomeScreen() {
     )
 
     // 3. Start the session linked to the mission
-    store.startSession(mission.id, undefined, 'focus', selectedMinutes)
-    store.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
+    storeActions.startSession(mission.id, undefined, 'focus', selectedMinutes)
+    storeActions.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
 
     // 4. Record retention event (activation path)
-    store.recordRetention('rescue_started', { state: selectedState, minutes: selectedMinutes, protocol: protocolId })
+    storeActions.recordRetention('rescue_started', { state: selectedState, minutes: selectedMinutes, protocol: protocolId })
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
 
-    setRescueStarted(true)
     router.push('/live')
-  }, [selectedState, selectedMinutes, store, router])
+  }, [selectedState, selectedMinutes, router])
 
   const handleQuickAction = useCallback((screen: Href) => {
     router.push(screen)
   }, [router])
-
-  // ── Rescue Active ──
-  if (rescueStarted) {
-    return (
-      <Screen>
-        <View style={styles.rescueActive}>
-          <Text style={styles.rescueActiveTitle}>Rescue in progress...</Text>
-          <Text style={styles.rescueActiveSub}>Head to your mission</Text>
-          <TouchableOpacity style={styles.goToMissionBtn} onPress={() => router.push('/live')}>
-            <Play size={20} color={colors.text.inverse} />
-            <Text style={styles.goToMissionText}>Go to Mission</Text>
-          </TouchableOpacity>
-        </View>
-      </Screen>
-    )
-  }
 
   return (
     <Screen>
@@ -275,6 +275,7 @@ export default function HomeScreen() {
               accessibilityRole="radio"
               accessibilityState={{ selected: selectedState === chip.id }}
               accessibilityLabel={`${chip.label} state - tap to select`}
+              accessibilityHint="Selects this emotional state for your rescue mission"
               style={[
                 styles.stateChip,
                 selectedState === chip.id && {
@@ -366,7 +367,7 @@ export default function HomeScreen() {
                 <Text style={styles.pendingDumpBadgeText}>{pendingBrainDumps.count}</Text>
               </View>
             </View>
-            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+            <View style={styles.pendingDumpContent}>
               <Text style={styles.pendingDumpLabel}>Turn thoughts into missions</Text>
               <Text style={styles.pendingDumpPreview} numberOfLines={1}>
                 {pendingBrainDumps.items[0]}
@@ -399,11 +400,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Loop Status */}
-        <View style={styles.loopStatus}>
-          <Text style={styles.loopText}>{homeIntel.loopStatus.active}/{homeIntel.loopStatus.total} loops</Text>
-        </View>
-
         {/* Weekly Narrative */}
         {homeIntel.weeklyNarrative && (
           <Card variant="subtle" style={styles.narrativeCard}>
@@ -412,8 +408,8 @@ export default function HomeScreen() {
           </Card>
         )}
 
-        <View style={{ height: layout.tabBarHeight + spacing.lg }} />
-      </ScrollView>
+        <View style={styles.bottomSpacer} />
+</ScrollView>
     </Screen>
   )
 }
@@ -446,7 +442,8 @@ const styles = StyleSheet.create({
   // State Grid
   stateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
   stateChip: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 3) / 4,
+    width: '22%',
+    minWidth: 72,
     alignItems: 'center', padding: spacing.md, borderRadius: radius.lg,
     backgroundColor: colors.bg.surface, borderWidth: 1, borderColor: colors.border.subtle,
     gap: spacing.xs,
@@ -509,38 +506,10 @@ const styles = StyleSheet.create({
   todayRow: { flexDirection: 'row', gap: spacing.sm },
   todayStat: { flex: 1, alignItems: 'center', padding: spacing.md, backgroundColor: colors.bg.surface, borderRadius: radius.lg },
   todayValue: { ...typography.h2, color: colors.text.primary, fontSize: 20 },
-  todayLabel: { ...typography.caption, color: colors.text.tertiary, marginTop: 2 },
 
-  // Rescue Active
-  rescueActive: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  rescueActiveTitle: { ...typography.h1, color: colors.text.primary, fontSize: 24, marginBottom: spacing.sm },
-  rescueActiveSub: { ...typography.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xl },
-  goToMissionBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.brand[400], borderRadius: radius.lg, padding: spacing.md, paddingHorizontal: spacing.xl,
-  },
-  goToMissionText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '600' },
-  pendingDumpCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.accent.orange + '10', borderRadius: radius.lg,
-    padding: spacing.md, marginBottom: spacing.lg,
-    borderWidth: 1, borderColor: colors.accent.orange + '20',
-  },
-  pendingDumpLabel: { ...typography.caption, color: colors.accent.orange, fontWeight: '600' },
-  pendingDumpPreview: { ...typography.bodySmall, color: colors.text.secondary, marginTop: 2 },
+  // Pending brain dump content wrapper (extracted from inline)
+  pendingDumpContent: { flex: 1, marginLeft: spacing.sm },
 
-  // Risk Indicator
-  riskCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
-  riskRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  riskText: { ...typography.bodyMedium, fontWeight: '600' },
-  riskAction: { ...typography.bodySmall, color: colors.text.secondary, marginTop: spacing.xs },
-
-  // Loop Status
-  loopStatus: { alignItems: 'center', padding: spacing.xs },
-  loopText: { ...typography.caption, color: colors.text.disabled },
-
-  // Narrative
-  narrativeCard: { padding: spacing.md, marginBottom: spacing.lg },
-  narrativeLabel: { ...typography.labelSmall, color: colors.brand[400], marginBottom: spacing.xs },
-  narrativeText: { ...typography.bodySmall, color: colors.text.secondary },
+  // Bottom spacer (extracted from inline)
+  bottomSpacer: { height: layout.tabBarHeight + spacing.lg },
 })

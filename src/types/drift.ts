@@ -78,7 +78,7 @@ export interface DriftGraphInsight {
 
 export interface PersonalDriftGraph {
   userId: string
-  nodes: Map<string, DriftGraphNode>
+  nodes: Record<string, DriftGraphNode>
   edges: DriftGraphEdge[]
   insights: DriftGraphInsight[]
   lastComputed: string

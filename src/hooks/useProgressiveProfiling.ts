@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useAppStore } from '../store'
+import type { UserProfile } from '../types'
 
 export type ProfilingQuestion =
   | 'work_type'
@@ -69,14 +70,14 @@ export function useProgressiveProfiling() {
       if (!state.questionType) return
 
       // Save the answer to user profile
-      const fieldMap: Record<string, string> = {
+      const fieldMap: Partial<Record<ProfilingQuestion, keyof UserProfile>> = {
         work_type: 'work_type',
         struggle_time: 'struggle_time',
         biggest_project: 'biggest_project',
       }
       const field = fieldMap[state.questionType]
       if (field) {
-        updateProfile({ [field]: answer } as any)
+        updateProfile({ [field]: answer } as Partial<UserProfile>)
       }
 
       // Mark this profiling question as shown

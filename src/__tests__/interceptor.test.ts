@@ -284,6 +284,8 @@ describe('DriftInterceptionOrchestrator', () => {
       }
       const result = orch.shouldIntercept(signal)
       expect(result.should).toBe(true)
+      // Side effects are now applied separately
+      orch.prepareInterception(signal)
     })
 
     test('rate limits when recent interceptions exist', () => {

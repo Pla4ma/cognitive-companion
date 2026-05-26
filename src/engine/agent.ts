@@ -73,13 +73,13 @@ interface SignalDef {
 }
 
 const SIGNAL_WEIGHTS: Record<string, SignalDef> = {
-  timeGap:          { weight: 0.35, minConfidence: 1,   decayHours: 4 },
-  abandonRate:      { weight: 0.30, minConfidence: 2,   decayHours: 6 },
-  distractionRate:  { weight: 0.20, minConfidence: 2,   decayHours: 8 },
-  timeProfile:      { weight: 0.15, minConfidence: 1,   decayHours: 12 },
-  patternRecurrence:{ weight: 0.25, minConfidence: 3,   decayHours: 24 },
-  frictionLevel:    { weight: 0.15, minConfidence: 1,   decayHours: 4 },
-  sessionQuality:   { weight: 0.20, minConfidence: 2,   decayHours: 12 },
+  timeGap:          { weight: 0.22, minConfidence: 1,   decayHours: 4 },
+  abandonRate:      { weight: 0.19, minConfidence: 2,   decayHours: 6 },
+  distractionRate:  { weight: 0.12, minConfidence: 2,   decayHours: 8 },
+  timeProfile:      { weight: 0.10, minConfidence: 1,   decayHours: 12 },
+  patternRecurrence:{ weight: 0.15, minConfidence: 3,   decayHours: 24 },
+  frictionLevel:    { weight: 0.10, minConfidence: 1,   decayHours: 4 },
+  sessionQuality:   { weight: 0.12, minConfidence: 2,   decayHours: 12 },
 }
 
 // Time-of-day profiles — what state is common at what hour
@@ -101,7 +101,10 @@ function getTimeProfile(hour: number): { state: AvoidanceState; urgencyBoost: nu
   return TIME_PROFILES.late_night
 }
 
-// Per-state signal accumulators for escalation tracking
+// Per-state signal accumulators for escalation tracking.
+// Module-level because drift detection runs across invocations and needs to
+// remember the previous detected state to track consecutive same-state patterns.
+// Use `resetDriftDetectionState()` (exported) to clear between test runs.
 let lastDetectedState: AvoidanceState | null = null
 let consecutiveSameStateCount = 0
 let lastDetectionHour = -1

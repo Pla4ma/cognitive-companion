@@ -9,6 +9,7 @@ import type {
   DangerWindow,
   TimeSlot,
 } from '../engine/predictiveEngine';
+import type { UserState } from '../types/moment';
 
 // ── Day Names ──────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ function formatHour(h: number): string {
 
 // ── State / Blocker Display Labels ─────────────────────────
 
-const STATE_LABELS: Record<string, string> = {
+const STATE_LABELS: Partial<Record<UserState, string>> = {
   avoiding: 'Avoiding',
   overwhelmed: 'Overwhelmed',
   stuck: 'Stuck',
@@ -59,14 +60,14 @@ const BLOCKER_LABELS: Record<string, string> = {
 
 // ── Risk Colors ────────────────────────────────────────────
 
-const RISK_COLORS: Record<string, string> = {
+const RISK_COLORS: Record<'low' | 'moderate' | 'high' | 'critical', string> = {
   low: colors.success,
   moderate: colors.warning,
   high: '#F97316',
   critical: colors.error,
 };
 
-const RISK_BG: Record<string, string> = {
+const RISK_BG: Record<'low' | 'moderate' | 'high' | 'critical', string> = {
   low: 'rgba(16,185,129,0.12)',
   moderate: 'rgba(245,158,11,0.12)',
   high: 'rgba(249,115,22,0.12)',

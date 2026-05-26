@@ -46,7 +46,6 @@ export function Screen({ children, style, scrollable = true, gradient }: ScreenP
   return (
     <View
       style={screenStyles.container}
-      accessible={false}
     >
       {gradient && (
         <LinearGradient colors={gradient as [string, string, ...string[]]} style={StyleSheet.absoluteFillObject} />
@@ -276,8 +275,16 @@ interface BarChartProps {
 }
 
 export function BarChart({ data, height = 100, showValues = true, animated = true }: BarChartProps) {
-  const animValues = useRef(data.map(() => new Animated.Value(0))).current
+  const animValuesRef = useRef<Animated.Value[]>(data.map(() => new Animated.Value(0)))
+  const animValues = animValuesRef.current
   const maxValue = Math.max(...data.map((d) => d.value), 1)
+
+  // Sync animated values array when data length changes
+  useEffect(() => {
+    while (animValues.length < data.length) {
+      animValues.push(new Animated.Value(0))
+    }
+  }, [data.length])
 
   useEffect(() => {
     if (animated) {
@@ -378,12 +385,10 @@ export function ProgressRing({
     Animated.timing(animatedValue, {
       toValue: Math.min(Math.max(progress, 0), 1),
       duration: animation.slow,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start()
   }, [progress])
-
-  // Note: For a real app, use react-native-svg for proper ring animation
-  // This is a simplified version
+  // Animated border segments based on progress using animatedValue
   return (
     <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
       <View style={{
@@ -391,14 +396,14 @@ export function ProgressRing({
         width: size, height: size, borderRadius: size / 2,
         borderWidth: strokeWidth, borderColor: backgroundColor,
       }} />
-      <View style={{
+      <Animated.View style={{
         position: 'absolute',
         width: size, height: size, borderRadius: size / 2,
         borderWidth: strokeWidth, borderColor: color,
         borderTopColor: 'transparent',
-        borderRightColor: progress > 0.25 ? color : 'transparent',
-        borderBottomColor: progress > 0.5 ? color : 'transparent',
-        borderLeftColor: progress > 0.75 ? color : 'transparent',
+        borderRightColor: animatedValue.interpolate({ inputRange: [0, 0.25, 0.2501], outputRange: ['transparent', 'transparent', color] }) as any,
+        borderBottomColor: animatedValue.interpolate({ inputRange: [0, 0.5, 0.501], outputRange: ['transparent', 'transparent', color] }) as any,
+        borderLeftColor: animatedValue.interpolate({ inputRange: [0, 0.75, 0.7501], outputRange: ['transparent', 'transparent', color] }) as any,
         transform: [{ rotate: '-90deg' }],
       }} />
       {children}

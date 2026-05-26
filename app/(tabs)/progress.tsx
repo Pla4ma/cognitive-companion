@@ -7,15 +7,16 @@ import React, { useMemo, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { TrendingUp, Share2, Brain, Calendar, ChevronDown, ChevronUp } from 'lucide-react-native'
 import { MMKV } from 'react-native-mmkv'
-import { useAppStore } from '../src/store'
-import { calculateMomentumScore, analyzeResistancePatterns } from '../src/engine'
-import { colors, spacing, radius, typography, layout } from '../src/theme'
-import { Screen, Card, SectionHeader } from '../src/components'
-import { generateWeeklyNarrative } from '../src/engine/insights'
-import { generateWeeklySummaryCard, shareCard } from '../src/services/share'
-import { useDriftIntelligence } from '../src/hooks/useDriftIntelligence'
-import { IntelligenceCard } from '../src/components/IntelligenceCard'
-import { DangerWindowHeatmap } from '../src/components/DangerWindowHeatmap'
+import { useAppStore } from '../../src/store'
+import { calculateMomentumScore, analyzeResistancePatterns } from '../../src/engine'
+import { colors, spacing, radius, typography, layout } from '../../src/theme'
+import { Screen, Card, SectionHeader } from '../../src/components'
+import { generateWeeklyNarrative } from '../../src/engine/insights'
+import { generateWeeklySummaryCard, shareCard } from '../../src/services/share'
+import { useDriftIntelligence } from '../../src/hooks/useDriftIntelligence'
+import { IntelligenceCard } from '../../src/components/IntelligenceCard'
+import { DangerWindowHeatmap } from '../../src/components/DangerWindowHeatmap'
+import { scheduleWeeklyNarrative } from '../../src/services/notifications'
 
 const storage = new MMKV()
 
@@ -36,18 +37,34 @@ export default function ProgressScreen() {
   const distractions = useAppStore((s) => s.distractions)
   const momentumEvents = useAppStore((s) => s.momentumEvents)
   const user = useAppStore((s) => s.user)
+  const sessionCount = useAppStore((s) => s.sessions.length)
+  const plan = user?.plan ?? 'free'
 
   const [heatmapOpen, setHeatmapOpen] = useState(false)
 
   // ── Weekly Narrative (cached in MMKV) ──
   const weekKey = getWeekKey()
   const weeklyNarrative = useMemo(() => {
-    const cached = storage.getString(weekKey)
-    if (cached) return cached
-    const fresh = generateWeeklyNarrative(sessions, resistancePatterns, distractions, user?.name ?? '')
+    const cachedNarrative = storage.getString(weekKey)
+    const cachedSessionCount = storage.getNumber(`${weekKey}_count`)
+    if (cachedNarrative != null && cachedSessionCount === sessionCount) return cachedNarrative
+    const fresh = generateWeeklyNarrative(sessions, resistancePatterns, distractions, user?.display_name ?? '')
     storage.set(weekKey, fresh)
+    storage.set(`${weekKey}_count`, sessionCount)
     return fresh
-  }, [sessions.length, resistancePatterns.length, distractions.length, weekKey])
+  }, [sessions.length, resistancePatterns.length, distractions.length, weekKey, sessionCount])
+
+  // Schedule weekly narrative notification (fires once per week)
+  React.useEffect(() => {
+    if (weeklyNarrative && sessions.length >= 7) {
+      const scheduledKey = `${weekKey}_notif_scheduled`
+      if (!storage.getBoolean(scheduledKey)) {
+        scheduleWeeklyNarrative(weeklyNarrative, user?.display_name ?? null)
+          .then(() => { storage.set(scheduledKey, true) })
+          .catch(() => {})
+      }
+    }
+  }, [weeklyNarrative, sessions.length, weekKey])
 
   // ── Weekly stats ──
   const weekAgo = Date.now() - 7 * 86400000
@@ -114,7 +131,7 @@ export default function ProgressScreen() {
 
   return (
     <Screen gradient={['rgba(139,92,246,0.04)', 'transparent']}>
-      <Text style={styles.title}>Progress</Text>
+      <Text accessibilityRole="header" style={styles.title}>Progress</Text>
 
       {/* ── Weekly Narrative ── */}
       <Card variant="default" style={styles.narrativeCard}>
@@ -123,7 +140,7 @@ export default function ProgressScreen() {
             <Calendar size={14} color={colors.brand[400]} />
             <Text style={styles.narrativeLabel}>THIS WEEK</Text>
           </View>
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare} accessibilityLabel="Share this week's progress">
             <Share2 size={16} color={colors.brand[400]} />
             <Text style={styles.shareBtnText}>Share this week</Text>
           </TouchableOpacity>
@@ -133,15 +150,15 @@ export default function ProgressScreen() {
 
       {/* ── Stats Row ── */}
       <View style={styles.statsRow}>
-        <Card variant="default" style={styles.statCard}>
+        <Card variant="default" style={styles.statCard} accessibilityLabel={`${rescuedCount} rescued this week`}>
           <Text style={styles.statValue}>{rescuedCount}</Text>
           <Text style={styles.statLabel}>Rescued this week</Text>
         </Card>
-        <Card variant="default" style={styles.statCard}>
+        <Card variant="default" style={styles.statCard} accessibilityLabel={`${completionRate} percent completion rate`}>
           <Text style={styles.statValue}>{completionRate}%</Text>
           <Text style={styles.statLabel}>Completion rate</Text>
         </Card>
-        <Card variant="default" style={styles.statCard}>
+        <Card variant="default" style={styles.statCard} accessibilityLabel={`${salvageRate} percent salvage rate`}>
           <Text style={styles.statValue}>{salvageRate}%</Text>
           <Text style={styles.statLabel}>Salvage rate</Text>
         </Card>
@@ -171,26 +188,41 @@ export default function ProgressScreen() {
         </View>
       </Card>
 
-      {/* ── Intelligence Panel (7+ sessions) ── */}
+      {/* ── Intelligence Panel (7+ sessions, Pro only) ── */}
       {intelligence.hasEnoughData && intelligence.profile && intelligence.prediction && (
         <>
-          <SectionHeader title="Intelligence" icon={<Brain size={16} color={colors.accent.purple]} />} />
-          <IntelligenceCard profile={intelligence.profile} prediction={intelligence.prediction} />
+          <SectionHeader title="Intelligence" icon={<Brain size={16} color={colors.accent.purple} />} />
+          {plan === 'pro' ? (
+            <>
+              <IntelligenceCard profile={intelligence.profile} prediction={intelligence.prediction} />
 
-          <TouchableOpacity
-            style={styles.heatmapToggle}
-            onPress={() => setHeatmapOpen((v) => !v)}
-          >
-            <Text style={styles.heatmapToggleText}>Danger Window Heatmap</Text>
-            {heatmapOpen
-              ? <ChevronUp size={16} color={colors.text.tertiary} />
-              : <ChevronDown size={16} color={colors.text.tertiary} />
-            }
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.heatmapToggle}
+                onPress={() => setHeatmapOpen((v) => !v)}
+                accessibilityRole="button"
+                accessibilityLabel={heatmapOpen ? 'Collapse danger window heatmap' : 'Expand danger window heatmap'}
+              >
+                <Text style={styles.heatmapToggleText}>Danger Window Heatmap</Text>
+                {heatmapOpen
+                  ? <ChevronUp size={16} color={colors.text.tertiary} />
+                  : <ChevronDown size={16} color={colors.text.tertiary} />
+                }
+              </TouchableOpacity>
 
-          {heatmapOpen && intelligence.profile.timeSlots.length > 0 && (
+              {heatmapOpen && intelligence.profile.timeSlots.length > 0 && (
+                <Card variant="default" style={styles.heatmapCard}>
+                  <DangerWindowHeatmap timeSlots={intelligence.profile.timeSlots} />
+                </Card>
+              )}
+            </>
+          ) : (
             <Card variant="default" style={styles.heatmapCard}>
-              <DangerWindowHeatmap timeSlots={intelligence.profile.timeSlots} />
+              <Text style={styles.resistanceInsight}>
+                After 7 sessions, INTENT maps your hardest hours and predicts when you'll drift.
+              </Text>
+              <Text style={[styles.resistanceInsight, { marginTop: 8, color: colors.brand[400] }]}>
+                Upgrade to Pro to unlock your full resistance map →
+              </Text>
             </Card>
           )}
         </>

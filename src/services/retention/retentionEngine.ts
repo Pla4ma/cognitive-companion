@@ -5,7 +5,7 @@
 // Tracks activation, comeback patterns, and social proof.
 // ══════════════════════════════════════════════════════════════
 
-import type { UserState, MissionSession, ResistancePattern } from '../../types'
+import type { UserState, MissionSession, ResistancePattern, BrainDump } from '../../types'
 
 // ── Storage Adapter ──────────────────────────────────────────
 // Uses MMKV in production, in-memory in tests
@@ -420,34 +420,34 @@ export function getSocialProofStat(
 
   const proofByState: Record<string, string[]> = {
     avoiding: [
-      "You just did what 73% of people who feel 'avoiding' can't do — you started anyway.",
-      "Most people who feel 'avoiding' never open the app. You did more than that.",
-      "Starting when you feel 'avoiding' is the hardest rescue. You just did it.",
+      "Research: most people who feel 'avoiding' never open the thing. You did.",
+      "Task initiation avoidance is real — and you just broke through it.",
+      "The hardest part is starting. You just did the hardest part.",
     ],
     overwhelmed: [
-      "68% of people who feel overwhelmed just close the app. You stayed and fought.",
-      "Overwhelmed is the hardest state to rescue from. You're in the top 30%.",
       "When everything feels too much, doing one thing is extraordinary. You did it.",
+      "Research shows overwhelmed people freeze. You didn't. You acted.",
+      "One thing done > everything planned. You chose the right side.",
     ],
     stuck: [
-      "People who feel 'stuck' take 3x longer to start. You broke through in minutes.",
-      "Being stuck and starting anyway — that's the 25% who actually move.",
       "Stuck means your brain is protecting you. You pushed through anyway.",
+      "Research: people who feel 'stuck' take 3x longer to start. You broke through in minutes.",
+      "Getting unstuck isn't about motivation — it's about one tiny action. You found it.",
     ],
     tired: [
       "Rescuing while tired takes more willpower than any other state. Respect.",
-      "Most people who feel tired just give in. You gave yourself 2 minutes instead.",
       "Tired rescues are the bravest. Your brain wanted rest and you chose action.",
+      "Research: tired decision-making defaults to avoidance. You overrode it.",
     ],
     anxious: [
       "Anxiety makes starting feel dangerous. You started anyway. That's courage.",
-      "72% of people who feel anxious avoid action. You just joined the 28%.",
+      "Research: anxious brains overestimate risk. You acted despite the signal.",
       "Anxious and still moving — that's not easy. You just proved you can.",
     ],
     distracted: [
       "Coming back from distraction is a skill. You just practiced it.",
       "Distracted brains resist returning. Yours didn't. That's a win.",
-      "Most distractions win. Yours didn't. You came back.",
+      "Research: task-switching back is harder than starting fresh. You did it anyway.",
     ],
     default: [
       "You just rescued time that most people lose forever. That matters.",
@@ -704,4 +704,315 @@ export function getLoopStatusSummary(state: RetentionState): {
     nextLoopToActivate: nextLoop,
     description: `${active}/7 retention loops active`,
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PRESCRIPTION LAYER — Decides what to do next
+// Reads retention state + sessions + brain dumps → actionable instructions
+// ══════════════════════════════════════════════════════════════
+
+// ── Types ────────────────────────────────────────────────────
+
+export type PostSessionMoment =
+  | 'activation_celebration'
+  | 'social_proof'
+  | 'comeback_acknowledgment'
+  | 'momentum_update'
+  | 'next_action_prompt'
+  | 'weekly_narrative'
+  | 'day_milestone'
+  | 'brain_dump_prompt'
+
+export type PrescriptionAction =
+  | { type: 'show_post_session_moment'; moment: PostSessionMoment }
+  | { type: 'schedule_notification'; notificationType: string; delay: number; copy: string }
+  | { type: 'show_ui_surface'; surface: string; data: Record<string, unknown> }
+  | { type: 'activate_loop'; loop: keyof RetentionState['loopsActive'] }
+  | { type: 'prompt_engagement'; prompt: string; action: string }
+  | { type: 'none' }
+
+export interface RetentionPrescription {
+  primary: PrescriptionAction
+  secondary: PrescriptionAction
+  uiMessage: string | null
+  loopActivations: Array<keyof RetentionState['loopsActive']>
+  shouldScheduleNotification: boolean
+  notificationCopy: string | null
+  nextScreen: string | null
+}
+
+export interface PostSessionMomentConfig {
+  moment: PostSessionMoment
+  priority: number
+  data: Record<string, unknown>
+  displayDurationMs: number
+  requiresInteraction: boolean
+}
+
+// ── Core Prescription Function ───────────────────────────────
+
+export type PrescriptionContext =
+  | 'post_session'
+  | 'app_open'
+  | 'comeback'
+
+export function prescribeNextAction(
+  state: RetentionState,
+  sessions: MissionSession[],
+  brainDumps: BrainDump[],
+  context: PrescriptionContext,
+  meta?: { comeback?: { isComeback: boolean; daysAway: number; message: string } },
+): RetentionPrescription {
+  const none: RetentionPrescription = {
+    primary: { type: 'none' },
+    secondary: { type: 'none' },
+    uiMessage: null,
+    loopActivations: [],
+    shouldScheduleNotification: false,
+    notificationCopy: null,
+    nextScreen: null,
+  }
+
+  // ── Post-session context ──
+  if (context === 'post_session') {
+    const loopActivations: Array<keyof RetentionState['loopsActive']> = []
+    let primaryMoment: PostSessionMoment | null = null
+    let secondaryMoment: PostSessionMoment | null = null
+    let uiMessage: string | null = null
+
+    // First rescue ever → activation celebration (highest priority)
+    if (state.totalRescues === 1 && state.activated) {
+      primaryMoment = 'activation_celebration'
+      loopActivations.push('rescueLoop')
+      const celeb = getActivationCelebration(state)
+      uiMessage = celeb.message
+    }
+    // 3 rescues → social proof
+    else if (state.totalRescues === 3) {
+      primaryMoment = 'social_proof'
+      loopActivations.push('socialProofLoop')
+    }
+    // 5 rescues → day milestone
+    else if (state.totalRescues === 5) {
+      primaryMoment = 'day_milestone'
+      loopActivations.push('insightLoop')
+    }
+    // Pending brain dumps → brain dump prompt
+    else if (getPendingBrainDumpItems(brainDumps).count > 0) {
+      primaryMoment = 'brain_dump_prompt'
+      loopActivations.push('contextLoop')
+    }
+    // Default → next action prompt
+    else {
+      primaryMoment = 'next_action_prompt'
+    }
+
+    // Secondary: social proof on milestone counts (if not already primary)
+    if (primaryMoment !== 'social_proof' && state.totalRescues >= 3) {
+      secondaryMoment = 'social_proof'
+    }
+
+    return {
+      primary: primaryMoment ? { type: 'show_post_session_moment', moment: primaryMoment } : { type: 'none' },
+      secondary: secondaryMoment ? { type: 'show_post_session_moment', moment: secondaryMoment } : { type: 'none' },
+      uiMessage,
+      loopActivations,
+      shouldScheduleNotification: false,
+      notificationCopy: null,
+      nextScreen: null,
+    }
+  }
+
+  // ── Comeback context ──
+  if (context === 'comeback' && meta?.comeback?.isComeback) {
+    return {
+      primary: { type: 'show_post_session_moment', moment: 'comeback_acknowledgment' },
+      secondary: { type: 'none' },
+      uiMessage: meta.comeback.message,
+      loopActivations: state.totalComebacks > 0 ? [] : ['comebackLoop'],
+      shouldScheduleNotification: false,
+      notificationCopy: null,
+      nextScreen: null,
+    }
+  }
+
+  // ── App-open context ──
+  if (context === 'app_open') {
+    const daysSinceActivation = getDaysSinceActivation(state)
+    let primary: PrescriptionAction = { type: 'none' }
+    let secondary: PrescriptionAction = { type: 'none' }
+    let shouldScheduleNotification = false
+    let notificationCopy: string | null = null
+    let uiMessage: string | null = null
+    const loopActivations: Array<keyof RetentionState['loopsActive']> = []
+
+    // Day 2: habit seed notification if not yet seeded
+    if (!state.day2.habitSeeded && daysSinceActivation >= 1) {
+      shouldScheduleNotification = true
+      notificationCopy = 'One small rescue today keeps the momentum going. Two minutes?'
+      primary = {
+        type: 'schedule_notification',
+        notificationType: 'day2_habit_seed',
+        delay: 3600000, // 1 hour
+        copy: notificationCopy,
+      }
+    }
+
+    // Day 3: pattern recognized → momentum update
+    if (state.day3.patternRecognized && !state.loopsActive.momentumLoop) {
+      primary = { type: 'show_post_session_moment', moment: 'momentum_update' }
+      loopActivations.push('momentumLoop')
+      uiMessage = computeMomentumTrend(sessions).description
+    }
+
+    // Day 7: first insight shown → weekly narrative
+    if (state.day7.firstInsightShown && !state.loopsActive.revelationLoop) {
+      primary = { type: 'show_post_session_moment', moment: 'weekly_narrative' }
+      loopActivations.push('revelationLoop')
+    }
+
+    // Day 30: commitment prompt
+    if (shouldShowDay30Commitment(state)) {
+      secondary = {
+        type: 'prompt_engagement',
+        prompt: 'You\'ve been at this for a month. Ready to commit to a daily practice?',
+        action: 'commitment_prompt',
+      }
+    }
+
+    return {
+      primary,
+      secondary,
+      uiMessage,
+      loopActivations,
+      shouldScheduleNotification,
+      notificationCopy,
+      nextScreen: null,
+    }
+  }
+
+  return none
+}
+
+// ── Post-Session Moment Sequence Builder ─────────────────────
+
+export function getPostSessionMoments(
+  state: RetentionState,
+  sessions: MissionSession[],
+  brainDumps: BrainDump[],
+  sessionJustCompleted: MissionSession,
+): PostSessionMomentConfig[] {
+  const moments: PostSessionMomentConfig[] = []
+
+  // Activation celebration — first rescue ever
+  if (state.totalRescues === 1 && state.activated) {
+    const celeb = getActivationCelebration(state)
+    moments.push({
+      moment: 'activation_celebration',
+      priority: 100,
+      data: { message: celeb.message, submessage: celeb.submessage },
+      displayDurationMs: 5000,
+      requiresInteraction: false,
+    })
+  }
+
+  // Social proof — show after 3+ rescues
+  if (state.totalRescues >= 3) {
+    const socialProof = getSocialProofStat(
+      sessionJustCompleted.notes ?? null,
+      sessionJustCompleted.status === 'completed',
+    )
+    if (socialProof) {
+      moments.push({
+        moment: 'social_proof',
+        priority: 90,
+        data: { stat: socialProof },
+        displayDurationMs: 4000,
+        requiresInteraction: false,
+      })
+    }
+  }
+
+  // Comeback acknowledgment — if user returned after gap
+  const comeback = detectComeback(sessions, state.lastRescueDate)
+  if (comeback.isComeback) {
+    moments.push({
+      moment: 'comeback_acknowledgment',
+      priority: 80,
+      data: { message: comeback.message, daysAway: comeback.daysAway },
+      displayDurationMs: 4000,
+      requiresInteraction: false,
+    })
+  }
+
+  // Day milestones
+  if (state.totalRescues === 5) {
+    moments.push({
+      moment: 'day_milestone',
+      priority: 70,
+      data: { milestone: 5, message: '5 rescues. You\'re building a pattern.' },
+      displayDurationMs: 4000,
+      requiresInteraction: false,
+    })
+  }
+  if (state.totalRescues === 10) {
+    moments.push({
+      moment: 'day_milestone',
+      priority: 70,
+      data: { milestone: 10, message: '10 rescues. This is becoming who you are.' },
+      displayDurationMs: 4000,
+      requiresInteraction: false,
+    })
+  }
+
+  // Momentum update — if momentum data exists
+  if (state.momentumWindows.last7Days > 0) {
+    const trend = computeMomentumTrend(sessions)
+    moments.push({
+      moment: 'momentum_update',
+      priority: 60,
+      data: { trend: trend.trend, count: trend.count, description: trend.description },
+      displayDurationMs: 3500,
+      requiresInteraction: false,
+    })
+  }
+
+  // Weekly narrative — if 7+ rescues
+  if (state.totalRescues >= 7) {
+    moments.push({
+      moment: 'weekly_narrative',
+      priority: 50,
+      data: { message: 'Your weekly pattern is emerging.' },
+      displayDurationMs: 4000,
+      requiresInteraction: false,
+    })
+  }
+
+  // Brain dump prompt — if pending brain dumps
+  const pendingDumps = getPendingBrainDumpItems(brainDumps)
+  if (pendingDumps.count > 0) {
+    moments.push({
+      moment: 'brain_dump_prompt',
+      priority: 40,
+      data: {
+        count: pendingDumps.count,
+        items: pendingDumps.items,
+        message: `You have ${pendingDumps.count} item${pendingDumps.count !== 1 ? 's' : ''} waiting in your brain dump.`,
+      },
+      displayDurationMs: 4000,
+      requiresInteraction: true,
+    })
+  }
+
+  // Next action prompt — always show as final moment
+  moments.push({
+    moment: 'next_action_prompt',
+    priority: 30,
+    data: { message: 'Ready for one more small thing?' },
+    displayDurationMs: 3000,
+    requiresInteraction: true,
+  })
+
+  // Sort by priority descending
+  return moments.sort((a, b) => b.priority - a.priority)
 }

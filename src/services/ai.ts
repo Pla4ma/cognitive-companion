@@ -22,6 +22,8 @@ function buildSystemPrompt(
     todayMinutes: number
     currentStreak: number
     recentAvoidance: AvoidanceState | null
+    driftRisk?: string
+    dangerWindows?: number
   }
 ): string {
   const styleGuide: Record<PushStyle, string> = {
@@ -29,6 +31,17 @@ function buildSystemPrompt(
     firm: 'Be direct and clear. No hedging. "Do this." "Stop that." Still respectful, but no fluff.',
     emergency: 'Be urgent and commanding. Short sentences. Imperatives. "Now." "Move." "Stop thinking. Start doing."',
   }
+
+  // Build danger context for the AI
+  const dangerContext = context.driftRisk === 'critical'
+    ? `\n\n⚠ URGENT: This user is in a critical drift risk moment right now. Lead with the most decisive action possible. No empathy buffer — go straight to the action.`
+    : context.driftRisk === 'high'
+    ? `\n\nContext: User is in elevated drift risk right now. They opened the coach — that's good. Help them start something in the next 30 seconds.`
+    : ''
+
+  const windowContext = context.dangerWindows && context.dangerWindows > 0
+    ? `\n- Danger windows detected: ${context.dangerWindows} time periods where this user typically drifts.`
+    : ''
 
   return `You are the Rescue Coach for the INTENT app. You are NOT a generic chatbot. You are an anti-avoidance specialist.
 
@@ -49,6 +62,7 @@ USER CONTEXT:
 - Today: ${context.todayMinutes} minutes focused
 - Current streak: ${context.currentStreak} days
 - Recent avoidance state: ${context.recentAvoidance ?? 'none detected'}
+- Drift risk level: ${context.driftRisk ?? 'low'}${windowContext}${dangerContext}
 
 RESPONSE FORMAT:
 - Line 1: State acknowledgment (3-5 words max)

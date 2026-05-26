@@ -53,11 +53,25 @@ export interface NotificationScheduleResult {
 
 // ── In-Memory State ──────────────────────────────────────────
 
+/**
+ * Module-level mutable state.
+ * These are intentionally module-scoped (not in Zustand) because they represent
+ * ephemeral scheduling bookkeeping that doesn't need persistence. Kept here to
+ * avoid polluting the global store with scheduler internals.
+ * Reset via `resetSchedulerState()` for testability.
+ */
+
 /** Map of notificationType -> last sent timestamp (ms) */
 const lastSentMap = new Map<NotificationType, number>()
 
 /** Outcome tracking log */
 const outcomeLog: ScheduledNotificationRecord[] = []
+
+/** Reset all scheduler-internal state. Useful for tests and fresh sessions. */
+export function resetSchedulerState(): void {
+  lastSentMap.clear()
+  outcomeLog.length = 0
+}
 
 /** Debounce minimum interval: 20 minutes in ms */
 const DEBOUNCE_MS = 20 * 60 * 1000
@@ -249,12 +263,6 @@ export function isWithinQuietHours(
   return timeMinutes >= startMinutes && timeMinutes < endMinutes
 }
 
-export function respectsQuietHours(
-  time: Date,
-  settings: QuietHoursConfig | null,
-): boolean {
-  return !isWithinQuietHours(time, settings)
-}
 
 // ── Outcome Tracking ─────────────────────────────────────────
 
@@ -267,15 +275,9 @@ export function trackNotificationOutcome(
     record.outcome = action
     record.outcomeAt = new Date()
   } else {
-    // Create a record even if we don't have the original schedule
-    outcomeLog.push({
-      id,
-      type: 'rescue', // unknown, placeholder
-      scheduledFor: new Date(),
-      sentAt: new Date(),
-      outcome: action,
-      outcomeAt: new Date(),
-    })
+    // No matching sent record — log warning and return early
+    console.warn(`[NotificationScheduler] trackNotificationOutcome: no record found for id="${id}", skipping phantom entry`)
+    return
   }
 
   // Trim log if too large

@@ -91,6 +91,9 @@ export interface AntiDriftInput {
   /** How many times the user has abandoned today */
   abandonCountToday: number
 
+  /** Whether there is an active focus/session running */
+  hasActiveSession: boolean
+
   /** Agent invocation source */
   source: 'app_open' | 'notification' | 'widget' | 'voice' | 'automated'
 }
@@ -288,31 +291,6 @@ export interface GraphUpdate {
   targetId: string
   /** Payload for the update */
   payload: Record<string, unknown>
-}
-
-// ══════════════════════════════════════════════════════════════
-// Agent Configuration
-// ══════════════════════════════════════════════════════════════
-
-export interface AntiDriftAgentConfig {
-  /** Max signals to consider in the sliding window */
-  maxSignalWindow: number
-  /** Minimum confidence to recommend a protocol */
-  minProtocolConfidence: number
-  /** Whether body double is available (requires pro) */
-  bodyDoubleAvailable: boolean
-  /** Whether on-device AI is available */
-  onDeviceAIAvailable: boolean
-  /** Default coach tone */
-  defaultTone: 'gentle' | 'firm' | 'urgent'
-}
-
-export const DEFAULT_AGENT_CONFIG: AntiDriftAgentConfig = {
-  maxSignalWindow: 20,
-  minProtocolConfidence: 0.3,
-  bodyDoubleAvailable: false,
-  onDeviceAIAvailable: false,
-  defaultTone: 'gentle',
 }
 
 // ══════════════════════════════════════════════════════════════
