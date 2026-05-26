@@ -1,0 +1,7238 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty timeSlots 1`] = `
+<View
+  style={
+    {
+      "gap": 16,
+    }
+  }
+>
+  <ScrollView
+    contentContainerStyle={
+      {
+        "paddingRight": 16,
+      }
+    }
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+  >
+    <View
+      style={
+        {
+          "gap": 2,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "gap": 2,
+            "marginBottom": 4,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            6a
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            9a
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            12p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            3p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            6p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            9p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            S
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            M
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            T
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            W
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            T
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            F
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            S
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+    </View>
+  </ScrollView>
+  <View
+    style={
+      {
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "gap": 12,
+        "paddingHorizontal": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "#16161A",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        No data
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(15,65,51)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Low
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(15,108,79)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Medium
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(83,57,16)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Moderate
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(153,100,14)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        High
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(171,52,53)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Critical
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated timeSlots 1`] = `
+<View
+  style={
+    {
+      "gap": 16,
+    }
+  }
+>
+  <ScrollView
+    contentContainerStyle={
+      {
+        "paddingRight": 16,
+      }
+    }
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+  >
+    <View
+      style={
+        {
+          "gap": 2,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "gap": 2,
+            "marginBottom": 4,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            6a
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            9a
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            12p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            3p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            6p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 9,
+                "fontWeight": "600",
+                "letterSpacing": 0,
+                "lineHeight": 14,
+              }
+            }
+          >
+            9p
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "height": 16,
+              "justifyContent": "flex-end",
+              "width": 28,
+            }
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            S
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            M
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "rgb(15,108,79)",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            T
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            W
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "rgb(153,100,14)",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            T
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            F
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 2,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+              "width": 18,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 10,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            S
+          </Text>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "borderRadius": 4,
+                "height": 28,
+                "width": 28,
+              },
+              {
+                "backgroundColor": "#16161A",
+              },
+            ]
+          }
+        />
+      </View>
+    </View>
+  </ScrollView>
+  <View
+    style={
+      {
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "gap": 12,
+        "paddingHorizontal": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "#16161A",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        No data
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(15,65,51)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Low
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(15,108,79)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Medium
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(83,57,16)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Moderate
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(153,100,14)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        High
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 4,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "borderRadius": 2,
+              "height": 10,
+              "width": 10,
+            },
+            {
+              "backgroundColor": "rgb(171,52,53)",
+            },
+          ]
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 10,
+            "fontWeight": "600",
+            "letterSpacing": 0.8,
+            "lineHeight": 14,
+          }
+        }
+      >
+        Critical
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Component Snapshots IntelligenceCard matches snapshot with empty data 1`] = `
+<Animated.View
+  style={
+    {
+      "transform": [
+        {
+          "scale": Value {
+            "_value": 1,
+            "addListener": [MockFunction],
+            "interpolate": [MockFunction],
+            "removeListener": [MockFunction],
+            "setValue": [MockFunction],
+          },
+        },
+      ],
+    }
+  }
+>
+  <BlurView
+    intensity={30}
+    style={
+      [
+        {
+          "borderRadius": 24,
+          "overflow": "hidden",
+        },
+        {
+          "backgroundColor": "#16161A",
+          "borderColor": "rgba(255,255,255,0.10)",
+          "borderWidth": 1,
+          "elevation": 4,
+          "shadowColor": "#000",
+          "shadowOffset": {
+            "height": 4,
+            "width": 0,
+          },
+          "shadowOpacity": 0.4,
+          "shadowRadius": 8,
+        },
+        {
+          "gap": 16,
+          "padding": 24,
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "marginBottom": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <Brain
+          color="#8B5CF6"
+          size={16}
+        />
+        <Text
+          style={
+            {
+              "color": "#B4B4C8",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 1.2,
+              "lineHeight": 14,
+            }
+          }
+        >
+          YOUR PATTERNS
+        </Text>
+      </View>
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 12,
+            "fontWeight": "500",
+            "lineHeight": 16,
+          }
+        }
+      >
+        0
+         sessions
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 4,
+          }
+        }
+      >
+        <TrendingUp
+          color="#7E7E96"
+          size={14}
+        />
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 0.8,
+              "lineHeight": 14,
+            }
+          }
+        >
+          COMEBACK RATE
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "baseline",
+            "flexDirection": "row",
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#FFFFFF",
+              "fontFamily": "System",
+              "fontSize": 24,
+              "fontWeight": "700",
+              "letterSpacing": -0.5,
+              "lineHeight": 30,
+            }
+          }
+        >
+          0
+          %
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 16,
+                  "fontWeight": "700",
+                },
+                {
+                  "color": "#7E7E96",
+                },
+              ]
+            }
+          >
+            →
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 14,
+                "fontWeight": "400",
+                "lineHeight": 20,
+                "textTransform": "capitalize",
+              }
+            }
+          >
+            stable
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginTop": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "lineHeight": 16,
+            }
+          }
+        >
+          Current risk
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.6,
+                "lineHeight": 14,
+              },
+              {
+                "color": "#10B981",
+              },
+            ]
+          }
+        >
+          LOW
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#1E1E24",
+            "borderRadius": 9999,
+            "height": 6,
+            "overflow": "hidden",
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderRadius": 9999,
+                "height": "100%",
+              },
+              {
+                "backgroundColor": "#10B981",
+                "width": "0%",
+              },
+            ]
+          }
+        />
+      </View>
+    </View>
+  </BlurView>
+</Animated.View>
+`;
+
+exports[`Component Snapshots IntelligenceCard matches snapshot with full profile and prediction 1`] = `
+<Animated.View
+  style={
+    {
+      "transform": [
+        {
+          "scale": Value {
+            "_value": 1,
+            "addListener": [MockFunction],
+            "interpolate": [MockFunction],
+            "removeListener": [MockFunction],
+            "setValue": [MockFunction],
+          },
+        },
+      ],
+    }
+  }
+>
+  <BlurView
+    intensity={30}
+    style={
+      [
+        {
+          "borderRadius": 24,
+          "overflow": "hidden",
+        },
+        {
+          "backgroundColor": "#16161A",
+          "borderColor": "rgba(255,255,255,0.10)",
+          "borderWidth": 1,
+          "elevation": 4,
+          "shadowColor": "#000",
+          "shadowOffset": {
+            "height": 4,
+            "width": 0,
+          },
+          "shadowOpacity": 0.4,
+          "shadowRadius": 8,
+        },
+        {
+          "gap": 16,
+          "padding": 24,
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "marginBottom": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <Brain
+          color="#8B5CF6"
+          size={16}
+        />
+        <Text
+          style={
+            {
+              "color": "#B4B4C8",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 1.2,
+              "lineHeight": 14,
+            }
+          }
+        >
+          YOUR PATTERNS
+        </Text>
+      </View>
+      <Text
+        style={
+          {
+            "color": "#7E7E96",
+            "fontFamily": "System",
+            "fontSize": 12,
+            "fontWeight": "500",
+            "lineHeight": 16,
+          }
+        }
+      >
+        25
+         sessions
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 4,
+          }
+        }
+      >
+        <Clock
+          color="#7E7E96"
+          size={14}
+        />
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 0.8,
+              "lineHeight": 14,
+            }
+          }
+        >
+          TOP DANGER WINDOW
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "gap": 2,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#FFFFFF",
+                "fontFamily": "System",
+                "fontSize": 18,
+                "fontWeight": "600",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Wed
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#B4B4C8",
+                "fontFamily": "System",
+                "fontSize": 14,
+                "fontWeight": "400",
+                "lineHeight": 20,
+              }
+            }
+          >
+            2pm
+             – 
+            4pm
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "flex-end",
+              "gap": 4,
+            }
+          }
+        >
+          <View
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 9999,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 4,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "backgroundColor": "rgba(249,115,22,0.12)",
+                  "borderColor": "#F9731633",
+                },
+              ]
+            }
+          >
+            <AlertTriangle
+              color="#F97316"
+              size={10}
+            />
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "System",
+                    "fontSize": 11,
+                    "fontWeight": "600",
+                    "letterSpacing": 0.6,
+                    "lineHeight": 14,
+                  },
+                  {
+                    "color": "#F97316",
+                  },
+                ]
+              }
+            >
+              HIGH
+            </Text>
+          </View>
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 12,
+                "fontWeight": "400",
+                "lineHeight": 16,
+              }
+            }
+          >
+            72
+            % drift
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 4,
+          }
+        }
+      >
+        <Shield
+          color="#7E7E96"
+          size={14}
+        />
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 0.8,
+              "lineHeight": 14,
+            }
+          }
+        >
+          TOP BATTLE
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "gap": 2,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#FFFFFF",
+                "fontFamily": "System",
+                "fontSize": 18,
+                "fontWeight": "600",
+                "lineHeight": 24,
+                "textTransform": "capitalize",
+              }
+            }
+          >
+            Avoiding
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#B4B4C8",
+                "fontFamily": "System",
+                "fontSize": 14,
+                "fontWeight": "400",
+                "lineHeight": 20,
+                "textTransform": "capitalize",
+              }
+            }
+          >
+            + 
+            Unknown
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "flex-end",
+              "gap": 2,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#8B5CF6",
+                "fontFamily": "System",
+                "fontSize": 18,
+                "fontWeight": "600",
+                "lineHeight": 24,
+              }
+            }
+          >
+            8
+            ×
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 12,
+                "fontWeight": "400",
+                "lineHeight": 16,
+              }
+            }
+          >
+            65
+            % win
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 4,
+          }
+        }
+      >
+        <TrendingUp
+          color="#7E7E96"
+          size={14}
+        />
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 0.8,
+              "lineHeight": 14,
+            }
+          }
+        >
+          COMEBACK RATE
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "baseline",
+            "flexDirection": "row",
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#FFFFFF",
+              "fontFamily": "System",
+              "fontSize": 24,
+              "fontWeight": "700",
+              "letterSpacing": -0.5,
+              "lineHeight": 30,
+            }
+          }
+        >
+          0
+          %
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 16,
+                  "fontWeight": "700",
+                },
+                {
+                  "color": "#7E7E96",
+                },
+              ]
+            }
+          >
+            →
+          </Text>
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 14,
+                "fontWeight": "400",
+                "lineHeight": 20,
+                "textTransform": "capitalize",
+              }
+            }
+          >
+            stable
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginTop": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#7E7E96",
+              "fontFamily": "System",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "lineHeight": 16,
+            }
+          }
+        >
+          Current risk
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.6,
+                "lineHeight": 14,
+              },
+              {
+                "color": "#F59E0B",
+              },
+            ]
+          }
+        >
+          MODERATE
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#1E1E24",
+            "borderRadius": 9999,
+            "height": 6,
+            "overflow": "hidden",
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderRadius": 9999,
+                "height": "100%",
+              },
+              {
+                "backgroundColor": "#F59E0B",
+                "width": "35%",
+              },
+            ]
+          }
+        />
+      </View>
+    </View>
+  </BlurView>
+</Animated.View>
+`;
