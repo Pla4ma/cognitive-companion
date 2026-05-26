@@ -16,6 +16,7 @@ export type SystemSurfaceType =
   | 'voice_shortcut'
   | 'lock_screen'
   | 'action_button'
+  | 'watch'
 
 export interface SystemSurfaceEvent {
   id: string
@@ -146,4 +147,5 @@ export const SURFACE_AVAILABILITY: SurfaceAvailability[] = [
   { surface: 'voice_shortcut', available: false, requiresNativeBuild: true, requiresEntitlement: false, notes: 'Requires App Intents + SiriKit' },
   { surface: 'lock_screen', available: false, requiresNativeBuild: true, requiresEntitlement: true, notes: 'Requires Live Activity + entitlement' },
   { surface: 'action_button', available: false, requiresNativeBuild: true, requiresEntitlement: false, notes: 'iPhone 15+ Action Button, requires native module' },
+  { surface: 'watch', available: false, requiresNativeBuild: true, requiresEntitlement: false, notes: 'Apple Watch companion via WatchConnectivity, requires native module + watchOS app' },
 ]
