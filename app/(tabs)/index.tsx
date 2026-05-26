@@ -4,18 +4,20 @@
 // Uses v4 engines: runAntiDriftAgent, compileMission, personalDriftGraph
 // ══════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, Dimensions, InteractionManager, AccessibilityInfo,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, SlideInDown } from 'react-native-reanimated'
 import { useRouter, type Href } from 'expo-router'
 import {
-  Zap, Shield, Brain, ChevronRight, Play, Flame, TrendingUp,
+  Shield, Brain, ChevronRight, Play, Flame, TrendingUp,
 } from 'lucide-react-native'
+import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '../../src/store'
 import { colors, spacing, radius, typography, shadows, layout } from '../../src/theme'
 import { Screen, Card } from '../../src/components'
+import { AnimatedRescueButton } from '../../src/components/AnimatedRescueButton'
 import { compileMission } from '../../src/engine/missionCompiler'
 import { getProtocolForState, RESCUE_PROTOCOLS } from '../../src/types/rescue'
 import {
@@ -46,6 +48,42 @@ const STATE_CHIPS: { id: UserState; emoji: string; label: string; color: string 
 
 const riskColors: Record<string, string> = { critical: '#EF4444', high: '#F59E0B', moderate: '#F97316', low: '#10B981' }
 
+function getStateProtocolHint(state: UserState): string {
+  const protocolId = getProtocolForState(state)
+  return `${RESCUE_PROTOCOLS[protocolId].name}`
+}
+
+// ── Animated State Chip ─────────────────────────────────────
+
+function AnimatedStateChip({ chip, selected, onPress }: {
+  chip: { id: string; emoji: string; label: string; color: string }
+  selected: boolean
+  onPress: () => void
+}) {
+  const scale = useSharedValue(1)
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
+
+  return (
+    <Animated.View style={[styles.stateChip, animStyle, selected && { borderColor: chip.color, backgroundColor: chip.color + '15' }]}>
+      <Pressable
+        onPress={() => {
+          scale.value = withSpring(0.96, { damping: 15, stiffness: 400 }, () => {
+            scale.value = withSpring(1, { damping: 12, stiffness: 300 })
+          })
+          onPress()
+        }}
+        style={{ alignItems: 'center', gap: 4, padding: 0 }}
+        accessibilityRole="radio"
+        accessibilityState={{ selected }}
+        accessibilityLabel={chip.label}
+      >
+        <Text style={styles.stateEmoji}>{chip.emoji}</Text>
+        <Text style={[styles.stateLabel, selected && { color: chip.color }]}>{chip.label}</Text>
+      </Pressable>
+    </Animated.View>
+  )
+}
+
 function truncateTitle(text: string, maxLen: number = 60): string {
   if (text.length <= maxLen) return text
   const truncated = text.slice(0, maxLen - 1)
@@ -61,16 +99,24 @@ const QUICK_ACTIONS: { id: string; emoji: string; label: string; screen: Href }[
 
 export default function HomeScreen() {
   const router = useRouter()
-  const user = useAppStore(s => s.user)
-  const sessions = useAppStore(s => s.sessions)
-  const momentumEvents = useAppStore(s => s.momentumEvents)
-  const retentionState = useAppStore(s => s.retentionState)
-  const getComebackStatus = useAppStore(s => s.getComebackStatus)
-  const brainDumps = useAppStore(s => s.brainDumps)
-  const resistancePatterns = useAppStore(s => s.resistancePatterns)
-  const distractions = useAppStore(s => s.distractions)
-  const missions = useAppStore(s => s.missions)
-  const microMissions = useAppStore(s => s.microMissions)
+  const { user, retentionState, getComebackStatus } = useAppStore(
+    useShallow(s => ({
+      user: s.user,
+      retentionState: s.retentionState,
+      getComebackStatus: s.getComebackStatus,
+    }))
+  )
+  const { sessions, momentumEvents, missions, microMissions, brainDumps, resistancePatterns, distractions } = useAppStore(
+    useShallow(s => ({
+      sessions: s.sessions,
+      momentumEvents: s.momentumEvents,
+      missions: s.missions,
+      microMissions: s.microMissions,
+      brainDumps: s.brainDumps,
+      resistancePatterns: s.resistancePatterns,
+      distractions: s.distractions,
+    }))
+  )
 
   const [selectedState, setSelectedState] = useState<UserState | null>(null)
   const [selectedMinutes, setSelectedMinutes] = useState(5)
@@ -79,6 +125,14 @@ export default function HomeScreen() {
   const displayName = user?.display_name || 'there'
   const hour = new Date().getHours()
   const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  // ── Momentum Visual Warmth ──
+  const weeklyRescues = retentionState.momentumWindows.last7Days ?? 0
+  const greeting = weeklyRescues >= 5
+    ? `You're on a roll, ${displayName}.`
+    : displayName === 'there'
+      ? 'About to drift?'
+      : `${timeGreeting}, ${displayName}`
 
   const todayMinutes = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10)
@@ -132,9 +186,9 @@ export default function HomeScreen() {
       .reduce((sum, e) => sum + e.points, 0)
   }, [momentumEvents])
 
-  // ── System Intelligence ──
-  const homeIntel = useMemo(() => {
-    return getHomeIntelligence({
+  // ── System Intelligence (deferred via InteractionManager) ──
+  const [homeIntel, setHomeIntel] = useState<HomeIntelligence>(() =>
+    getHomeIntelligence({
       sessions,
       retentionState,
       patterns: resistancePatterns,
@@ -147,12 +201,60 @@ export default function HomeScreen() {
       quietHours: null,
       userName: user?.display_name ?? null,
     })
-  }, [sessions.length, retentionState.totalRescues, resistancePatterns.length, distractions.length, momentumEvents.length, missions.length, microMissions.length, brainDumps.length, user?.display_name])
+  )
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      const intel = getHomeIntelligence({
+        sessions,
+        retentionState,
+        patterns: resistancePatterns,
+        distractions,
+        momentumEvents,
+        missions,
+        microMissions,
+        brainDumps,
+        userPatterns: null,
+        quietHours: null,
+        userName: user?.display_name ?? null,
+      })
+      setHomeIntel(intel)
+    })
+    return () => task.cancel()
+  }, [sessions.length, retentionState.totalRescues])
+
+  // ── Auto-select last resistance state if recent ──
+  useEffect(() => {
+    if (resistancePatterns.length > 0) {
+      const mostRecent = resistancePatterns[0]
+      const hoursSince = (Date.now() - new Date(mostRecent.created_at).getTime()) / 3600000
+      if (hoursSince < 2) {
+        setSelectedState(mostRecent.state as UserState)
+      }
+    }
+  }, [])  // mount only
+
+  // ── Conditional card visibility (max 2) ──
+  let conditionalCardCount = 0
+  const showConditional = () => {
+    if (conditionalCardCount < 2) { conditionalCardCount++; return true }
+    return false
+  }
+  const showComeback = comeback.isComeback && showConditional()
+  const showDayTracking = dayTrackingMessage && !comeback.isComeback && showConditional()
+  const showRisk = homeIntel.riskLevel && homeIntel.riskLevel !== 'low' && showConditional()
+  const showBrainDumps = pendingBrainDumps.count > 0 && showConditional()
+  const showInsight = homeIntel.riskMessage && !homeIntel.riskLevel && showConditional()
+  const showNarrative = !!homeIntel.weeklyNarrative && showConditional()
 
   // ── Handlers ──
   const handleStateSelect = useCallback((state: UserState) => {
     setSelectedState(state)
     Haptics.selectionAsync()
+    // Accessibility: announce selection for screen reader users
+    const chip = STATE_CHIPS.find(c => c.id === state)
+    if (chip) {
+      AccessibilityInfo.announceForAccessibility(`${chip.label} selected. Tap Rescue Me to begin.`)
+    }
   }, [])
 
   const handleRescueMe = useCallback(() => {
@@ -210,7 +312,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>{timeGreeting}, {displayName}</Text>
+            <Text style={styles.greeting}>{greeting}</Text>
             <View style={styles.headerMeta}>
               {momentum.last7Days > 0 && (
                 <View style={styles.momentumWindowPill}>
@@ -227,22 +329,29 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Good Timing Banner */}
+        {homeIntel?.nextDangerWindow && (
+          <Card variant="subtle" style={styles.timingCard}>
+            <Text style={styles.timingText}>Your best focus window is coming up</Text>
+          </Card>
+        )}
+
         {/* Comeback Message (Loop 3) */}
-        {comeback.isComeback && (
+        {showComeback && (
           <Card variant="subtle" style={styles.comebackCard}>
             <Text style={styles.comebackText}>{comeback.message}</Text>
           </Card>
         )}
 
         {/* Day Tracking Message (Loop 4 - Momentum) */}
-        {dayTrackingMessage && !comeback.isComeback && (
+        {showDayTracking && (
           <Card variant="subtle" style={styles.comebackCard}>
             <Text style={styles.comebackText}>{dayTrackingMessage}</Text>
           </Card>
         )}
 
         {/* Risk Indicator */}
-        {homeIntel.riskLevel && homeIntel.riskLevel !== 'low' && (
+        {showRisk && (
           <Card variant="subtle" style={styles.riskCard}>
             <View style={styles.riskRow}>
               <Shield size={16} color={riskColors[homeIntel.riskLevel]} />
@@ -270,37 +379,18 @@ export default function HomeScreen() {
         {/* State Chips */}
         <View style={styles.stateGrid}>
           {STATE_CHIPS.map(chip => (
-            <TouchableOpacity
+            <AnimatedStateChip
               key={chip.id}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: selectedState === chip.id }}
-              accessibilityLabel={`${chip.label} state - tap to select`}
-              accessibilityHint="Selects this emotional state for your rescue mission"
-              style={[
-                styles.stateChip,
-                selectedState === chip.id && {
-                  borderColor: chip.color,
-                  backgroundColor: chip.color + '15',
-                },
-              ]}
+              chip={chip}
+              selected={selectedState === chip.id}
               onPress={() => handleStateSelect(chip.id)}
-            >
-              <Text style={styles.stateEmoji}>{chip.emoji}</Text>
-              <Text
-                style={[
-                  styles.stateLabel,
-                  selectedState === chip.id && { color: chip.color },
-                ]}
-              >
-                {chip.label}
-              </Text>
-            </TouchableOpacity>
+            />
           ))}
         </View>
 
         {/* Rescue Button */}
         {selectedState && (
-          <View style={styles.rescueSection}>
+          <Animated.View entering={SlideInDown.springify().damping(20)} style={styles.rescueSection}>
             {/* Time Selector */}
             <View style={styles.timeRow}>
               {[1, 2, 5, 10, 15, 25].map(min => (
@@ -320,18 +410,12 @@ export default function HomeScreen() {
             </View>
 
             {/* Rescue Me */}
-            <TouchableOpacity style={styles.rescueBtn} onPress={handleRescueMe} accessibilityRole="button" accessibilityLabel="Start rescue session">
-              <LinearGradient colors={colors.gradients.brand} style={styles.rescueGradient}>
-                <Zap size={22} color={colors.text.inverse} />
-                <Text style={styles.rescueText}>Rescue Me</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Protocol hint */}
-            <Text style={styles.protocolHint}>
-              {RESCUE_PROTOCOLS[getProtocolForState(selectedState)].name} • {selectedMinutes} min
-            </Text>
-          </View>
+            <AnimatedRescueButton
+              visible={!!selectedState}
+              protocolHint={selectedState ? `${getStateProtocolHint(selectedState)} • ${selectedMinutes} min` : ''}
+              onPress={handleRescueMe}
+            />
+          </Animated.View>
         )}
 
         {/* Quick Actions */}
@@ -354,7 +438,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Pending Brain Dump — Enhanced (Loop 6: Context Loop) */}
-        {pendingBrainDumps.count > 0 && (
+        {showBrainDumps && (
           <TouchableOpacity
             style={styles.pendingDumpCard}
             onPress={() => router.push('/coach')}
@@ -378,7 +462,7 @@ export default function HomeScreen() {
         )}
 
         {/* System Insight */}
-        {homeIntel.riskMessage && !homeIntel.riskLevel && (
+        {showInsight && (
           <Card variant="subtle" style={styles.insightCard}>
             <Text style={styles.insightText}>{homeIntel.riskMessage}</Text>
           </Card>
@@ -401,7 +485,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Weekly Narrative */}
-        {homeIntel.weeklyNarrative && (
+        {showNarrative && (
           <Card variant="subtle" style={styles.narrativeCard}>
             <Text style={styles.narrativeLabel}>YOUR WEEK</Text>
             <Text style={styles.narrativeText}>{homeIntel.weeklyNarrative}</Text>
@@ -427,6 +511,10 @@ const styles = StyleSheet.create({
   momentumWindowText: { ...typography.caption, color: colors.accent.green, fontWeight: '600' },
   comebackCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
   comebackText: { ...typography.bodyMedium, color: colors.text.secondary, fontStyle: 'italic' },
+
+  // Timing Banner
+  timingCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.green + '30' },
+  timingText: { ...typography.bodyMedium, color: colors.accent.green },
   momentumPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.bg.surface, paddingHorizontal: spacing.sm,
@@ -462,13 +550,6 @@ const styles = StyleSheet.create({
   timeChipActive: { borderColor: colors.brand[400], backgroundColor: colors.brand[400] + '15' },
   timeText: { ...typography.bodySmall, color: colors.text.secondary },
   timeTextActive: { color: colors.brand[400], fontWeight: '600' },
-  rescueBtn: { borderRadius: radius.lg, overflow: 'hidden' },
-  rescueGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    padding: spacing.md,
-  },
-  rescueText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '700', fontSize: 18 },
-  protocolHint: { ...typography.caption, color: colors.text.tertiary, textAlign: 'center', marginTop: spacing.xs },
 
   // Quick Actions
   quickActions: { gap: spacing.sm, marginBottom: spacing.lg },
@@ -506,6 +587,18 @@ const styles = StyleSheet.create({
   todayRow: { flexDirection: 'row', gap: spacing.sm },
   todayStat: { flex: 1, alignItems: 'center', padding: spacing.md, backgroundColor: colors.bg.surface, borderRadius: radius.lg },
   todayValue: { ...typography.h2, color: colors.text.primary, fontSize: 20 },
+  todayLabel: { ...typography.caption, color: colors.text.tertiary, marginTop: 2 },
+
+  // Risk Indicator
+  riskCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.warning + '30' },
+  riskRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  riskText: { ...typography.bodyMedium, fontWeight: '600' },
+  riskAction: { ...typography.bodySmall, color: colors.text.secondary, marginTop: spacing.xxs },
+
+  // Weekly Narrative
+  narrativeCard: { padding: spacing.md, marginBottom: spacing.lg },
+  narrativeLabel: { ...typography.labelSmall, color: colors.text.tertiary, letterSpacing: 1, marginBottom: spacing.xs },
+  narrativeText: { ...typography.bodyMedium, color: colors.text.secondary, lineHeight: 22 },
 
   // Pending brain dump content wrapper (extracted from inline)
   pendingDumpContent: { flex: 1, marginLeft: spacing.sm },
