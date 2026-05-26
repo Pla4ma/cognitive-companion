@@ -1,12 +1,13 @@
 // ══════════════════════════════════════════════════════════════
-// INTENT — Instant Rescue Onboarding (Phase 9)
-// First 10-second experience. No auth. No typing. Immediate value.
-// Flow: Where do you lose time? → Pick your state → First mission → Complete
+// INTENT — 5-Step Onboarding
+// Welcome → Name → State → Rescue (2-min timer) → Complete
+// No auth wall. Immediate value. All data stays local.
 // ══════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
-  View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, TextInput,
+  Dimensions, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -14,69 +15,154 @@ import { Play, ChevronRight, Zap } from 'lucide-react-native'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { getProtocolForState, RESCUE_PROTOCOLS } from '../src/types/rescue'
 import { compileMission } from '../src/engine/missionCompiler'
-import type { UserState, EnergyLevel, BlockerType, MicroMission } from '../src/types'
+import { useAppStore } from '../src/store'
+import type { UserState, MicroMission, CompiledMission } from '../src/types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-interface OnboardingStep {
-  id: string
-  title: string
-  subtitle: string
-}
-
-const DRIFT_LOSS_OPTIONS = [
-  { id: 'avoiding', emoji: '🙈', label: 'Avoiding hard tasks', state: 'avoiding' as UserState },
-  { id: 'scrolling', emoji: '📱', label: 'Doomscrolling', state: 'doomscroll_risk' as UserState },
-  { id: 'overthinking', emoji: '🌀', label: 'Overthinking', state: 'anxious' as UserState },
-  { id: 'overwhelmed', emoji: '🌊', label: 'Feeling overwhelmed', state: 'overwhelmed' as UserState },
-  { id: 'switching', emoji: '🔀', label: 'Switching tasks', state: 'scattered' as UserState },
-  { id: 'quitting', emoji: '🏃', label: 'Quitting too early', state: 'avoiding' as UserState },
-]
-
-const STATE_OPTIONS = [
+// ── State options for step 3 ────────────────────────────────
+const STATE_OPTIONS: { id: UserState; emoji: string; label: string; color: string }[] = [
   { id: 'avoiding', emoji: '🙈', label: 'Avoiding', color: '#EF4444' },
   { id: 'overwhelmed', emoji: '🌊', label: 'Overwhelmed', color: '#F59E0B' },
   { id: 'stuck', emoji: '🫠', label: 'Stuck', color: '#8B5CF6' },
   { id: 'tired', emoji: '😴', label: 'Tired', color: '#6366F1' },
   { id: 'distracted', emoji: '🦋', label: 'Distracted', color: '#EC4899' },
   { id: 'anxious', emoji: '😰', label: 'Anxious', color: '#F97316' },
-  { id: 'scattered', emoji: '🌪️', label: 'Scattered', color: '#14B8A6' },
-  { id: 'ready', emoji: '🚀', label: 'Ready', color: '#10B981' },
 ]
 
-const TIME_OPTIONS = [1, 2, 5, 10, 15, 25]
+// ── Helpers ─────────────────────────────────────────────────
+function uid(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
+}
 
-export default function InstantRescueOnboarding() {
+function formatTimer(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMPONENT
+// ══════════════════════════════════════════════════════════════
+
+export default function Onboarding() {
   const router = useRouter()
-  const [step, setStep] = useState(0)
-  const [selectedLoss, setSelectedLoss] = useState<string | null>(null)
-  const [selectedState, setSelectedState] = useState<UserState | null>(null)
-  const [selectedMinutes, setSelectedMinutes] = useState(2)
-  const [compiledMission, setCompiledMission] = useState<MicroMission | null>(null)
+  const {
+    user, setUser, updateProfile, completeOnboarding,
+    addMission, addMicroMission, startSession,
+    completeSession, updateSessionTimer,
+    addMomentumEvent, updateConsent,
+  } = useAppStore()
 
-  const handleLossSelect = useCallback((option: typeof DRIFT_LOSS_OPTIONS[0]) => {
-    setSelectedLoss(option.id)
-    setSelectedState(option.state)
+  // ── State ──────────────────────────────────────────────────
+  const [step, setStep] = useState(0)
+  const [nameInput, setNameInput] = useState('')
+  const [selectedState, setSelectedState] = useState<UserState | null>(null)
+  const [compiledMission, setCompiledMission] = useState<CompiledMission | null>(null)
+  const [timerSeconds, setTimerSeconds] = useState(120) // 2 minutes
+  const [timerActive, setTimerActive] = useState(false)
+  const [missionStored, setMissionStored] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // ── Cleanup timer on unmount ───────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
+
+  // ── Timer countdown ────────────────────────────────────────
+  useEffect(() => {
+    if (timerActive && timerSeconds > 0) {
+      timerRef.current = setInterval(() => {
+        setTimerSeconds(prev => {
+          const next = prev - 1
+          // Update session timer in store every second
+          const { activeSession } = useAppStore.getState()
+          if (activeSession) {
+            updateSessionTimer(activeSession.id, (activeSession.planned_minutes * 60) - next)
+          }
+          if (next <= 0) {
+            clearInterval(timerRef.current!)
+            setTimerActive(false)
+            handleTimerComplete()
+            return 0
+          }
+          return next
+        })
+      }, 1000)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [timerActive])
+
+  // ── Create local user ──────────────────────────────────────
+  const ensureUser = useCallback((displayName: string | null) => {
+    if (user) {
+      // Update existing user name if provided
+      if (displayName) {
+        updateProfile({ display_name: displayName, onboarding_step: 1 })
+      }
+      return
+    }
+    const now = new Date().toISOString()
+    const newUser = {
+      id: uid(),
+      email: '',
+      display_name: displayName ?? '',
+      avatar_url: null,
+      push_style: 'gentle' as const,
+      onboarding_complete: false,
+      onboarding_step: 1 as const,
+      plan: 'free' as const,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
+      body_double_enabled: false,
+      vault_enabled: false,
+      local_only: true,
+      created_at: now,
+      updated_at: now,
+    }
+    setUser(newUser)
+  }, [user, setUser, updateProfile])
+
+  // ── Step 1: Welcome → Name ─────────────────────────────────
+  const handleShowMeHow = useCallback(() => {
     setStep(1)
   }, [])
 
+  // ── Step 2: Name → State ───────────────────────────────────
+  const handleNameSubmit = useCallback(() => {
+    const trimmed = nameInput.trim()
+    ensureUser(trimmed || null)
+    setStep(2)
+  }, [nameInput, ensureUser])
+
+  const handleSkipName = useCallback(() => {
+    ensureUser(null)
+    setStep(2)
+  }, [ensureUser])
+
+  // ── Step 3: State → Rescue ─────────────────────────────────
   const handleStateSelect = useCallback((state: UserState) => {
     setSelectedState(state)
   }, [])
 
-  const handleTimeSelect = useCallback((minutes: number) => {
-    setSelectedMinutes(minutes)
-  }, [])
-
-  const handleGenerateMission = useCallback(() => {
+  const handleStateConfirm = useCallback(() => {
     if (!selectedState) return
 
+    // Ensure user exists
+    if (!useAppStore.getState().user) {
+      ensureUser(null)
+    }
+
+    // Compile mission
     const protocolId = getProtocolForState(selectedState)
     const result = compileMission({
       state: selectedState,
       blocker: null,
       energy: 'medium',
-      availableMinutes: selectedMinutes,
+      availableMinutes: 2,
       contextText: null,
       threadId: null,
       previousFailures: [],
@@ -85,69 +171,213 @@ export default function InstantRescueOnboarding() {
       privacyPolicy: 'local_only',
     })
 
-    setCompiledMission(result.primaryMission)
+    setCompiledMission(result)
     setStep(3)
-  }, [selectedState, selectedMinutes])
+  }, [selectedState, ensureUser])
 
-  const handleStartMission = useCallback(() => {
-    // Navigate to live mission with the compiled mission
-    router.push('/live')
-  }, [router])
+  // ── Step 4: Rescue → Complete ──────────────────────────────
+  const handleStartTimer = useCallback(() => {
+    if (!compiledMission || missionStored) {
+      setTimerActive(true)
+      return
+    }
 
+    // Create mission in store
+    const protocolId = getProtocolForState(selectedState!)
+    const protocol = RESCUE_PROTOCOLS[protocolId]
+    const mission = addMission(
+      protocol.name,
+      `Onboarding rescue for ${selectedState}`,
+      colors.brand[400],
+    )
+
+    // Add the compiled micro-mission to the store
+    const micro = addMicroMission(
+      mission.id,
+      compiledMission.primaryMission.exactAction,
+      compiledMission.primaryMission.completionCriteria ?? undefined,
+      2,
+    )
+
+    // Start a session
+    startSession(mission.id, micro.id, 'focus', 2)
+
+    setMissionStored(true)
+    setTimerActive(true)
+  }, [compiledMission, selectedState, missionStored, addMission, addMicroMission, startSession])
+
+  const handleTimerComplete = useCallback(() => {
+    // Complete the session in the store
+    const { activeSession } = useAppStore.getState()
+    if (activeSession) {
+      completeSession('Completed onboarding rescue')
+    }
+
+    // Add momentum
+    addMomentumEvent('session_completed', 15, 'Onboarding first rescue')
+
+    // Update onboarding progress
+    updateProfile({ onboarding_step: 4 })
+
+    // Move to complete screen
+    setStep(4)
+  }, [completeSession, addMomentumEvent, updateProfile])
+
+  // ── Step 5: Complete → App ─────────────────────────────────
+  const handleAllowNotifications = useCallback(() => {
+    updateConsent('notifications_smart', true, 'onboarding', 'Post first rescue notification prompt')
+    finishOnboarding()
+  }, [updateConsent])
+
+  const handleSkipNotifications = useCallback(() => {
+    updateConsent('notifications_smart', false, 'onboarding', 'Declined after first rescue')
+    finishOnboarding()
+  }, [updateConsent])
+
+  const finishOnboarding = useCallback(() => {
+    completeOnboarding()
+    router.replace('/(tabs)/')
+  }, [completeOnboarding, router])
+
+  // ── Skip to app (any step) — creates minimal local user ───
   const handleSkipToApp = useCallback(() => {
-    router.replace('/')
-  }, [router])
+    ensureUser(null)
+    completeOnboarding()
+    router.replace('/(tabs)/')
+  }, [ensureUser, completeOnboarding, router])
 
-  // ── Step 0: Where do you lose time? ──────────────────────
+  // ══════════════════════════════════════════════════════════
+  // RENDER
+  // ══════════════════════════════════════════════════════════
+
+  // ── SCREEN 1: Welcome ──────────────────────────────────────
   if (step === 0) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['rgba(108,58,237,0.12)', 'transparent']} style={styles.gradientBg} />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.stepHeader}>
-            <Text style={styles.stepNumber}>1 / 3</Text>
+        <LinearGradient
+          colors={['rgba(108,58,237,0.15)', 'rgba(108,58,237,0.02)', 'transparent']}
+          style={styles.gradientBg}
+        />
+        <View style={styles.welcomeContent}>
+          <View style={styles.welcomeTop}>
+            <Zap size={32} color={colors.brand[400]} />
+            <Text style={styles.welcomeBrand}>INTENT</Text>
           </View>
 
-          <Text style={styles.title}>Where do you lose time?</Text>
-          <Text style={styles.subtitle}>Be honest. This stays on your device.</Text>
+          <View style={styles.welcomeCenter}>
+            <Text style={styles.welcomeHeadline}>
+              Your brain knows what to do.
+            </Text>
+            <Text style={styles.welcomeSubheadline}>
+              The problem is starting.
+            </Text>
+          </View>
 
-          <View style={styles.optionsGrid}>
-            {DRIFT_LOSS_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.id}
-                style={styles.optionCard}
-                onPress={() => handleLossSelect(option)}
+          <View style={styles.welcomeBottom}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleShowMeHow}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={colors.gradients.brand}
+                style={styles.primaryBtnGradient}
               >
-                <Text style={styles.optionEmoji}>{option.emoji}</Text>
-                <Text style={styles.optionLabel}>{option.label}</Text>
-                <ChevronRight size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
-            ))}
-          </View>
+                <Text style={styles.primaryBtnText}>Show me how</Text>
+                <ChevronRight size={18} color={colors.text.inverse} />
+              </LinearGradient>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSkipToApp}>
-            <Text style={styles.skipText}>Skip for now</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            <TouchableOpacity style={styles.skipBtn} onPress={handleSkipToApp}>
+              <Text style={styles.skipText}>Skip to app</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     )
   }
 
-  // ── Step 1: Pick your state right now ────────────────────
+  // ── SCREEN 2: Name ─────────────────────────────────────────
   if (step === 1) {
     return (
-      <View style={styles.container}>
-        <LinearGradient colors={['rgba(108,58,237,0.08)', 'transparent']} style={styles.gradientBg} />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <LinearGradient
+          colors={['rgba(108,58,237,0.08)', 'transparent']}
+          style={styles.gradientBg}
+        />
+        <View style={styles.content}>
           <View style={styles.stepHeader}>
-            <TouchableOpacity onPress={() => setStep(0)}>
-              <Text style={styles.backText}>← Back</Text>
+            <View style={styles.stepDots}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <View key={i} style={[styles.dot, i <= 1 && styles.dotActive]} />
+              ))}
+            </View>
+            <TouchableOpacity onPress={handleSkipName}>
+              <Text style={styles.skipLink}>Skip</Text>
             </TouchableOpacity>
-            <Text style={styles.stepNumber}>2 / 3</Text>
           </View>
 
-          <Text style={styles.title}>Pick your state right now</Text>
-          <Text style={styles.subtitle}>No wrong answer. Just how you feel.</Text>
+          <Text style={styles.title}>What should I call you?</Text>
+          <Text style={styles.subtitle}>
+            Just a name. No account needed.
+          </Text>
+
+          <TextInput
+            style={styles.nameInput}
+            value={nameInput}
+            onChangeText={setNameInput}
+            placeholder="Your name"
+            placeholderTextColor={colors.text.disabled}
+            autoFocus
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={handleNameSubmit}
+          />
+
+          <TouchableOpacity
+            style={[styles.primaryBtn, !nameInput.trim() && styles.primaryBtnMuted]}
+            onPress={handleNameSubmit}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={nameInput.trim() ? colors.gradients.brand : [colors.bg.overlay, colors.bg.overlay]}
+              style={styles.primaryBtnGradient}
+            >
+              <Text style={styles.primaryBtnText}>Continue</Text>
+              <ChevronRight size={18} color={colors.text.inverse} />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    )
+  }
+
+  // ── SCREEN 3: State ────────────────────────────────────────
+  if (step === 2) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['rgba(108,58,237,0.08)', 'transparent']}
+          style={styles.gradientBg}
+        />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.stepHeader}>
+            <TouchableOpacity onPress={() => setStep(1)}>
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+            <View style={styles.stepDots}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <View key={i} style={[styles.dot, i <= 2 && styles.dotActive]} />
+              ))}
+            </View>
+          </View>
+
+          <Text style={styles.title}>Right now, what's your biggest obstacle?</Text>
+          <Text style={styles.subtitle}>No wrong answer. This helps me help you.</Text>
 
           <View style={styles.stateGrid}>
             {STATE_OPTIONS.map(state => (
@@ -157,10 +387,11 @@ export default function InstantRescueOnboarding() {
                   styles.stateChip,
                   selectedState === state.id && {
                     borderColor: state.color,
-                    backgroundColor: state.color + '15',
+                    backgroundColor: state.color + '18',
                   },
                 ]}
-                onPress={() => handleStateSelect(state.id as UserState)}
+                onPress={() => handleStateSelect(state.id)}
+                activeOpacity={0.75}
               >
                 <Text style={styles.stateEmoji}>{state.emoji}</Text>
                 <Text
@@ -176,9 +407,15 @@ export default function InstantRescueOnboarding() {
           </View>
 
           {selectedState && (
-            <TouchableOpacity style={styles.continueBtn} onPress={() => setStep(2)}>
-              <Text style={styles.continueText}>Continue</Text>
-              <ChevronRight size={18} color={colors.text.inverse} />
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleStateConfirm}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={colors.gradients.brand} style={styles.primaryBtnGradient}>
+                <Zap size={18} color={colors.text.inverse} />
+                <Text style={styles.primaryBtnText}>Build my rescue</Text>
+              </LinearGradient>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -186,100 +423,131 @@ export default function InstantRescueOnboarding() {
     )
   }
 
-  // ── Step 2: How much time? ───────────────────────────────
-  if (step === 2) {
+  // ── SCREEN 4: Rescue (2-min timer) ─────────────────────────
+  if (step === 3 && compiledMission) {
+    const protocol = RESCUE_PROTOCOLS[getProtocolForState(selectedState!)]
+
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['rgba(108,58,237,0.08)', 'transparent']} style={styles.gradientBg} />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={['rgba(16,185,129,0.10)', 'transparent']}
+          style={styles.gradientBg}
+        />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.stepHeader}>
-            <TouchableOpacity onPress={() => setStep(1)}>
-              <Text style={styles.backText}>← Back</Text>
+            <View style={styles.stepDots}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <View key={i} style={[styles.dot, i <= 3 && styles.dotActive]} />
+              ))}
+            </View>
+            <Text style={styles.protocolBadge}>{protocol.name}</Text>
+          </View>
+
+          {/* Mission action — always visible */}
+          <View style={styles.missionCard}>
+            <Text style={styles.missionLabel}>YOUR RESCUE</Text>
+            <Text style={styles.missionAction}>
+              {compiledMission.primaryMission.exactAction}
+            </Text>
+            <Text style={styles.missionCriteria}>
+              ✓ {compiledMission.primaryMission.completionCriteria}
+            </Text>
+          </View>
+
+          {/* Timer */}
+          <View style={styles.timerContainer}>
+            <Text style={[styles.timerText, timerSeconds <= 10 && timerActive && styles.timerUrgent]}>
+              {formatTimer(timerSeconds)}
+            </Text>
+            <Text style={styles.timerLabel}>
+              {timerActive
+                ? timerSeconds > 0 ? 'Stay with it' : 'Done!'
+                : '2-minute rescue'
+              }
+            </Text>
+          </View>
+
+          {/* Fallback (visible before timer starts) */}
+          {!timerActive && compiledMission.primaryMission.fallbackMission && (
+            <View style={styles.fallbackBox}>
+              <Text style={styles.fallbackLabel}>If it's too hard:</Text>
+              <Text style={styles.fallbackText}>
+                {compiledMission.primaryMission.fallbackMission}
+              </Text>
+            </View>
+          )}
+
+          {/* Start / Restart button */}
+          {!timerActive && timerSeconds === 120 && (
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleStartTimer}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={colors.gradients.brand} style={styles.primaryBtnGradient}>
+                <Play size={18} color={colors.text.inverse} />
+                <Text style={styles.primaryBtnText}>Start 2-minute rescue</Text>
+              </LinearGradient>
             </TouchableOpacity>
-            <Text style={styles.stepNumber}>3 / 3</Text>
-          </View>
-
-          <Text style={styles.title}>Give INTENT 2 minutes?</Text>
-          <Text style={styles.subtitle}>
-            {selectedState && RESCUE_PROTOCOLS[getProtocolForState(selectedState)].name} works best with small starts.
-          </Text>
-
-          <View style={styles.timeGrid}>
-            {TIME_OPTIONS.map(minutes => (
-              <TouchableOpacity
-                key={minutes}
-                style={[
-                  styles.timeChip,
-                  selectedMinutes === minutes && styles.timeChipActive,
-                ]}
-                onPress={() => handleTimeSelect(minutes)}
-              >
-                <Text
-                  style={[
-                    styles.timeValue,
-                    selectedMinutes === minutes && styles.timeValueActive,
-                  ]}
-                >
-                  {minutes}
-                </Text>
-                <Text
-                  style={[
-                    styles.timeUnit,
-                    selectedMinutes === minutes && styles.timeValueActive,
-                  ]}
-                >
-                  min
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity style={styles.generateBtn} onPress={handleGenerateMission}>
-            <LinearGradient colors={colors.gradients.brand} style={styles.generateGradient}>
-              <Zap size={20} color={colors.text.inverse} />
-              <Text style={styles.generateText}>Generate My First Mission</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          )}
         </ScrollView>
       </View>
     )
   }
 
-  // ── Step 3: Your first mission ───────────────────────────
-  if (step === 3 && compiledMission) {
+  // ── SCREEN 5: Complete ─────────────────────────────────────
+  if (step === 4) {
+    const stateLabel = STATE_OPTIONS.find(s => s.id === selectedState)?.label ?? selectedState
+
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['rgba(16,185,129,0.1)', 'transparent']} style={styles.gradientBg} />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.missionCard}>
-            <Text style={styles.missionLabel}>YOUR FIRST MISSION</Text>
-            <Text style={styles.missionAction}>{compiledMission.exactAction}</Text>
-            <Text style={styles.missionDuration}>{selectedMinutes} minutes</Text>
-
-            <View style={styles.missionCriteria}>
-              <Text style={styles.criteriaLabel}>Success means:</Text>
-              <Text style={styles.criteriaText}>{compiledMission.completionCriteria}</Text>
+        <LinearGradient
+          colors={['rgba(16,185,129,0.12)', 'rgba(108,58,237,0.05)', 'transparent']}
+          style={styles.gradientBg}
+        />
+        <View style={styles.content}>
+          <View style={styles.stepHeader}>
+            <View style={styles.stepDots}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <View key={i} style={[styles.dot, styles.dotActive]} />
+              ))}
             </View>
-
-            {compiledMission.fallbackMission && (
-              <View style={styles.fallbackBox}>
-                <Text style={styles.fallbackLabel}>If it's too hard:</Text>
-                <Text style={styles.fallbackText}>{compiledMission.fallbackMission}</Text>
-              </View>
-            )}
           </View>
 
-          <TouchableOpacity style={styles.startMissionBtn} onPress={handleStartMission}>
-            <LinearGradient colors={colors.gradients.brand} style={styles.startMissionGradient}>
-              <Play size={20} color={colors.text.inverse} />
-              <Text style={styles.startMissionText}>Start Mission</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <View style={styles.completeCenter}>
+            <Text style={styles.completeHeadline}>You did it.</Text>
+            <Text style={styles.completeSubheadline}>
+              You just rescued 2 minutes from {stateLabel?.toLowerCase()}.
+            </Text>
 
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSkipToApp}>
-            <Text style={styles.skipText}>I'll try later</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            <View style={styles.rescuedBadge}>
+              <Text style={styles.rescuedNumber}>2</Text>
+              <Text style={styles.rescuedUnit}>minutes rescued</Text>
+            </View>
+          </View>
+
+          {/* Notification permission request */}
+          <View style={styles.notifCard}>
+            <Text style={styles.notifTitle}>Stay on track?</Text>
+            <Text style={styles.notifBody}>
+              INTENT can send a quick check-in when it looks like you're drifting. No spam. You control it.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleAllowNotifications}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={colors.gradients.brand} style={styles.primaryBtnGradient}>
+                <Text style={styles.primaryBtnText}>Allow check-ins</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.skipBtn} onPress={handleSkipNotifications}>
+              <Text style={styles.skipText}>Not now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     )
   }
@@ -287,89 +555,306 @@ export default function InstantRescueOnboarding() {
   return null
 }
 
+// ══════════════════════════════════════════════════════════════
+// STYLES
+// ══════════════════════════════════════════════════════════════
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg.base },
-  gradientBg: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
-  content: { flexGrow: 1, padding: spacing.lg, paddingTop: spacing.xl * 2 },
-  stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
-  stepNumber: { ...typography.caption, color: colors.text.tertiary },
-  backText: { ...typography.bodySmall, color: colors.brand[400] },
-  title: { ...typography.h1, color: colors.text.primary, fontSize: 28, marginBottom: spacing.xs },
-  subtitle: { ...typography.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xl, lineHeight: 22 },
-
-  // Options
-  optionsGrid: { gap: spacing.sm },
-  optionCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.bg.surface, borderRadius: radius.lg,
-    padding: spacing.md, borderWidth: 1, borderColor: colors.border.subtle,
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg.base,
   },
-  optionEmoji: { fontSize: 24 },
-  optionLabel: { ...typography.bodyMedium, color: colors.text.primary, flex: 1 },
-
-  // State Grid
-  stateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  stateChip: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 3) / 4,
-    alignItems: 'center', padding: spacing.md, borderRadius: radius.lg,
-    backgroundColor: colors.bg.surface, borderWidth: 1, borderColor: colors.border.subtle,
-    gap: spacing.xs,
+  gradientBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 400,
   },
-  stateEmoji: { fontSize: 22 },
-  stateLabel: { ...typography.caption, color: colors.text.secondary, textAlign: 'center' },
-
-  // Time Grid
-  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  timeChip: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3,
-    alignItems: 'center', padding: spacing.lg, borderRadius: radius.lg,
-    backgroundColor: colors.bg.surface, borderWidth: 1, borderColor: colors.border.subtle,
+  content: {
+    flex: 1,
+    padding: spacing.lg,
+    paddingTop: spacing.xl * 2.5,
   },
-  timeChipActive: { borderColor: colors.brand[400], backgroundColor: colors.brand[400] + '15' },
-  timeValue: { ...typography.h2, color: colors.text.primary, fontSize: 28 },
-  timeValueActive: { color: colors.brand[400] },
-  timeUnit: { ...typography.caption, color: colors.text.tertiary },
-
-  // Buttons
-  continueBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
-    marginTop: spacing.xl, backgroundColor: colors.brand[400],
-    borderRadius: radius.lg, padding: spacing.md,
+  scrollContent: {
+    flexGrow: 1,
+    padding: spacing.lg,
+    paddingTop: spacing.xl * 2,
   },
-  continueText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '600' },
-  generateBtn: { marginTop: spacing.xl, borderRadius: radius.lg, overflow: 'hidden' },
-  generateGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    padding: spacing.md,
-  },
-  generateText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '600' },
-  skipBtn: { alignItems: 'center', marginTop: spacing.lg, padding: spacing.md },
-  skipText: { ...typography.bodySmall, color: colors.text.tertiary },
 
-  // Mission Card
-  missionCard: {
-    backgroundColor: colors.bg.surface, borderRadius: radius.xl,
-    padding: spacing.xl, borderWidth: 1, borderColor: colors.border.subtle,
+  // ── Step indicator ──────────────────────────────────────
+  stepHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  missionLabel: { ...typography.labelSmall, color: colors.accent.green, marginBottom: spacing.sm },
-  missionAction: { ...typography.h2, color: colors.text.primary, fontSize: 22, lineHeight: 30, marginBottom: spacing.sm },
-  missionDuration: { ...typography.bodyMedium, color: colors.text.tertiary, marginBottom: spacing.lg },
-  missionCriteria: { marginBottom: spacing.md },
-  criteriaLabel: { ...typography.labelSmall, color: colors.text.tertiary, marginBottom: spacing.xs },
-  criteriaText: { ...typography.bodyMedium, color: colors.text.secondary },
-  fallbackBox: {
-    backgroundColor: colors.bg.elevated, borderRadius: radius.md,
-    padding: spacing.md, marginTop: spacing.md,
+  stepDots: {
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
-  fallbackLabel: { ...typography.labelSmall, color: colors.accent.orange, marginBottom: spacing.xs },
-  fallbackText: { ...typography.bodySmall, color: colors.text.secondary },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.bg.overlay,
+  },
+  dotActive: {
+    backgroundColor: colors.brand[400],
+  },
+  backText: {
+    ...typography.bodySmall,
+    color: colors.brand[400],
+  },
+  skipLink: {
+    ...typography.bodySmall,
+    color: colors.text.tertiary,
+  },
+  protocolBadge: {
+    ...typography.labelSmall,
+    color: colors.brand[300],
+    backgroundColor: colors.brand[400] + '15',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    borderRadius: radius.full,
+  },
 
-  // Start Mission
-  startMissionBtn: { borderRadius: radius.lg, overflow: 'hidden' },
-  startMissionGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+  // ── Welcome screen ──────────────────────────────────────
+  welcomeContent: {
+    flex: 1,
+    padding: spacing.lg,
+    justifyContent: 'space-between',
+  },
+  welcomeTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.xl * 2,
+  },
+  welcomeBrand: {
+    ...typography.label,
+    color: colors.brand[300],
+    letterSpacing: 2,
+  },
+  welcomeCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: spacing.xxl,
+  },
+  welcomeHeadline: {
+    ...typography.hero,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  welcomeSubheadline: {
+    ...typography.h2,
+    color: colors.text.tertiary,
+    fontWeight: '400',
+  },
+  welcomeBottom: {
+    gap: spacing.sm,
+  },
+
+  // ── Typography ──────────────────────────────────────────
+  title: {
+    ...typography.headline,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    marginBottom: spacing.xl,
+    lineHeight: 22,
+  },
+
+  // ── Name input ──────────────────────────────────────────
+  nameInput: {
+    ...typography.h2,
+    color: colors.text.primary,
+    backgroundColor: colors.bg.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    padding: spacing.md,
+    marginBottom: spacing.xl,
+  },
+
+  // ── State grid ──────────────────────────────────────────
+  stateGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  stateChip: {
+    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm) / 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bg.surface,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+  },
+  stateEmoji: {
+    fontSize: 22,
+  },
+  stateLabel: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+
+  // ── Mission card ────────────────────────────────────────
+  missionCard: {
+    backgroundColor: colors.bg.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    marginBottom: spacing.lg,
+    ...shadows.md,
+  },
+  missionLabel: {
+    ...typography.labelSmall,
+    color: colors.accent.green,
+    marginBottom: spacing.sm,
+  },
+  missionAction: {
+    ...typography.h2,
+    color: colors.text.primary,
+    fontSize: 20,
+    lineHeight: 28,
+    marginBottom: spacing.md,
+  },
+  missionCriteria: {
+    ...typography.bodySmall,
+    color: colors.text.tertiary,
+  },
+
+  // ── Timer ───────────────────────────────────────────────
+  timerContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  timerText: {
+    ...typography.mono,
+    color: colors.text.primary,
+    fontSize: 64,
+    lineHeight: 68,
+  },
+  timerUrgent: {
+    color: colors.accent.red,
+  },
+  timerLabel: {
+    ...typography.bodyMedium,
+    color: colors.text.tertiary,
+    marginTop: spacing.xs,
+  },
+
+  // ── Fallback ────────────────────────────────────────────
+  fallbackBox: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  fallbackLabel: {
+    ...typography.labelSmall,
+    color: colors.accent.orange,
+    marginBottom: spacing.xxs,
+  },
+  fallbackText: {
+    ...typography.bodySmall,
+    color: colors.text.secondary,
+  },
+
+  // ── Complete screen ─────────────────────────────────────
+  completeCenter: {
+    alignItems: 'center',
+    marginBottom: spacing.xxl,
+    paddingTop: spacing.xl,
+  },
+  completeHeadline: {
+    ...typography.hero,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  completeSubheadline: {
+    ...typography.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  rescuedBadge: {
+    alignItems: 'center',
+    backgroundColor: colors.accent.green + '15',
+    borderRadius: radius.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xxl,
+    borderWidth: 1,
+    borderColor: colors.accent.green + '30',
+  },
+  rescuedNumber: {
+    ...typography.mono,
+    color: colors.accent.green,
+    fontSize: 56,
+  },
+  rescuedUnit: {
+    ...typography.label,
+    color: colors.accent.green,
+    marginTop: spacing.xxs,
+  },
+
+  // ── Notification card ───────────────────────────────────
+  notifCard: {
+    backgroundColor: colors.bg.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+  },
+  notifTitle: {
+    ...typography.h3,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  notifBody: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+
+  // ── Buttons ─────────────────────────────────────────────
+  primaryBtn: {
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    ...shadows.md,
+  },
+  primaryBtnMuted: {
+    opacity: 0.5,
+  },
+  primaryBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  primaryBtnText: {
+    ...typography.button,
+    color: colors.text.inverse,
+  },
+  skipBtn: {
+    alignItems: 'center',
     padding: spacing.md,
   },
-  startMissionText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '600' },
+  skipText: {
+    ...typography.bodySmall,
+    color: colors.text.tertiary,
+  },
 })

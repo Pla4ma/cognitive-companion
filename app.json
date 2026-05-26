@@ -80,7 +80,8 @@
         {
           "faceIDPermission": "INTENT uses Face ID to protect your focus data."
         }
-      ]
+      ],
+      "expo-updates"
     ],
     "experiments": {
       "typedRoutes": true

@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter, type Href } from 'expo-router'
 import {
-  Zap, Shield, Brain, ChevronRight, Play, Flame,
+  Zap, Shield, Brain, ChevronRight, Play, Flame, TrendingUp,
 } from 'lucide-react-native'
 import { useAppStore } from '../src/store'
 import { colors, spacing, radius, typography, shadows, layout } from '../src/theme'
@@ -46,6 +46,8 @@ export default function HomeScreen() {
   const user = store.user
   const sessions = store.sessions
   const momentumEvents = store.momentumEvents
+  const retentionState = store.retentionState
+  const getComebackStatus = store.getComebackStatus
 
   const [selectedState, setSelectedState] = useState<UserState | null>(null)
   const [selectedMinutes, setSelectedMinutes] = useState(5)
@@ -65,21 +67,17 @@ export default function HomeScreen() {
     )
   }, [sessions])
 
-  const streak = useMemo(() => {
-    let count = 0
-    const today = new Date()
-    for (let i = 0; i < 30; i++) {
-      const checkDate = new Date(today)
-      checkDate.setDate(checkDate.getDate() - i)
-      const dateStr = checkDate.toISOString().slice(0, 10)
-      const hasSession = sessions.some(s =>
-        s.started_at.slice(0, 10) === dateStr && (s.status === 'completed' || s.status === 'salvaged')
-      )
-      if (hasSession) count++
-      else if (i > 0) break
-    }
-    return count
-  }, [sessions])
+  // ── Momentum Windows (replaces streaks) ──
+  const momentum = useMemo(() => ({
+    last7Days: retentionState.momentumWindows.last7Days,
+    last14Days: retentionState.momentumWindows.last14Days,
+    trend: retentionState.momentumWindows.last7Days > 0
+      ? (retentionState.momentumWindows.last7Days >= 3 ? 'building' : 'stable')
+      : 'cooling' as const,
+  }), [retentionState.momentumWindows])
+
+  // ── Comeback Detection ──
+  const comeback = useMemo(() => getComebackStatus(), [sessions, retentionState.lastRescueDate])
 
   const weeklyMomentum = useMemo(() => {
     const weekAgo = Date.now() - 7 * 86400000
@@ -168,10 +166,12 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.greeting}>{timeGreeting}, {displayName}</Text>
             <View style={styles.headerMeta}>
-              {streak > 0 && (
-                <View style={styles.streakPill}>
-                  <Flame size={14} color={colors.accent.orange} />
-                  <Text style={styles.streakText}>{streak} day streak</Text>
+              {momentum.last7Days > 0 && (
+                <View style={styles.momentumWindowPill}>
+                  <TrendingUp size={14} color={colors.accent.green} />
+                  <Text style={styles.momentumWindowText}>
+                    {momentum.last7Days} rescue{momentum.last7Days !== 1 ? 's' : ''} this week
+                  </Text>
                 </View>
               )}
               <View style={styles.momentumPill}>
@@ -180,6 +180,13 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Comeback Message (Loop 3) */}
+        {comeback.isComeback && (
+          <Card variant="subtle" style={styles.comebackCard}>
+            <Text style={styles.comebackText}>{comeback.message}</Text>
+          </Card>
+        )}
 
         {/* Main Question */}
         <View style={styles.mainQuestion}>
@@ -298,12 +305,14 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.lg },
   greeting: { ...typography.headline, color: colors.text.primary, fontSize: 24 },
   headerMeta: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-  streakPill: {
+  momentumWindowPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: colors.accent.orange + '15', paddingHorizontal: spacing.sm,
+    backgroundColor: colors.accent.green + '15', paddingHorizontal: spacing.sm,
     paddingVertical: 2, borderRadius: radius.full,
   },
-  streakText: { ...typography.caption, color: colors.accent.orange, fontWeight: '600' },
+  momentumWindowText: { ...typography.caption, color: colors.accent.green, fontWeight: '600' },
+  comebackCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
+  comebackText: { ...typography.bodyMedium, color: colors.text.secondary, fontStyle: 'italic' },
   momentumPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.bg.surface, paddingHorizontal: spacing.sm,

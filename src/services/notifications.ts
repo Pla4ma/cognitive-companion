@@ -9,7 +9,17 @@ import * as TaskManager from 'expo-task-manager'
 import { Platform } from 'react-native'
 import type { MicroMission } from '../types/mission'
 import type { DangerWindow } from '../types/ambient'
-import { rescueCopy, streakProtectionCopy, summaryCopy, dangerWindowCopy, type DailyStats } from './notificationCopy'
+import type { DangerWindow as PredictiveDangerWindow, UserIntelligenceProfile } from '../engine/predictiveEngine'
+import {
+  rescueCopy,
+  streakProtectionCopy,
+  summaryCopy,
+  dangerWindowCopy,
+  predictiveDangerWindowCopy,
+  comebackCopy,
+  type DailyStats,
+  type ComebackSessionInfo,
+} from './notificationCopy'
 import {
   scheduleOptimalTime,
   debounceNotification,
@@ -447,6 +457,160 @@ export function handleNotificationResponse(
   trackNotificationOutcome(notification.request.identifier, action as 'tapped' | 'dismissed' | 'action_pressed')
 
   return { type, action, data }
+}
+
+// ── Predictive Danger Window Notifications ────────────────────
+// Schedules weekly notifications for high-confidence danger windows
+// detected by the predictive engine. 10 minutes before the window.
+
+export async function scheduleDangerWindowNotifications(
+  dangerWindows: PredictiveDangerWindow[],
+  _profile: UserIntelligenceProfile,
+): Promise<string[]> {
+  if (!hasSmartNotificationConsent()) return []
+
+  // Cancel all existing danger_window notifications
+  await cancelNotificationsByType('danger_window')
+
+  // Get top 3 windows with confidence > 0.5, sorted by riskScore
+  const eligible = dangerWindows
+    .filter(w => w.confidence > 0.5)
+    .sort((a, b) => b.riskScore - a.riskScore)
+    .slice(0, 3)
+
+  const identifiers: string[] = []
+
+  for (const window of eligible) {
+    const copy = predictiveDangerWindowCopy(window)
+
+    // Schedule 10 minutes before window starts
+    let alertMinute = 50 // 60 - 10
+    let alertHour = window.startHour
+    // If startHour:00 minus 10 min wraps backward
+    // (startHour * 60) - 10 = startHour*60 - 10
+    // We want the notification at (startHour:00 - 10min)
+    // e.g., startHour=14 → 13:50
+    alertHour = (alertHour - 1 + 24) % 24
+
+    // expo-notifications weekday: 1=Sunday, 2=Monday, ..., 7=Saturday
+    // predictive engine dayOfWeek: 0=Sun, 1=Mon, ..., 6=Sat
+    const weekday = window.dayOfWeek + 1 // 0→1, 1→2, ..., 6→7
+
+    const identifier = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: copy.title,
+        body: copy.body,
+        data: copy.data,
+        sound: 'default',
+      },
+      trigger: {
+        weekday,
+        hour: alertHour,
+        minute: alertMinute,
+        repeats: true,
+        channelId: 'focus-reminders',
+      },
+    })
+
+    trackNotificationSent(identifier, 'danger_window', new Date())
+    identifiers.push(identifier)
+  }
+
+  return identifiers
+}
+
+// ── Comeback Notification ─────────────────────────────────────
+// Scheduled 30-90 minutes after a session is abandoned.
+// Debounced to prevent duplicate comeback notifications.
+
+let _lastComebackScheduleTime = 0
+const COMEBACK_DEBOUNCE_MS = 30 * 60 * 1000 // 30 min debounce
+
+export async function scheduleComebackNotification(
+  sessionInfo: ComebackSessionInfo,
+): Promise<string | null> {
+  if (!hasSmartNotificationConsent()) return null
+
+  // Debounce: don't schedule if we scheduled one recently
+  const now = Date.now()
+  if (now - _lastComebackScheduleTime < COMEBACK_DEBOUNCE_MS) return null
+  _lastComebackScheduleTime = now
+
+  // Also use the scheduler-level debounce
+  if (!debounceNotification('comeback')) return null
+
+  const copy = comebackCopy(sessionInfo)
+
+  // Schedule 30-90 minutes after abandonment (randomized)
+  const delayMinutes = 30 + Math.floor(Math.random() * 60)
+  const delaySeconds = delayMinutes * 60
+
+  const identifier = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: copy.title,
+      body: copy.body,
+      data: copy.data,
+      sound: 'default',
+      categoryIdentifier: 'rescue',
+    },
+    trigger: {
+      seconds: delaySeconds,
+      channelId: 'focus-reminders',
+    },
+  })
+
+  trackNotificationSent(identifier, 'comeback', new Date(Date.now() + delaySeconds * 1000))
+  return identifier
+}
+
+// ── Permission Request with Context ───────────────────────────
+// Shows a custom explanation before triggering the OS permission dialog.
+
+export async function requestNotificationPermissionsWithContext(
+  contextMessage: string,
+): Promise<'granted' | 'denied' | 'undetermined'> {
+  if (!Device.isDevice) {
+    console.log('Push notifications require a physical device')
+    return 'denied'
+  }
+
+  // Check if already granted
+  const existing = await Notifications.getPermissionsAsync()
+  if (existing.status === 'granted') return 'granted'
+
+  // Log the context message — the calling UI should display this
+  // to the user before invoking this function (e.g. via an Alert or modal).
+  // We include it here so the message is co-located with the permission flow.
+  console.log(`[NotificationPermission] Context: ${contextMessage}`)
+
+  const result = await Notifications.requestPermissionsAsync()
+
+  // Set up Android channels if newly granted
+  if (result.status === 'granted' && Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('focus-reminders', {
+      name: 'Focus Reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#6C3AED',
+      sound: 'default',
+    })
+
+    await Notifications.setNotificationChannelAsync('streak-protection', {
+      name: 'Streak Protection',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 500, 250, 500],
+      lightColor: '#F59E0B',
+      sound: 'default',
+    })
+
+    await Notifications.setNotificationChannelAsync('daily-summary', {
+      name: 'Daily Summary',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      sound: 'default',
+    })
+  }
+
+  return result.status as 'granted' | 'denied' | 'undetermined'
 }
 
 // ── Background Task Registration ─────────────────────────────

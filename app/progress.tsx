@@ -1,180 +1,205 @@
 // ══════════════════════════════════════════════════════════════
-// INTENT — Momentum Screen
-// Momentum score, resistance map, comeback tracking, pattern insights
+// INTENT — Progress Screen
+// Weekly narrative, stats, intelligence panel, heatmap
 // ══════════════════════════════════════════════════════════════
 
-import React, { useEffect, useMemo } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
-import { Flame, Zap, Target, TrendingUp, Shield, Brain, RotateCcw, Calendar, Share2 } from 'lucide-react-native'
+import React, { useMemo, useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { TrendingUp, Share2, Brain, Calendar, ChevronDown, ChevronUp } from 'lucide-react-native'
+import { MMKV } from 'react-native-mmkv'
 import { useAppStore } from '../src/store'
 import { calculateMomentumScore, analyzeResistancePatterns } from '../src/engine'
 import { colors, spacing, radius, typography, layout } from '../src/theme'
-import { Screen, Card, SectionHeader, BarChart, StreakBadge } from '../src/components'
+import { Screen, Card, SectionHeader } from '../src/components'
+import { generateWeeklyNarrative } from '../src/engine/insights'
 import { generateWeeklySummaryCard, shareCard } from '../src/services/share'
-import { TabBar } from '../src/components'
+import { useDriftIntelligence } from '../src/hooks/useDriftIntelligence'
+import { IntelligenceCard } from '../src/components/IntelligenceCard'
+import { DangerWindowHeatmap } from '../src/components/DangerWindowHeatmap'
 
-export default function MomentumScreen() {
-  const momentumEvents = useAppStore((s) => s.momentumEvents)
+const storage = new MMKV()
+
+// ── Helpers ─────────────────────────────────────────────────
+
+function getWeekKey(): string {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
+  return `narrative_${now.getFullYear()}_${weekNum}`
+}
+
+// ── Component ───────────────────────────────────────────────
+
+export default function ProgressScreen() {
+  const sessions = useAppStore((s) => s.sessions)
   const resistancePatterns = useAppStore((s) => s.resistancePatterns)
   const distractions = useAppStore((s) => s.distractions)
-  const brainDumps = useAppStore((s) => s.brainDumps)
-  const sessions = useAppStore((s) => s.sessions)
+  const momentumEvents = useAppStore((s) => s.momentumEvents)
   const user = useAppStore((s) => s.user)
 
-  const pushStyle = user?.push_style ?? 'gentle'
+  const [heatmapOpen, setHeatmapOpen] = useState(false)
 
-  // Momentum score
-  const momentum = useMemo(() => calculateMomentumScore(momentumEvents, 7), [momentumEvents])
-  const lastWeek = useMemo(() => {
-    const prevEvents = momentumEvents.filter(e => {
-      const t = new Date(e.created_at).getTime()
-      const weekAgo = Date.now() - 7 * 86400000
-      const twoWeeksAgo = Date.now() - 14 * 86400000
-      return t >= twoWeeksAgo && t < weekAgo
+  // ── Weekly Narrative (cached in MMKV) ──
+  const weekKey = getWeekKey()
+  const weeklyNarrative = useMemo(() => {
+    const cached = storage.getString(weekKey)
+    if (cached) return cached
+    const fresh = generateWeeklyNarrative(sessions, resistancePatterns, distractions, user?.name ?? '')
+    storage.set(weekKey, fresh)
+    return fresh
+  }, [sessions.length, resistancePatterns.length, distractions.length, weekKey])
+
+  // ── Weekly stats ──
+  const weekAgo = Date.now() - 7 * 86400000
+  const weekSessions = useMemo(
+    () => sessions.filter((s) => new Date(s.started_at).getTime() >= weekAgo),
+    [sessions],
+  )
+  const rescuedCount = weekSessions.filter(
+    (s) => s.status === 'completed' || s.status === 'salvaged',
+  ).length
+  const completionRate = weekSessions.length > 0
+    ? Math.round((weekSessions.filter((s) => s.status === 'completed').length / weekSessions.length) * 100)
+    : 0
+  const salvageRate = weekSessions.length > 0
+    ? Math.round((weekSessions.filter((s) => s.status === 'salvaged').length / weekSessions.length) * 100)
+    : 0
+
+  // ── 4-Week Trend ──
+  const trendData = useMemo(() => {
+    const bars: { label: string; count: number }[] = []
+    for (let w = 3; w >= 0; w--) {
+      const start = Date.now() - (w + 1) * 7 * 86400000
+      const end = Date.now() - w * 7 * 86400000
+      const count = sessions.filter((s) => {
+        const t = new Date(s.started_at).getTime()
+        return t >= start && t < end && (s.status === 'completed' || s.status === 'salvaged')
+      }).length
+      const label = w === 0 ? 'This' : w === 1 ? 'Last' : `${w + 1}w`
+      bars.push({ label, count })
+    }
+    return bars
+  }, [sessions])
+  const maxBar = Math.max(...trendData.map((d) => d.count), 1)
+
+  // ── Resistance analysis ──
+  const resistanceAnalysis = useMemo(
+    () => analyzeResistancePatterns(resistancePatterns),
+    [resistancePatterns],
+  )
+
+  // ── Intelligence (7+ sessions) ──
+  const intelligence = useDriftIntelligence()
+
+  // ── Recent sessions ──
+  const recentSessions = sessions.slice(0, 10)
+
+  const handleShare = () => {
+    const todaySessions = sessions.filter(
+      (s) => s.started_at.slice(0, 10) === new Date().toISOString().slice(0, 10) &&
+        (s.status === 'completed' || s.status === 'salvaged'),
+    )
+    const card = generateWeeklySummaryCard({
+      sessions: rescuedCount,
+      minutes: Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60),
+      streak: 0,
+      rescues: rescuedCount,
+      topState: 'avoiding',
+      completionRate,
+      salvageRate,
+      narrative: weeklyNarrative,
     })
-    return prevEvents.reduce((s, e) => s + e.points, 0)
-  }, [momentumEvents])
-
-  // Resistance analysis
-  const resistanceAnalysis = useMemo(() => analyzeResistancePatterns(resistancePatterns), [resistancePatterns])
-
-  // Chart data
-  const weekChartData = useMemo(() => {
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const data: { label: string; value: number; color?: string }[] = []
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000)
-      const dateStr = d.toISOString().slice(0, 10)
-      const dayEvents = momentumEvents.filter(e => e.created_at.slice(0, 10) === dateStr)
-      const points = dayEvents.reduce((s, e) => s + e.points, 0)
-      data.push({
-        label: dayNames[d.getDay()],
-        value: points,
-        color: points > 0 ? colors.brand[500] : colors.border.subtle,
-      })
-    }
-    return data
-  }, [momentumEvents])
-
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const todayEvents = momentumEvents.filter(e => e.created_at.slice(0, 10) === todayStr)
-  const todayPoints = todayEvents.reduce((s, e) => s + e.points, 0)
-
-  // Distraction stats
-  const distractionCategories = useMemo(() => {
-    const cats: Record<string, number> = {}
-    for (const d of distractions) {
-      cats[d.category] = (cats[d.category] || 0) + 1
-    }
-    return Object.entries(cats).sort((a, b) => b[1] - a[1])
-  }, [distractions])
-
-  // Salvage count
-  const salvagedCount = sessions.filter(s => s.status === 'salvaged').length
-  const comebackCount = sessions.filter(s => s.status === 'salvaged' && s.actual_seconds > 60).length
+    shareCard(card)
+  }
 
   return (
-    <Screen gradient={['rgba(245,158,11,0.04)', 'transparent']}>
-      <Text style={styles.title}>Momentum</Text>
-      <Text style={styles.subtitle}>Your anti-avoidance progress</Text>
+    <Screen gradient={['rgba(139,92,246,0.04)', 'transparent']}>
+      <Text style={styles.title}>Progress</Text>
 
-      {/* Momentum Score Hero */}
-      <Card variant="glow" style={styles.heroCard}>
-        <View style={styles.heroContent}>
-          <StreakBadge days={momentum.score > 0 ? Math.floor(momentum.score / 20) : 0} size="lg" />
-          <View style={styles.heroInfo}>
-            <Text style={styles.heroScore}>{momentum.score}</Text>
-            <Text style={styles.heroLabel}>momentum points</Text>
-            <View style={styles.trendRow}>
-              <TrendingUp size={14} color={momentum.trend === 'up' ? colors.accent.green : momentum.trend === 'down' ? colors.error : colors.text.tertiary} />
-              <Text style={[styles.trendText, { color: momentum.trend === 'up' ? colors.accent.green : momentum.trend === 'down' ? colors.error : colors.text.tertiary }]}>
-                {momentum.trend === 'up' ? 'Up' : momentum.trend === 'down' ? 'Down' : 'Stable'} vs last week ({lastWeek})
-              </Text>
-            </View>
+      {/* ── Weekly Narrative ── */}
+      <Card variant="default" style={styles.narrativeCard}>
+        <View style={styles.narrativeHeader}>
+          <View style={styles.narrativeHeaderLeft}>
+            <Calendar size={14} color={colors.brand[400]} />
+            <Text style={styles.narrativeLabel}>THIS WEEK</Text>
           </View>
-          <TouchableOpacity
-            style={styles.shareBtn}
-            onPress={() => {
-              const todayStr = new Date().toISOString().slice(0, 10)
-              const todaySessions = sessions.filter(s => s.started_at.slice(0, 10) === todayStr && (s.status === 'completed' || s.status === 'salvaged'))
-              const weekAgo = Date.now() - 7 * 86400000
-              const weeklyRescues = momentumEvents.filter(e => e.type === 'rescue_started' && new Date(e.created_at).getTime() >= weekAgo).length
-              const card = generateWeeklySummaryCard({
-                sessions: todaySessions.length,
-                minutes: Math.round(todaySessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60),
-                streak: 0,
-                rescues: weeklyRescues,
-                topState: 'avoiding',
-              })
-              shareCard(card)
-            }}
-          >
-            <Share2 size={18} color={colors.brand[400]} />
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <Share2 size={16} color={colors.brand[400]} />
+            <Text style={styles.shareBtnText}>Share this week</Text>
           </TouchableOpacity>
+        </View>
+        <Text style={styles.narrativeText}>{weeklyNarrative}</Text>
+      </Card>
+
+      {/* ── Stats Row ── */}
+      <View style={styles.statsRow}>
+        <Card variant="default" style={styles.statCard}>
+          <Text style={styles.statValue}>{rescuedCount}</Text>
+          <Text style={styles.statLabel}>Rescued this week</Text>
+        </Card>
+        <Card variant="default" style={styles.statCard}>
+          <Text style={styles.statValue}>{completionRate}%</Text>
+          <Text style={styles.statLabel}>Completion rate</Text>
+        </Card>
+        <Card variant="default" style={styles.statCard}>
+          <Text style={styles.statValue}>{salvageRate}%</Text>
+          <Text style={styles.statLabel}>Salvage rate</Text>
+        </Card>
+      </View>
+
+      {/* ── 4-Week Trend ── */}
+      <SectionHeader title="4-Week Trend" icon={<TrendingUp size={16} color={colors.accent.pink} />} />
+      <Card variant="default" style={styles.trendCard}>
+        <View style={styles.trendBars}>
+          {trendData.map((bar, i) => (
+            <View key={i} style={styles.trendBarCol}>
+              <Text style={styles.trendBarValue}>{bar.count}</Text>
+              <View style={styles.trendBarTrack}>
+                <View
+                  style={[
+                    styles.trendBarFill,
+                    {
+                      height: `${Math.round((bar.count / maxBar) * 100)}%`,
+                      backgroundColor: i === 3 ? colors.brand[500] : colors.brand[500] + '60',
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.trendBarLabel}>{bar.label}</Text>
+            </View>
+          ))}
         </View>
       </Card>
 
-      {/* Today */}
-      <SectionHeader title="Today" icon={<Calendar size={16} color={colors.brand[400]} />} />
-      <View style={styles.statsRow}>
-        <Card variant="default" style={styles.statCard}><View style={styles.statContent}>
-          <Zap size={20} color={colors.brand[400]} />
-          <Text style={styles.statValue}>{todayPoints}</Text>
-          <Text style={styles.statLabel}>points</Text>
-        </View></Card>
-        <Card variant="default" style={styles.statCard}><View style={styles.statContent}>
-          <Target size={20} color={colors.accent.pink} />
-          <Text style={styles.statValue}>{sessions.filter(s => s.started_at.slice(0, 10) === todayStr && (s.status === 'completed' || s.status === 'salvaged')).length}</Text>
-          <Text style={styles.statLabel}>sessions</Text>
-        </View></Card>
-        <Card variant="default" style={styles.statCard}><View style={styles.statContent}>
-          <Brain size={20} color={colors.accent.green} />
-          <Text style={styles.statValue}>{distractions.filter(d => d.captured_at.slice(0, 10) === todayStr).length}</Text>
-          <Text style={styles.statLabel}>captured</Text>
-        </View></Card>
-      </View>
-
-      {/* Weekly Chart */}
-      <SectionHeader title="This Week" icon={<TrendingUp size={16} color={colors.accent.pink} />} />
-      <Card variant="default" style={styles.chartCard}>
-        <BarChart data={weekChartData} height={120} showValues />
-        <Text style={styles.chartTotal}>{weekChartData.reduce((s, d) => s + d.value, 0)} points this week</Text>
-      </Card>
-
-      {/* Momentum Breakdown */}
-      {Object.keys(momentum.breakdown).length > 0 && (
+      {/* ── Intelligence Panel (7+ sessions) ── */}
+      {intelligence.hasEnoughData && intelligence.profile && intelligence.prediction && (
         <>
-          <SectionHeader title="Point Sources" icon={<Flame size={16} color={colors.accent.orange} />} />
-          <Card variant="default" style={styles.breakdownCard}>
-            {Object.entries(momentum.breakdown).map(([type, points]) => {
-              const labels: Record<string, { label: string; icon: any; color: string }> = {
-                session_completed: { label: 'Sessions', icon: Target, color: colors.brand[500] },
-                session_salvaged: { label: 'Salvaged', icon: RotateCcw, color: colors.accent.orange },
-                comeback: { label: 'Comebacks', icon: Flame, color: colors.accent.red },
-                resistance_overcome: { label: 'Resistance', icon: Shield, color: colors.accent.purple },
-                distraction_captured: { label: 'Distractions', icon: Brain, color: colors.accent.pink },
-                brain_dump_cleared: { label: 'Brain Dumps', icon: Brain, color: colors.accent.green },
-                streak_extended: { label: 'Streaks', icon: Flame, color: colors.accent.orange },
-              }
-              const info = labels[type] || { label: type, icon: Zap, color: colors.text.tertiary }
-              const Icon = info.icon
-              return (
-                <View key={type} style={styles.breakdownRow}>
-                  <View style={[styles.breakdownDot, { backgroundColor: info.color }]} />
-                  <Icon size={16} color={info.color} />
-                  <Text style={styles.breakdownLabel}>{info.label}</Text>
-                  <Text style={styles.breakdownValue}>{points}</Text>
-                </View>
-              )
-            })}
-          </Card>
+          <SectionHeader title="Intelligence" icon={<Brain size={16} color={colors.accent.purple]} />} />
+          <IntelligenceCard profile={intelligence.profile} prediction={intelligence.prediction} />
+
+          <TouchableOpacity
+            style={styles.heatmapToggle}
+            onPress={() => setHeatmapOpen((v) => !v)}
+          >
+            <Text style={styles.heatmapToggleText}>Danger Window Heatmap</Text>
+            {heatmapOpen
+              ? <ChevronUp size={16} color={colors.text.tertiary} />
+              : <ChevronDown size={16} color={colors.text.tertiary} />
+            }
+          </TouchableOpacity>
+
+          {heatmapOpen && intelligence.profile.timeSlots.length > 0 && (
+            <Card variant="default" style={styles.heatmapCard}>
+              <DangerWindowHeatmap timeSlots={intelligence.profile.timeSlots} />
+            </Card>
+          )}
         </>
       )}
 
-      {/* Resistance Map */}
+      {/* ── Resistance Map ── */}
       {resistancePatterns.length > 0 && (
         <>
-          <SectionHeader title="Resistance Patterns" icon={<Shield size={16} color={colors.accent.purple} />} />
+          <SectionHeader title="Resistance Map" icon={<TrendingUp size={16} color={colors.accent.purple} />} />
           <Card variant="default" style={styles.resistanceCard}>
             <Text style={styles.resistanceInsight}>{resistanceAnalysis.insight}</Text>
             <View style={styles.resistanceStats}>
@@ -195,35 +220,39 @@ export default function MomentumScreen() {
         </>
       )}
 
-      {/* Salvage & Comeback */}
-      {(salvagedCount > 0 || comebackCount > 0) && (
+      {/* ── Recent Sessions ── */}
+      {recentSessions.length > 0 && (
         <>
-          <SectionHeader title="Comebacks" icon={<RotateCcw size={16} color={colors.accent.orange} />} />
-          <Card variant="subtle" style={styles.comebackCard}>
-            <Text style={styles.comebackText}>
-              You've salvaged <Text style={styles.comebackHighlight}>{salvagedCount} sessions</Text> and made <Text style={styles.comebackHighlight}>{comebackCount} comebacks</Text>.
-              {salvagedCount > 0 && '\n\nSalvaging is a skill. You\'re learning to finish what you start, even when it goes sideways.'}
-            </Text>
-          </Card>
+          <SectionHeader title="Recent Sessions" icon={<Calendar size={16} color={colors.brand[400]} />} />
+          {recentSessions.map((s, i) => {
+            const statusColor =
+              s.status === 'completed' ? colors.accent.green
+                : s.status === 'salvaged' ? colors.accent.orange
+                : colors.text.tertiary
+            return (
+              <Card key={i} variant="default" style={styles.sessionRow}>
+                <View style={styles.sessionRowInner}>
+                  <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                  <View style={styles.sessionInfo}>
+                    <Text style={styles.sessionStatus}>{s.status}</Text>
+                    <Text style={styles.sessionTime}>
+                      {new Date(s.started_at).toLocaleDateString()} · {Math.round(s.actual_seconds / 60)}m
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            )
+          })}
         </>
       )}
 
-      {/* Distraction Categories */}
-      {distractionCategories.length > 0 && (
-        <>
-          <SectionHeader title="Distraction Patterns" icon={<Brain size={16} color={colors.accent.pink} />} />
-          <Card variant="default" style={styles.distractionCard}>
-            {distractionCategories.map(([cat, count]) => (
-              <View key={cat} style={styles.distractionRow}>
-                <Text style={styles.distractionCat}>{cat}</Text>
-                <View style={styles.distractionBar}>
-                  <View style={[styles.distractionBarFill, { width: `${Math.min((count / distractionCategories[0][1]) * 100, 100)}%`, backgroundColor: colors.accent.pink + '60' }]} />
-                </View>
-                <Text style={styles.distractionCount}>{count}</Text>
-              </View>
-            ))}
-          </Card>
-        </>
+      {/* ── Empty state ── */}
+      {sessions.length === 0 && (
+        <Card variant="default" style={styles.emptyCard}>
+          <Text style={styles.emptyText}>
+            No sessions yet. Start your first session to see your progress here.
+          </Text>
+        </Card>
       )}
 
       <View style={{ height: layout.tabBarHeight + spacing.lg }} />
@@ -231,39 +260,56 @@ export default function MomentumScreen() {
   )
 }
 
+// ── Styles ──────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  title: { ...typography.headline, color: colors.text.primary },
-  subtitle: { ...typography.bodyMedium, color: colors.text.tertiary, marginTop: 2, marginBottom: spacing.lg },
+  title: { ...typography.headline, color: colors.text.primary, marginBottom: spacing.lg },
 
-  heroCard: { marginBottom: spacing.sectionGap },
-  heroContent: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
-  heroInfo: { flex: 1, marginLeft: spacing.md },
-  heroScore: { ...typography.display, color: colors.text.primary, fontSize: 36 },
-  heroLabel: { ...typography.bodySmall, color: colors.text.tertiary },
-  shareBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.brand[500] + '15',
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: colors.brand[500] + '30',
+  // Narrative
+  narrativeCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
+  narrativeHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm,
   },
-  trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  trendText: { ...typography.caption },
+  narrativeHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  narrativeLabel: { ...typography.labelSmall, color: colors.text.secondary, letterSpacing: 1 },
+  narrativeText: { ...typography.bodyMedium, color: colors.text.primary, lineHeight: 22 },
+  shareBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xxs,
+    paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs,
+    borderRadius: radius.full,
+    backgroundColor: colors.brand[500] + '12',
+    borderWidth: 1, borderColor: colors.brand[500] + '25',
+  },
+  shareBtnText: { ...typography.caption, color: colors.brand[400] },
 
+  // Stats
   statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sectionGap },
-  statCard: { flex: 1, padding: spacing.md },
-  statContent: { alignItems: 'center', gap: 6 },
-  statValue: { ...typography.h3, color: colors.text.primary, fontSize: 20 },
-  statLabel: { ...typography.caption, color: colors.text.tertiary },
+  statCard: { flex: 1, padding: spacing.md, alignItems: 'center' },
+  statValue: { ...typography.h2, color: colors.text.primary },
+  statLabel: { ...typography.caption, color: colors.text.tertiary, textAlign: 'center', marginTop: 2 },
 
-  chartCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
-  chartTotal: { ...typography.bodySmall, color: colors.text.tertiary, textAlign: 'center', marginTop: spacing.sm },
+  // 4-Week Trend
+  trendCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
+  trendBars: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 100 },
+  trendBarCol: { alignItems: 'center', gap: spacing.xxs },
+  trendBarValue: { ...typography.caption, color: colors.text.tertiary },
+  trendBarTrack: {
+    width: 32, height: 60, borderRadius: radius.sm,
+    backgroundColor: colors.border.subtle, overflow: 'hidden', justifyContent: 'flex-end',
+  },
+  trendBarFill: { width: '100%', borderRadius: radius.sm },
+  trendBarLabel: { ...typography.caption, color: colors.text.tertiary },
 
-  breakdownCard: { padding: spacing.md, marginBottom: spacing.sectionGap },
-  breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
-  breakdownDot: { width: 8, height: 8, borderRadius: 4 },
-  breakdownLabel: { ...typography.bodyMedium, color: colors.text.primary, flex: 1, marginLeft: spacing.xs },
-  breakdownValue: { ...typography.bodyMedium, color: colors.text.secondary, fontWeight: '600' },
+  // Heatmap toggle
+  heatmapToggle: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  heatmapToggleText: { ...typography.bodyMedium, color: colors.text.secondary },
+  heatmapCard: { padding: spacing.md, marginBottom: spacing.sectionGap },
 
+  // Resistance
   resistanceCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
   resistanceInsight: { ...typography.bodyMedium, color: colors.text.primary, lineHeight: 20, marginBottom: spacing.md },
   resistanceStats: { flexDirection: 'row', gap: spacing.md },
@@ -271,14 +317,15 @@ const styles = StyleSheet.create({
   resistanceStatLabel: { ...typography.caption, color: colors.text.tertiary },
   resistanceStatValue: { ...typography.bodySmall, color: colors.text.primary, marginTop: 2, fontWeight: '600' },
 
-  comebackCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
-  comebackText: { ...typography.bodyMedium, color: colors.text.secondary, lineHeight: 20 },
-  comebackHighlight: { fontWeight: '700', color: colors.accent.orange },
+  // Recent Sessions
+  sessionRow: { padding: spacing.md, marginBottom: spacing.xs },
+  sessionRowInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  sessionInfo: { flex: 1 },
+  sessionStatus: { ...typography.bodyMedium, color: colors.text.primary, textTransform: 'capitalize' },
+  sessionTime: { ...typography.caption, color: colors.text.tertiary },
 
-  distractionCard: { padding: spacing.md, marginBottom: spacing.sectionGap },
-  distractionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
-  distractionCat: { ...typography.bodySmall, color: colors.text.primary, width: 80, textTransform: 'capitalize' },
-  distractionBar: { flex: 1, height: 6, backgroundColor: colors.border.subtle, borderRadius: 3, overflow: 'hidden' },
-  distractionBarFill: { height: '100%', borderRadius: 3 },
-  distractionCount: { ...typography.caption, color: colors.text.tertiary, width: 30, textAlign: 'right' },
+  // Empty
+  emptyCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
+  emptyText: { ...typography.bodyMedium, color: colors.text.tertiary, textAlign: 'center' },
 })

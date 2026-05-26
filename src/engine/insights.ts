@@ -6,6 +6,7 @@
 
 import type { UserState } from '../types/moment'
 import type { MissionOutcome } from './missionEngines'
+import type { MissionSession, ResistancePattern, Distraction } from '../types'
 
 // ══════════════════════════════════════════════════════════════
 // SECTION 1: Drift Mirror
@@ -379,4 +380,161 @@ export function generatePlanningLoopCopy(signal: PlanningLoopSignal): string {
     'You are in a planning loop. Time to execute, not plan.',
   ]
   return copies[Math.floor(Math.random() * copies.length)]
+}
+
+// ══════════════════════════════════════════════════════════════
+// SECTION 4: Weekly Narrative & Momentum Window
+// Weekly summary narratives and momentum tracking
+// ══════════════════════════════════════════════════════════════
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const
+
+function isWithinDays(dateStr: string, days: number): boolean {
+  const cutoff = Date.now() - days * 86_400_000
+  return new Date(dateStr).getTime() >= cutoff
+}
+
+function isWithinFirstHalf(dateStr: string, days: number): boolean {
+  const now = Date.now()
+  const halfCutoff = now - (days / 2) * 86_400_000
+  return new Date(dateStr).getTime() >= halfCutoff
+}
+
+export function generateWeeklyNarrative(
+  sessions: MissionSession[],
+  resistancePatterns: ResistancePattern[],
+  distractions: Distraction[],
+  userName: string,
+): string {
+  const weekSessions = sessions.filter((s) => isWithinDays(s.started_at, 7))
+  const completed = weekSessions.filter((s) => s.status === 'completed' || s.status === 'salvaged')
+  const abandoned = weekSessions.filter((s) => s.status === 'abandoned')
+  const totalMinutes = Math.round(
+    completed.reduce((sum, s) => sum + s.actual_seconds, 0) / 60,
+  )
+
+  // Line 1
+  let narrative: string
+  if (completed.length === 0) {
+    narrative = 'Rough week. Zero sessions.'
+  } else {
+    narrative = `${completed.length} session${completed.length === 1 ? '' : 's'} this week — ${totalMinutes} minutes that would have been lost.`
+  }
+
+  // Line 2: dominant resistance state
+  const recentPatterns = resistancePatterns.filter(
+    (p) => p.last_occurred && isWithinDays(p.last_occurred, 7),
+  )
+  if (recentPatterns.length > 0) {
+    const stateCounts: Record<string, number> = {}
+    for (const p of recentPatterns) {
+      stateCounts[p.avoidance_state] = (stateCounts[p.avoidance_state] ?? 0) + 1
+    }
+    const dominant = Object.entries(stateCounts).sort((a, b) => b[1] - a[1])[0][0]
+    // Estimate win rate from successful_strategy presence
+    const dominantPatterns = recentPatterns.filter((p) => p.avoidance_state === dominant)
+    const wins = dominantPatterns.filter((p) => p.successful_strategy != null).length
+    const winPct = dominantPatterns.length > 0 ? Math.round((wins / dominantPatterns.length) * 100) : 0
+    narrative += ` ${capitalize(dominant)} was your main battle. You won ${winPct}% of those fights.`
+  }
+
+  // Line 3: best day
+  if (completed.length > 0) {
+    const dayMinutes: Record<string, number> = {}
+    for (const s of completed) {
+      const day = DAY_NAMES[new Date(s.started_at).getDay()]
+      dayMinutes[day] = (dayMinutes[day] ?? 0) + s.actual_seconds / 60
+    }
+    const bestDay = Object.entries(dayMinutes).sort((a, b) => b[1] - a[1])[0][0]
+    narrative += ` ${bestDay} was your strongest day.`
+  }
+
+  // Line 4: abandoned sessions
+  if (abandoned.length > 0) {
+    narrative += ` ${abandoned.length} session${abandoned.length === 1 ? '' : 's'} were abandoned — that data helps predict what to watch for.`
+  } else if (completed.length > 0) {
+    narrative += ' No abandoned sessions. The resistance lost this week.'
+  }
+
+  return narrative
+}
+
+export function computeMomentumWindow(
+  sessions: MissionSession[],
+  days: number = 14,
+): { count: number; trend: 'building' | 'stable' | 'cooling'; description: string } {
+  const active = sessions.filter(
+    (s) =>
+      isWithinDays(s.started_at, days) &&
+      (s.status === 'completed' || s.status === 'salvaged'),
+  )
+
+  const count = active.length
+
+  // Split into first half and second half of the window
+  const firstHalf = active.filter((s) => !isWithinFirstHalf(s.started_at, days))
+  const secondHalf = active.filter((s) => isWithinFirstHalf(s.started_at, days))
+
+  let trend: 'building' | 'stable' | 'cooling'
+  if (secondHalf.length > firstHalf.length * 1.2) {
+    trend = 'building'
+  } else if (secondHalf.length < firstHalf.length * 0.8) {
+    trend = 'cooling'
+  } else {
+    trend = 'stable'
+  }
+
+  return {
+    count,
+    trend,
+    description: `${count} rescues in ${days} days`,
+  }
+}
+
+export function getInsightSummary(
+  sessions: MissionSession[],
+  resistancePatterns: ResistancePattern[],
+): {
+  bestDay: string
+  avgSessionMinutes: number
+  completionRate: number
+  topState: string | null
+} {
+  const completed = sessions.filter((s) => s.status === 'completed' || s.status === 'salvaged')
+  const total = sessions.length
+
+  // Best day
+  const dayMinutes: Record<string, number> = {}
+  for (const s of completed) {
+    const day = DAY_NAMES[new Date(s.started_at).getDay()]
+    dayMinutes[day] = (dayMinutes[day] ?? 0) + s.actual_seconds / 60
+  }
+  const bestDay = Object.keys(dayMinutes).length > 0
+    ? Object.entries(dayMinutes).sort((a, b) => b[1] - a[1])[0][0]
+    : 'N/A'
+
+  // Average session minutes
+  const avgSessionMinutes = completed.length > 0
+    ? Math.round(completed.reduce((sum, s) => sum + s.actual_seconds / 60, 0) / completed.length)
+    : 0
+
+  // Completion rate
+  const completionRate = total > 0
+    ? Math.round((completed.length / total) * 100)
+    : 0
+
+  // Top resistance state
+  const stateCounts: Record<string, number> = {}
+  for (const p of resistancePatterns) {
+    stateCounts[p.avoidance_state] = (stateCounts[p.avoidance_state] ?? 0) + 1
+  }
+  const topState = Object.keys(stateCounts).length > 0
+    ? Object.entries(stateCounts).sort((a, b) => b[1] - a[1])[0][0]
+    : null
+
+  return { bestDay, avgSessionMinutes, completionRate, topState }
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }

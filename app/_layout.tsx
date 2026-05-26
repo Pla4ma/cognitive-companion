@@ -12,8 +12,9 @@ import { colors } from '../src/theme'
 import { GlobalErrorBoundary } from '../src/services/errorBoundary'
 import { initCrashReporting, setConsentMode } from '../src/services/crashReporting'
 import { useAppStore } from '../src/store'
+import { checkForUpdates } from '../src/services/updates'
 
-const SENTRY_DSN = 'https://YOUR_SENTRY_DSN@sentry.io/YOUR_PROJECT_ID'
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://YOUR_SENTRY_DSN@sentry.io/YOUR_PROJECT_ID'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -23,6 +24,8 @@ export default function RootLayout() {
   // Hide splash screen immediately since we don't require custom fonts
   useEffect(() => {
     SplashScreen.hideAsync()
+    // Check for OTA updates after a short delay
+    setTimeout(() => void checkForUpdates(), 3000)
   }, [])
 
   // Initialize crash reporting on mount, gated by consent
@@ -30,6 +33,21 @@ export default function RootLayout() {
     initCrashReporting(SENTRY_DSN)
     setConsentMode(checkConsent('crash_reporting'))
   }, [checkConsent])
+
+  // Wire notification system for danger windows after enough sessions
+  useEffect(() => {
+    const sessions = useAppStore.getState().sessions
+    if (sessions.length >= 5) {
+      try {
+        const { predictDrift } = require('../src/engine/predictiveEngine')
+        const { scheduleDangerWindowNotifications } = require('../src/services/notifications')
+        const prediction = predictDrift({ sessions })
+        if (prediction?.dangerWindows?.length > 0) {
+          void scheduleDangerWindowNotifications(prediction.dangerWindows, { totalSessions: sessions.length })
+        }
+      } catch {}
+    }
+  }, [])
 
   return (
     <GlobalErrorBoundary>

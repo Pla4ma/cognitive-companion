@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// INTENT — Goal Detail Screen
+// INTENT — Mission Detail Screen
 // Individual mission detail with full micro-mission breakdown
 // ══════════════════════════════════════════════════════════════
 
@@ -11,7 +11,7 @@ import { useAppStore } from '../../src/store'
 import { colors, spacing, radius, typography, layout } from '../../src/theme'
 import { Screen, Card, Button, ProgressRing } from '../../src/components'
 
-export default function GoalDetailScreen() {
+export default function MissionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const missions = useAppStore((s) => s.missions)

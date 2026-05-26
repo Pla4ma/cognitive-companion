@@ -290,6 +290,33 @@ export { runAntiDriftAgent } from '../agents/antiDriftAgent'
 export { compileMission, scoreMission, rejectMission, estimateSuccessProbability, generateNextStep } from './missionCompiler'
 export { createEmptyGraph, recordEvent, computeInsights, getBestProtocol, getBestDuration, getStrongestSignal, getBestComebackStrategy, getBestSurface, summarizeGraph, decayEdges, analyzeRecoverySequences, analyzeDriftChains } from './personalDriftGraph'
 export { routeAgent, shouldUseRemoteAI } from '../services/ai/orchestrator'
-export { recordRetentionEvent, getComebackMessage, shouldShowPaywall } from '../services/retention/retentionEngine'
+export {
+  recordRetentionEvent,
+  getComebackMessage,
+  shouldShowPaywall,
+  loadRetentionState,
+  saveRetentionState,
+  isActivated,
+  getActivationData,
+  computeMomentumWindows,
+  computeMomentumTrend,
+  detectComeback,
+  getActivationCelebration,
+  getSocialProofStat,
+  getPendingBrainDumpItems,
+  getLoopStatusSummary,
+  generateWeeklyNarrative,
+  getDaysSinceActivation,
+  getRetentionDay,
+  shouldShowDay1Notification,
+  shouldShowDay2HabitSeed,
+  shouldShowDay3Pattern,
+  shouldShowDay7Insight,
+  shouldShowDay30Commitment,
+  type RetentionState,
+  type ActivationData,
+  type RetentionEvent,
+  type PaywallTrigger,
+} from '../services/retention/retentionEngine'
 export { mark, measure, getMeasure, getAllMeasures, isWithinBudget, PERFORMANCE_BUDGETS } from '../services/performance/performanceMarks'
 export type { GraphEvent } from './personalDriftGraph'

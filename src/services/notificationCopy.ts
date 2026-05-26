@@ -7,6 +7,7 @@
 import type { UserState } from '../types/moment'
 import type { RescueProtocolId, RescueProtocol } from '../types/rescue'
 import type { DangerWindow } from '../types/ambient'
+import type { DangerWindow as PredictiveDangerWindow } from '../engine/predictiveEngine'
 
 // ── Shared Types ─────────────────────────────────────────────
 
@@ -366,6 +367,92 @@ export function dangerWindowCopy(window: DangerWindow): NotificationCopy {
       preferredProtocol: window.preferredProtocol,
       startTime: window.startTime,
       endTime: window.endTime,
+      timestamp: new Date().toISOString(),
+    },
+  }
+}
+
+// ── Comeback Copy ────────────────────────────────────────────
+// Messages for users who abandoned a session
+
+export interface ComebackSessionInfo {
+  missionTitle?: string
+  abandonedAfterMinutes?: number
+  protocolId?: string
+  state?: UserState
+}
+
+const COMEBACK_TITLES = [
+  'Still there? 👋',
+  'Miss you already',
+  'Quick restart?',
+  'Your mission is waiting',
+  'No judgment — ready to retry?',
+]
+
+const COMEBACK_BODIES = [
+  'Your focus session ended early. Ready to try again?',
+  'No judgment — want a tiny restart?',
+  'Even 2 minutes counts. Come back?',
+  'Your work is still waiting. One small step?',
+  'Stepping away is fine. Coming back is the win.',
+]
+
+export function comebackCopy(sessionInfo: ComebackSessionInfo): NotificationCopy {
+  const title = pickRandom(COMEBACK_TITLES)
+  let body = pickRandom(COMEBACK_BODIES)
+
+  if (sessionInfo.missionTitle) {
+    body = `${body} (${sessionInfo.missionTitle})`
+  }
+
+  return {
+    title,
+    body,
+    data: {
+      type: 'comeback',
+      missionTitle: sessionInfo.missionTitle ?? null,
+      abandonedAfterMinutes: sessionInfo.abandonedAfterMinutes ?? null,
+      protocolId: sessionInfo.protocolId ?? null,
+      timestamp: new Date().toISOString(),
+    },
+  }
+}
+
+// ── Predictive Danger Window Copy ─────────────────────────────
+// Alerts based on the predictive engine's DangerWindow (not user-defined)
+
+const PREDICTIVE_DANGER_TITLES = [
+  'Heads up — drift zone approaching',
+  'Your pattern says danger ahead',
+  'Stay sharp — risky time incoming',
+  'Prevention mode: activate',
+  'Your data says be careful',
+]
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+export function predictiveDangerWindowCopy(window: PredictiveDangerWindow): NotificationCopy {
+  const title = pickRandom(PREDICTIVE_DANGER_TITLES)
+  const dayName = DAY_NAMES[window.dayOfWeek] ?? 'Unknown'
+  const riskPercent = Math.round(window.riskScore * 100)
+  const body = `Around ${window.startHour}:00 on ${dayName}, you tend to drift (${riskPercent}% risk). Want a rescue mission ready?`
+
+  return {
+    title,
+    body,
+    data: {
+      type: 'danger_window',
+      source: 'predictive_engine',
+      startHour: window.startHour,
+      endHour: window.endHour,
+      dayOfWeek: window.dayOfWeek,
+      riskScore: window.riskScore,
+      riskLevel: window.riskLevel,
+      primaryState: window.primaryState,
+      primaryBlocker: window.primaryBlocker,
+      confidence: window.confidence,
+      sampleSize: window.sampleSize,
       timestamp: new Date().toISOString(),
     },
   }

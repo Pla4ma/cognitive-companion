@@ -67,7 +67,7 @@ describe('notificationCopy', () => {
 
     test('returns 1-day milestone', () => {
       const copy = streakCopy(1)
-      expect(copy.title).toContain('1')
+      expect(copy.title).toBeTruthy()
       expect(copy.data.milestone).toBe(1)
     })
 

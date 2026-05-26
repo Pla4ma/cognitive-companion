@@ -29,7 +29,9 @@ import {
   predictDrift, buildIntelligenceProfile, DriftPrediction,
   DangerWindow, UserIntelligenceProfile,
 } from '../src/engine'
-import { streamChat } from '../src/services/ai'
+import { coachStreamResponse, CoachContext } from '../src/services/ai'
+import { DEFAULT_PRIVACY_SETTINGS } from '../src/types/privacy'
+import { useAIQuota } from '../src/hooks/useAIQuota'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { Screen, Card, EmptyState } from '../src/components'
 
@@ -69,6 +71,8 @@ export default function CoachScreen() {
   const features = store.getFeatures
   const startSession = store.startSession
   const addMission = store.addMission
+  const consentLedger = store.consentLedger
+  const aiQuota = useAIQuota()
 
   const [messages, setMessages] = useState<CoachMessage[]>([])
   const [inputText, setInputText] = useState('')
@@ -275,6 +279,17 @@ export default function CoachScreen() {
   const handleSend = useCallback(async () => {
     if (!inputText.trim() || isStreaming) return
 
+    // ── AI daily limit enforcement ──
+    if (!aiQuota.canSendMessage) {
+      setMessages(prev => [...prev, {
+        id: `quota-${Date.now()}`,
+        role: 'system',
+        content: `You've reached your daily AI message limit (${aiQuota.messagesRemaining} remaining). Upgrade to Pro for unlimited coaching.`,
+        timestamp: new Date().toISOString(),
+      }])
+      return
+    }
+
     const userMessage = inputText.trim()
     const newUserMsg: CoachMessage = {
       id: Date.now().toString(),
@@ -288,6 +303,9 @@ export default function CoachScreen() {
     setStreamingText('')
     setShowActions(false)
 
+    // Increment quota count
+    aiQuota.incrementMessages()
+
     const conversationHistory = messages.slice(-15).map(m => ({
       id: m.id,
       user_id: user?.id ?? '',
@@ -297,11 +315,26 @@ export default function CoachScreen() {
       created_at: m.timestamp,
     }))
 
+    // Build CoachContext for the orchestrator
+    const coachContext: CoachContext = {
+      userName: contextData.userName,
+      pushStyle: contextData.pushStyle,
+      currentMomentum: contextData.currentMomentum,
+      activeMissions: contextData.activeMissions,
+      todayMinutes: contextData.todayMinutes,
+      currentStreak: contextData.currentStreak,
+      recentAvoidance: contextData.recentAvoidance,
+      driftRisk: contextData.driftRisk,
+      dangerWindows: contextData.dangerWindows,
+    }
+
     try {
-      await streamChat(
+      await coachStreamResponse(
         conversationHistory,
         userMessage,
-        contextData,
+        coachContext,
+        consentLedger,
+        DEFAULT_PRIVACY_SETTINGS,
         (text) => setStreamingText(text),
         (fullText) => {
           setMessages(prev => [...prev, {
@@ -324,7 +357,7 @@ export default function CoachScreen() {
       setStreamingText('')
       setIsStreaming(false)
     }
-  }, [inputText, isStreaming, messages, contextData, user])
+  }, [inputText, isStreaming, messages, contextData, user, consentLedger, aiQuota])
 
   const handleQuickAction = useCallback((suggestion: ActionSuggestion) => {
     suggestion.onPress()
@@ -377,7 +410,9 @@ export default function CoachScreen() {
             <Text style={styles.subtitle}>
               {prediction && prediction.currentRiskLevel !== 'low'
                 ? `${prediction.currentRiskLevel === 'critical' ? '🔴' : prediction.currentRiskLevel === 'high' ? '🟡' : '🟢'} ${prediction.recommendedAction.slice(0, 40)}...`
-                : 'Action-first guidance. Not a chatbot.'}
+                : aiQuota.isPro
+                  ? 'Action-first guidance. Not a chatbot.'
+                  : `Action-first guidance. ${aiQuota.messagesRemaining} AI messages left today.`}
             </Text>
           </View>
           {hasMessages && (

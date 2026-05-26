@@ -14,5 +14,12 @@ export { Toast } from './Toast';
 export { Slider } from './Slider';
 export { Skeleton } from './Skeleton';
 
+// ── New feature components ────────────────────────────────
+export { IntelligenceCard } from './IntelligenceCard';
+export { DangerWindowHeatmap } from './DangerWindowHeatmap';
+export { ProPaywall } from './ProPaywall';
+export { MissionCard } from './MissionCard';
+export { ProgressiveProfiling } from './ProgressiveProfiling';
+
 // ── Legacy components (Screen, BarChart, StreakBadge, TabBar) ─
 export { Screen, BarChart, StreakBadge, TabBar } from './Legacy';

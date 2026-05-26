@@ -12,6 +12,8 @@ import { useAppStore } from '../src/store'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { Screen, Button, ProgressRing } from '../src/components'
 import { showSessionCompleteNotification } from '../src/services/notifications'
+import { getSocialProofStat, getActivationCelebration } from '../src/services/retention/retentionEngine'
+import type { UserState } from '../src/types'
 
 export default function LiveMissionScreen() {
   const activeSession = useAppStore((s) => s.activeSession)
@@ -31,6 +33,8 @@ export default function LiveMissionScreen() {
   const [distractionInput, setDistractionInput] = useState('')
   const [showDistractionCapture, setShowDistractionCapture] = useState(false)
   const [sessionNotes, setSessionNotes] = useState('')
+  const [socialProof, setSocialProof] = useState<string | null>(null)
+  const [activationCelebration, setActivationCelebration] = useState<{ show: boolean; message: string; submessage: string } | null>(null)
 
   const pulseAnim = useRef(new Animated.Value(1)).current
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -72,10 +76,23 @@ export default function LiveMissionScreen() {
 
   const handleComplete = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
-    await void 0
     completeSession(sessionNotes)
     showSessionCompleteNotification(Math.round(elapsedSeconds / 60), 0)
-  }, [completeSession, sessionNotes, elapsedSeconds])
+
+    // Show social proof stat after completion
+    const proof = getSocialProofStat(
+      (activeSession?.mode as string as UserState) ?? null,
+      true,
+    )
+    if (proof) setSocialProof(proof)
+
+    // Check if this was the first rescue (activation celebration)
+    const retentionState = useAppStore.getState().retentionState
+    const celebration = getActivationCelebration(retentionState)
+    if (celebration.show && retentionState.totalRescues <= 1) {
+      setActivationCelebration(celebration)
+    }
+  }, [completeSession, sessionNotes, elapsedSeconds, activeSession])
 
   const handleAbandon = () => {
     Alert.alert(
@@ -242,6 +259,27 @@ export default function LiveMissionScreen() {
         )}
       </View>
 
+      {/* Social Proof Toast */}
+      {socialProof && !showSalvage && (
+        <View style={styles.socialProofContainer}>
+          <Text style={styles.socialProofText}>{socialProof}</Text>
+          <TouchableOpacity onPress={() => setSocialProof(null)}>
+            <Text style={styles.socialProofDismiss}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Activation Celebration Overlay */}
+      {activationCelebration?.show && (
+        <View style={styles.activationContainer}>
+          <Text style={styles.activationMessage}>{activationCelebration.message}</Text>
+          <Text style={styles.activationSubmessage}>{activationCelebration.submessage}</Text>
+          <TouchableOpacity onPress={() => setActivationCelebration(null)} style={styles.activationDismiss}>
+            <Text style={styles.activationDismissText}>Let's go →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Salvage Modal */}
       {showSalvage && (
         <BlurView intensity={40} style={styles.salvageOverlay}>
@@ -333,4 +371,25 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border.subtle,
   },
   salvageActions: { gap: spacing.sm },
+  socialProofContainer: {
+    position: 'absolute', bottom: 100, left: spacing.lg, right: spacing.lg,
+    backgroundColor: colors.bg.card, borderRadius: radius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: colors.brand[500] + '30',
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8,
+    elevation: 4,
+  },
+  socialProofText: { ...typography.bodySmall, color: colors.text.secondary, flex: 1 },
+  socialProofDismiss: { ...typography.bodyMedium, color: colors.text.disabled },
+  activationContainer: {
+    ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center',
+    padding: spacing.xl, backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  activationMessage: { ...typography.h2, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.md },
+  activationSubmessage: { ...typography.bodyMedium, color: colors.text.tertiary, textAlign: 'center', marginBottom: spacing.xl },
+  activationDismiss: {
+    backgroundColor: colors.brand[500], borderRadius: radius.lg,
+    paddingHorizontal: spacing.xl, paddingVertical: spacing.md,
+  },
+  activationDismissText: { ...typography.bodyMedium, color: colors.text.inverse, fontWeight: '700' },
 })

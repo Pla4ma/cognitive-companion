@@ -21,6 +21,7 @@ import { useAppStore } from '../store/index'
 // ── Helper to reset store between tests ─────────────────────
 
 function resetStore() {
+  const { createEmptyRetentionState } = require('../services/retention/retentionEngine')
   useAppStore.setState({
     user: null,
     isAuthenticated: false,
@@ -36,6 +37,7 @@ function resetStore() {
     isLoading: false,
     currentRoute: '/',
     skipCount: 0,
+    retentionState: createEmptyRetentionState(),
   } as any)
 }
 
@@ -335,5 +337,178 @@ describe('Zustand Store', () => {
       useAppStore.getState().resetSkipCount()
       expect(useAppStore.getState().skipCount).toBe(0)
     })
+  })
+
+  // ── Retention Engine ─────────────────────────────────────
+
+  describe('retention engine', () => {
+    test('recordRetention fires without error for rescue_completed', () => {
+      expect(() => {
+        useAppStore.getState().recordRetention('rescue_completed', {
+          state: 'focus',
+          minutes: 25,
+          protocol: 'session',
+        })
+      }).not.toThrow()
+    })
+
+    test('recordRetention fires without error for rescue_started', () => {
+      expect(() => {
+        useAppStore.getState().recordRetention('rescue_started')
+      }).not.toThrow()
+    })
+
+    test('recordRetention fires without error for rescue_salvaged', () => {
+      expect(() => {
+        useAppStore.getState().recordRetention('rescue_salvaged', {
+          state: 'focus',
+          minutes: 10,
+          protocol: 'salvage',
+        })
+      }).not.toThrow()
+    })
+
+    test('recordRetention updates retentionState', () => {
+      const before = useAppStore.getState().retentionState
+      useAppStore.getState().recordRetention('rescue_completed', {
+        state: 'focus',
+        minutes: 15,
+        protocol: 'session',
+      })
+      const after = useAppStore.getState().retentionState
+      expect(after).toBeDefined()
+      // The state should be updated (not necessarily different, but should not error)
+      expect(after).not.toBeNull()
+    })
+
+    test('getMomentumWindows returns valid structure', () => {
+      const windows = useAppStore.getState().getMomentumWindows()
+      expect(windows).toBeDefined()
+      expect(typeof windows.last7Days).toBe('number')
+      expect(typeof windows.last14Days).toBe('number')
+      expect(typeof windows.last30Days).toBe('number')
+    })
+
+    test('getMomentumWindows with no sessions returns zeros', () => {
+      const windows = useAppStore.getState().getMomentumWindows()
+      expect(windows.last7Days).toBe(0)
+      expect(windows.last14Days).toBe(0)
+      expect(windows.last30Days).toBe(0)
+    })
+
+    test('getMomentumWindows counts sessions correctly', () => {
+      // Add some sessions
+      useAppStore.getState().startSession()
+      useAppStore.getState().completeSession()
+
+      const windows = useAppStore.getState().getMomentumWindows()
+      // At least one session in the last 7 days
+      expect(windows.last7Days).toBeGreaterThanOrEqual(1)
+      expect(windows.last14Days).toBeGreaterThanOrEqual(windows.last7Days)
+      expect(windows.last30Days).toBeGreaterThanOrEqual(windows.last14Days)
+    })
+
+    test('getComebackStatus returns valid structure', () => {
+      const status = useAppStore.getState().getComebackStatus()
+      expect(status).toBeDefined()
+      expect(typeof status.isComeback).toBe('boolean')
+      expect(typeof status.daysAway).toBe('number')
+      expect(typeof status.message).toBe('string')
+    })
+
+    test('getComebackStatus with no history is not a comeback', () => {
+      const status = useAppStore.getState().getComebackStatus()
+      expect(status.isComeback).toBe(false)
+    })
+  })
+
+  // ── End-to-End Session Lifecycle ─────────────────────────
+
+  describe('end-to-end: addMission + startSession + completeSession', () => {
+    test('full lifecycle works without error', () => {
+      // 1. Add a mission
+      const mission = useAppStore.getState().addMission('Write documentation', 'Write the README')
+      expect(mission.id).toBeDefined()
+      expect(useAppStore.getState().missions.length).toBe(1)
+
+      // 2. Start a session
+      const sessionId = useAppStore.getState().startSession(mission.id, undefined, 'focus', 25)
+      expect(sessionId).toBeDefined()
+      expect(useAppStore.getState().activeSession).not.toBeNull()
+      expect(useAppStore.getState().activeSession!.status).toBe('active')
+
+      // 3. Update timer
+      useAppStore.getState().updateSessionTimer(sessionId, 1200)
+
+      // 4. Complete the session
+      useAppStore.getState().completeSession('Great progress on docs')
+      expect(useAppStore.getState().activeSession).toBeNull()
+      expect(useAppStore.getState().sessions.length).toBe(1)
+      expect(useAppStore.getState().sessions[0].status).toBe('completed')
+      expect(useAppStore.getState().sessions[0].notes).toBe('Great progress on docs')
+      expect(useAppStore.getState().sessionCount).toBe(1)
+
+      // 5. Verify mission is still active (sessions don't auto-complete missions)
+      expect(useAppStore.getState().missions.length).toBe(1)
+
+      // 6. Verify momentum event was created
+      const events = useAppStore.getState().momentumEvents
+      expect(events.some(e => e.type === 'session_completed')).toBe(true)
+    })
+
+    test('multiple sessions accumulate correctly', () => {
+      // Session 1
+      useAppStore.getState().startSession(undefined, undefined, 'focus', 15)
+      useAppStore.getState().completeSession()
+
+      // Session 2
+      useAppStore.getState().startSession(undefined, undefined, 'focus', 25)
+      useAppStore.getState().completeSession()
+
+      // Session 3
+      useAppStore.getState().startSession(undefined, undefined, 'focus', 10)
+      useAppStore.getState().completeSession()
+
+      expect(useAppStore.getState().sessions.length).toBe(3)
+      expect(useAppStore.getState().sessionCount).toBe(3)
+      expect(useAppStore.getState().activeSession).toBeNull()
+    })
+
+    test('mission + session + salvage lifecycle', () => {
+      const mission = useAppStore.getState().addMission('Read chapter 3')
+      const sessionId = useAppStore.getState().startSession(mission.id, undefined, 'focus', 20)
+      useAppStore.getState().updateSessionTimer(sessionId, 600) // 10 minutes
+      useAppStore.getState().salvageSession('Got through half the chapter')
+
+      expect(useAppStore.getState().activeSession).toBeNull()
+      expect(useAppStore.getState().sessions[0].status).toBe('salvaged')
+      expect(useAppStore.getState().sessions[0].notes).toBe('Got through half the chapter')
+      expect(useAppStore.getState().sessionCount).toBe(1)
+
+      // Verify salvage momentum event
+      const events = useAppStore.getState().momentumEvents
+      expect(events.some(e => e.type === 'session_salvaged')).toBe(true)
+    })
+  })
+})
+
+// ── Store Migrations ──────────────────────────────────────
+
+describe('Store Migrations', () => {
+  it('migrates v0 sessions to include mode field', () => {
+    // The migration logic adds mode: 'focus' to sessions without it
+    const v0Session = { id: '1', started_at: '2026-01-01', status: 'completed', actual_seconds: 300 }
+    const migrated = { ...v0Session, mode: v0Session.mode ?? 'focus' }
+    expect(migrated.mode).toBe('focus')
+  })
+
+  it('migrates v1 to v2 by adding retentionState', () => {
+    const v1State = { sessions: [], missions: [] }
+    expect(v1State.retentionState).toBeUndefined()
+    // After migration, retentionState should be populated
+    const { loadRetentionState } = require('../services/retention/retentionEngine')
+    const migrated = { ...v1State, retentionState: loadRetentionState(), skipCount: 0 }
+    expect(migrated.retentionState).toBeDefined()
+    expect(migrated.skipCount).toBe(0)
   })
 })

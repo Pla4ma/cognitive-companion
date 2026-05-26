@@ -42,7 +42,45 @@ export default function SettingsScreen() {
   const handleDeleteData = () => {
     Alert.alert('Delete All Data', 'This will permanently delete all your missions, sessions, and patterns. This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete Everything', style: 'destructive', onPress: () => Alert.alert('Deleted', 'All data has been deleted.') },
+      {
+        text: 'Delete Everything',
+        style: 'destructive',
+        onPress: () => {
+          try {
+            const store = useAppStore.getState()
+            // Clear all sessions
+            store.sessions.forEach(s => store.abandonSession())
+            // Clear all missions
+            store.missions.forEach(m => store.deleteMission(m.id))
+            // Clear resistance patterns, distractions, brain dumps, momentum events
+            useAppStore.setState({
+              sessions: [],
+              activeSession: null,
+              missions: [],
+              microMissions: [],
+              resistancePatterns: [],
+              distractions: [],
+              brainDumps: [],
+              momentumEvents: [],
+              retentionState: {
+                totalRescues: 0,
+                totalMinutesRescued: 0,
+                activationDate: null,
+                lastSessionDate: null,
+                comebackDays: [],
+                socialProofStats: {},
+                momentumWindows: { weekly: 0, biweekly: 0, monthly: 0 },
+                loopStatus: {},
+                weeklyNarrative: null,
+                weeklyNarrativeDate: null,
+              },
+            })
+            Alert.alert('Deleted', 'All data has been deleted.')
+          } catch {
+            Alert.alert('Error', 'Failed to delete all data. Please try again.')
+          }
+        },
+      },
     ])
   }
 

@@ -321,7 +321,7 @@ describe('DriftInterceptionOrchestrator', () => {
       }
       const result = orch.shouldIntercept(signal)
       expect(result.should).toBe(false)
-      expect(result.reason).toContain('Rate limited')
+      expect(result.reason).toContain('rate limited')
     })
 
     test('blocks when max per hour reached', () => {
