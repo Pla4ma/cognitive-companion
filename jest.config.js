@@ -1,12 +1,25 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx', '**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
+    '^react-native$': 'react-native-web',
+    '^react-native-reanimated$': '<rootDir>/src/__tests__/__mocks__/react-native-reanimated.js',
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^~/(.*)$': '<rootDir>/$1',
   },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react',
+      },
+    }],
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(react-native-web|@testing-library)/)',
+  ],
   collectCoverageFrom: [
     'src/engine/**/*.ts',
     'src/services/consent.ts',

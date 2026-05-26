@@ -18,13 +18,14 @@ import {
 } from 'lucide-react-native'
 import { colors, spacing, radius, typography } from '../src/theme'
 import { compileMission } from '../src/engine/missionCompiler'
+import { getProtocolForState } from '../src/types/rescue'
 import { useAppStore } from '../src/store'
 import type { MicroMission } from '../src/types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const TIMER_SECONDS = 120
 
-type ScrollStep = 'intro' | 'mission' | 'timer' | 'braindump' | 'choice'
+type ScrollStep = 'intro' | 'state' | 'mission' | 'timer' | 'braindump' | 'choice'
 
 // ── Skip-aware intro copy ────────────────────────────────────
 function getIntroCopy(skipCount: number): { title: string; subtitle: string; principle: string } {
@@ -71,11 +72,17 @@ export default function BeforeYouScrollScreen() {
   const [brainDumpSaved, setBrainDumpSaved] = useState(false)
   const [didAnything, setDidAnything] = useState(false)
   const brainDumpInputRef = useRef<TextInput>(null)
+  const [selectedState, setSelectedState] = useState<string | null>(null)
 
   const handleStart = useCallback(() => {
     resetSkipCount()
+    setStep('state')
+  }, [resetSkipCount])
+
+  const handleStateSelect = useCallback((state: string) => {
+    setSelectedState(state)
     const result = compileMission({
-      state: 'doomscroll_risk',
+      state: state as any,
       blocker: null,
       energy: 'medium',
       availableMinutes: 2,
@@ -83,12 +90,12 @@ export default function BeforeYouScrollScreen() {
       threadId: null,
       previousFailures: [],
       previousSuccesses: [],
-      protocolId: 'doomscroll_intercept',
+      protocolId: getProtocolForState(state as any),
       privacyPolicy: 'local_only',
     })
     setMission(result.primaryMission)
     setStep('mission')
-  }, [resetSkipCount])
+  }, [])
 
   const handleSkip = useCallback(() => {
     incrementSkipCount()
@@ -146,6 +153,10 @@ export default function BeforeYouScrollScreen() {
     (choice: 'scroll' | 'another' | 'done') => {
       switch (choice) {
         case 'scroll':
+          {
+            const { recordRetention } = useAppStore.getState()
+            recordRetention('before_scroll_bypassed', { state: selectedState ?? 'unknown' })
+          }
           router.back()
           break
         case 'another':
@@ -199,6 +210,37 @@ export default function BeforeYouScrollScreen() {
 
           <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
             <Text style={styles.skipText}>Not right now</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
+
+  // ── State Picker ─────────────────────────────────────────────
+  if (step === 'state') {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={['rgba(219,39,119,0.12)', 'transparent']} style={styles.gradientBg} />
+        <View style={styles.content}>
+          <Text style={styles.stepLabel}>HOW ARE YOU FEELING?</Text>
+          <Text style={styles.subtitle}>Pick the one that's closest right now.</Text>
+
+          {[
+            { key: 'avoiding', emoji: '🙈', label: 'Avoiding', desc: 'I know what to do but I can\'t start' },
+            { key: 'overwhelmed', emoji: '🌊', label: 'Overwhelmed', desc: 'Too much, don\'t know where to begin' },
+            { key: 'tired', emoji: '😴', label: 'Just Tired', desc: 'Low energy, need something easy' },
+          ].map((opt) => (
+            <TouchableOpacity key={opt.key} style={styles.choiceCard} onPress={() => handleStateSelect(opt.key)}>
+              <Text style={{ fontSize: 28 }}>{opt.emoji}</Text>
+              <View style={styles.choiceContent}>
+                <Text style={styles.choiceLabel}>{opt.label}</Text>
+                <Text style={styles.choiceSub}>{opt.desc}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+            <Text style={styles.skipText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>

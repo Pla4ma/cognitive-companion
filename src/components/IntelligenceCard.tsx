@@ -89,7 +89,7 @@ interface IntelligenceCardProps {
   prediction: DriftPrediction;
 }
 
-export function IntelligenceCard({ profile, prediction }: IntelligenceCardProps) {
+export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, prediction }: IntelligenceCardProps) {
   const topDanger = profile.dangerWindows[0];
   const topResistance = profile.resistanceMap[0];
 
@@ -230,7 +230,7 @@ export function IntelligenceCard({ profile, prediction }: IntelligenceCardProps)
       </View>
     </Card>
   );
-}
+});
 
 // ── Styles ─────────────────────────────────────────────────
 

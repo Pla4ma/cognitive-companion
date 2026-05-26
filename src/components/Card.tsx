@@ -11,7 +11,7 @@ interface CardProps {
   accessibilityLabel?: string;
 }
 
-export function Card({ children, style, variant = 'default', onPress, accessibilityLabel }: CardProps) {
+export const Card = React.memo(function Card({ children, style, variant = 'default', onPress, accessibilityLabel }: CardProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handleIn = useCallback(() => {
@@ -45,7 +45,7 @@ export function Card({ children, style, variant = 'default', onPress, accessibil
     );
   }
   return content;
-}
+});
 
 const styles = StyleSheet.create({
   base: { borderRadius: radius.xxl, overflow: 'hidden' },

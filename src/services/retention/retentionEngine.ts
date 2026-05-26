@@ -43,6 +43,7 @@ export type RetentionEvent =
   | 'comeback_completed'
   | 'drift_insight_viewed'
   | 'experiment_selected'
+  | 'before_scroll_bypassed'
   | 'body_double_started'
   | 'context_capsule_created'
   | 'before_scroll_started'

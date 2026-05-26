@@ -67,7 +67,7 @@ function getAssignedProtocol(micros: MicroMission[]): string | null {
 
 // ── Component ─────────────────────────────────────────────
 
-export function MissionCard({
+export const MissionCard = React.memo(function MissionCard({
   mission,
   microMissions,
   sessions,
@@ -172,7 +172,7 @@ export function MissionCard({
       </View>
     </Card>
   );
-}
+});
 
 // ── Styles ────────────────────────────────────────────────
 

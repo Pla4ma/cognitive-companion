@@ -23,7 +23,7 @@ export const colors = {
     primary: '#FFFFFF',
     secondary: '#B4B4C8',    // was oklch(75% 0.02 260)
     tertiary: '#7E7E96',     // was oklch(55% 0.02 260)
-    disabled: '#565668',     // was oklch(40% 0.02 260)
+    disabled: '#6A6A80',     // was '#565668', raised for WCAG AA contrast
     inverse: '#060608',
   },
 

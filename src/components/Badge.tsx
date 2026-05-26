@@ -24,14 +24,14 @@ const bgColor: Record<BadgeVariant, string> = {
   info: 'rgba(59,130,246,0.12)',
 };
 
-export function Badge({ label, variant, style }: BadgeProps) {
+export const Badge = React.memo(function Badge({ label, variant, style }: BadgeProps) {
   return (
     <View style={[styles.container, { backgroundColor: bgColor[variant] }, style]}>
       <View style={[styles.dot, { backgroundColor: dotColor[variant] }]} />
       <Text style={[styles.label, { color: dotColor[variant] }]}>{label}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

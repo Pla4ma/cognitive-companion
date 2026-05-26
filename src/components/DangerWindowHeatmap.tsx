@@ -60,7 +60,7 @@ interface DangerWindowHeatmapProps {
   timeSlots: TimeSlot[];
 }
 
-export function DangerWindowHeatmap({ timeSlots }: DangerWindowHeatmapProps) {
+export const DangerWindowHeatmap = React.memo(function DangerWindowHeatmap({ timeSlots }: DangerWindowHeatmapProps) {
   // Build a lookup map: "day-hour" → TimeSlot
   const slotMap = useMemo(() => {
     const map = new Map<string, TimeSlot>();
@@ -129,7 +129,7 @@ export function DangerWindowHeatmap({ timeSlots }: DangerWindowHeatmapProps) {
       </View>
     </View>
   );
-}
+});
 
 // ── Styles ─────────────────────────────────────────────────
 

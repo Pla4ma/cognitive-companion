@@ -8,8 +8,13 @@ import { createEmptyGraph, recordEvent, computeInsights, getBestProtocol, getBes
 import { generateSalvagePlan } from '../engine/missionEngines'
 import { classifyInput, rewriteShameLanguage, isMissionSafe, buildSafetyStatus } from '../agents/antiDriftAgent/safety'
 import { RESCUE_PROTOCOLS, getProtocolForState, getFallbackProtocol } from '../types/rescue'
+import { resetDriftDetectionState } from '../engine/agent'
 import type { MissionCompilationInput, UserState, EnergyLevel, BlockerType } from '../types'
 import type { GraphEvent } from '../engine/personalDriftGraph'
+
+beforeEach(() => {
+  resetDriftDetectionState()
+})
 
 // ── Mission Compiler Tests ──────────────────────────────────
 

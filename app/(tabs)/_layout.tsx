@@ -37,7 +37,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="goals"
+        name="missions"
         options={{
           title: 'Missions',
           tabBarIcon: ({ color }) => <Target size={22} color={color} />,

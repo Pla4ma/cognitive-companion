@@ -92,6 +92,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
       importance: Notifications.AndroidImportance.DEFAULT,
       sound: 'default',
     })
+
+    await Notifications.setNotificationChannelAsync('danger-windows', {
+      name: 'Danger Windows',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250],
+      lightColor: '#F59E0B',
+      sound: 'default',
+    })
   }
 
   return true
@@ -684,7 +692,7 @@ export async function scheduleWeeklyNarrative(
     content: {
       title,
       body: firstSentence,
-      data: { screen: 'progress', type: 'weekly_narrative' },
+      data: { screen: 'progress', type: 'weekly_narrative', deepLink: '/(tabs)/progress' },
       sound: 'default',
       categoryIdentifier: 'weekly_narrative',
     },
