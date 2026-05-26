@@ -21,7 +21,7 @@ import {
 import { BlurView } from 'expo-blur'
 import {
   Send, Trash2, Lightbulb, Target, Zap, Brain,
-  Shield, TrendingUp, AlertTriangle, Clock, ChevronRight,
+  Shield, TrendingUp, AlertTriangle, Clock, ChevronRight, Mic, MicOff,
 } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
 import { useAppStore } from '../../src/store'
@@ -34,7 +34,7 @@ import { coachStreamResponse, CoachContext } from '../../src/services/ai'
 import { DEFAULT_PRIVACY_SETTINGS } from '../../src/types/privacy'
 import { useAIQuota } from '../../src/hooks/useAIQuota'
 import { colors, spacing, radius, typography, shadows } from '../../src/theme'
-import { Screen, Card, EmptyState } from '../../src/components'
+import { Screen, Card, Button, EmptyState } from '../../src/components'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -80,7 +80,8 @@ export default function CoachScreen() {
   const [inputText, setInputText] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingText, setStreamingText] = useState('')
-  const [showActions, setShowActions] = useState(true)
+  const [isListening, setIsListening] = useState(false)
+  const [actionsExpanded, setActionsExpanded] = useState(true)
   const scrollRef = useRef<ScrollView>(null)
   const fadeAnim = useRef(new Animated.Value(1)).current
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
@@ -284,6 +285,31 @@ export default function CoachScreen() {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
   }, [])
 
+  // ── Voice Input ──
+  // TODO: Install @react-native-voice/voice for real speech-to-text.
+  // For now, this is a stub that logs intent and toggles visual state.
+  const toggleVoiceInput = useCallback(async () => {
+    if (isListening) {
+      // Stop listening
+      setIsListening(false)
+      console.log('[VoiceInput] Stopped listening (stub)')
+    } else {
+      // Start listening
+      setIsListening(true)
+      console.log('[VoiceInput] Started listening (stub)')
+      // TODO: When @react-native-voice/voice is installed:
+      //   import Voice from '@react-native-voice/voice'
+      //   Voice.onSpeechResults = (e) => setInputText(e.value?.[0] ?? '')
+      //   Voice.onSpeechEnd = () => setIsListening(false)
+      //   await Voice.start('en-US')
+      // Simulate auto-stop after 5 seconds for visual feedback
+      setTimeout(() => {
+        setIsListening(false)
+        console.log('[VoiceInput] Auto-stopped (stub — install @react-native-voice/voice for real STT)')
+      }, 5000)
+    }
+  }, [isListening])
+
   const handleSend = useCallback(async () => {
     if (!inputText.trim() || isStreaming) return
 
@@ -309,7 +335,7 @@ export default function CoachScreen() {
     setInputText('')
     setIsStreaming(true)
     setStreamingText('')
-    setShowActions(false)
+    setActionsExpanded(false)
 
     // Increment quota count
     aiQuota.incrementMessages()
@@ -387,24 +413,42 @@ export default function CoachScreen() {
       actionTaken: suggestion.type,
     }
     setMessages(prev => [...prev, actionMsg])
-    setShowActions(false)
+    setActionsExpanded(false)
   }, [])
 
   const pushStyle = user?.push_style ?? 'gentle'
   const hasMessages = messages.filter(m => m.role !== 'system').length > 0
-  const isLocked = !features()['CORE']
+  const isLocked = !features['CORE']
 
-  // ── Locked State ──
+  // ── Locked State (Limited Mode) ──
   if (isLocked) {
     return (
       <Screen>
         <View style={styles.lockedContainer}>
-          <EmptyState
-            icon="🔒"
-            title="Complete 3 sessions to unlock your coach"
-            description="Your AI coach learns from your patterns. Start with a few focus sessions to unlock personalized guidance."
-            actionLabel="Go to Rescue"
-            onAction={() => {}}
+          <Text style={styles.title}>Your Coach</Text>
+          <Text style={[styles.subtitle, { marginTop: spacing.sm, marginBottom: spacing.lg }]}>
+            I get smarter as we work together. After a few sessions, I'll know your patterns and give you personalized guidance.
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.text.tertiary, marginBottom: spacing.xl }]}>
+            For now, I can still help you think through what's in your way.
+          </Text>
+          <TextInput
+            style={styles.chatInput}
+            placeholder="What's pulling you away right now?"
+            placeholderTextColor={colors.text.disabled}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+            multiline
+          />
+          <Button
+            title="Send"
+            onPress={handleSend}
+            variant="gradient"
+            size="md"
+            style={{ marginTop: spacing.sm }}
+            disabled={!inputText.trim() || isStreaming}
           />
         </View>
       </Screen>
@@ -435,7 +479,7 @@ export default function CoachScreen() {
           {hasMessages && (
             <TouchableOpacity
               style={styles.clearBtn}
-              onPress={() => { setMessages([]); setShowActions(true) }}
+              onPress={() => { setMessages([]); setActionsExpanded(true) }}
               accessibilityLabel="Clear conversation"
             >
               <Trash2 size={18} color={colors.text.tertiary} />
@@ -450,11 +494,11 @@ export default function CoachScreen() {
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Welcome + Action Suggestions (before first message) */}
-          {!hasMessages && showActions && (
+          {/* Welcome + Action Suggestions */}
+          {(!hasMessages || actionsExpanded) && (
             <View style={styles.welcomeSection}>
               {/* Drift Prediction Card */}
-              {prediction && prediction.confidence > 0.2 && (
+              {!hasMessages && prediction && prediction.confidence > 0.2 && (
                 <Card variant="glow" style={styles.predictionCard}>
                   <View style={styles.predictionHeader}>
                     <Clock size={16} color={colors.brand[400]} />
@@ -494,3 +538,280 @@ export default function CoachScreen() {
                     <Text style={styles.actionSubtitle}>{suggestion.subtitle}</Text>
                   </View>
                   <ChevronRight size={18} color={colors.text.tertiary} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Collapsed actions indicator when conversation is active */}
+          {hasMessages && !actionsExpanded && (
+            <TouchableOpacity
+              style={styles.quickActionsCollapsed}
+              onPress={() => setActionsExpanded(true)}
+              accessibilityLabel="Show quick actions"
+            >
+              <Text style={styles.quickActionsCollapsedText}>⚡ Quick Actions</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Messages */}
+          {messages.map((msg) => (
+            <View key={msg.id} style={[
+              styles.messageBubble,
+              msg.role === 'user' ? styles.userBubble : msg.role === 'system' ? styles.systemBubble : styles.assistantBubble,
+            ]}>
+              <Text style={[
+                styles.messageText,
+                msg.role === 'user' ? styles.userText : msg.role === 'system' ? styles.systemText : styles.assistantText,
+              ]}>
+                {msg.content}
+              </Text>
+            </View>
+          ))}
+
+          {/* Streaming text */}
+          {isStreaming && streamingText && (
+            <View style={[styles.messageBubble, styles.assistantBubble]}>
+              <Text style={[styles.messageText, styles.assistantText]}>
+                {streamingText}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.chatInput}
+            placeholder="What's pulling you away right now?"
+            placeholderTextColor={colors.text.disabled}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+            multiline
+          />
+          <TouchableOpacity
+            style={[styles.micBtn, isListening && styles.micBtnActive]}
+            onPress={toggleVoiceInput}
+            disabled={isStreaming}
+            accessibilityLabel={isListening ? 'Stop voice input' : 'Start voice input'}
+            accessibilityRole="button"
+          >
+            {isListening
+              ? <MicOff size={20} color={colors.error} />
+              : <Mic size={20} color={inputText.trim() ? colors.text.tertiary : colors.brand[400]} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sendBtn, (!inputText.trim() || isStreaming) && styles.sendBtnDisabled]}
+            onPress={handleSend}
+            disabled={!inputText.trim() || isStreaming}
+            accessibilityLabel="Send message"
+          >
+            <Send size={20} color={inputText.trim() && !isStreaming ? colors.brand[400] : colors.text.disabled} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Screen>
+  )
+}
+
+const styles = StyleSheet.create({
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  title: {
+    ...typography.h2,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  clearBtn: {
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  welcomeSection: {
+    marginBottom: spacing.lg,
+  },
+  predictionCard: {
+    marginBottom: spacing.lg,
+  },
+  predictionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  predictionLabel: {
+    ...typography.caption,
+    color: colors.brand[400],
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  predictionRisk: {
+    ...typography.body,
+    color: colors.text.primary,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  predictionAction: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  predictionWindow: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+    marginTop: spacing.sm,
+  },
+  actionsTitle: {
+    ...typography.h3,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    ...typography.body,
+    color: colors.text.primary,
+    fontWeight: '600',
+  },
+  actionSubtitle: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  quickActionsCollapsed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    backgroundColor: colors.surface.elevated,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    borderStyle: 'dashed',
+  },
+  quickActionsCollapsedText: {
+    ...typography.body,
+    color: colors.text.secondary,
+    fontWeight: '600',
+  },
+  messageBubble: {
+    maxWidth: '85%',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+  },
+  userBubble: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.brand[500],
+    borderBottomRightRadius: spacing.xs,
+  },
+  assistantBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface.card,
+    borderBottomLeftRadius: spacing.xs,
+  },
+  systemBubble: {
+    alignSelf: 'center',
+    backgroundColor: colors.surface.elevated,
+    borderRadius: radius.sm,
+  },
+  messageText: {
+    ...typography.body,
+  },
+  userText: {
+    color: colors.text.primary,
+  },
+  assistantText: {
+    color: colors.text.primary,
+  },
+  systemText: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border.subtle,
+  },
+  chatInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.text.primary,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    maxHeight: 100,
+  },
+  sendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendBtnDisabled: {
+    opacity: 0.5,
+  },
+  micBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micBtnActive: {
+    backgroundColor: colors.error + '20',
+  },
+})
