@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import { extractFromText, createContextCapsule, contextToMission } from '../services/context/contextExtractor'
-import { generateSalvagePlan } from '../engine/salvageEngine'
+import { generateSalvagePlan } from '../engine/missionEngines'
 import { scrubEvent } from '../services/analytics'
 import { executeAction, isPermissionGranted, grantPermission, revokePermission } from '../services/tools/toolExecutor'
 import { recordRetentionEvent, getComebackMessage, shouldShowPaywall } from '../services/retention/retentionEngine'

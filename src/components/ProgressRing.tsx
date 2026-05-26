@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, ReactNode } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors, typography, animation } from '../theme';
@@ -10,11 +10,12 @@ interface ProgressRingProps {
   color?: string;
   trackColor?: string;
   label?: string;
+  children?: ReactNode;
 }
 
 export function ProgressRing({
   progress, size = 120, strokeWidth = 8,
-  color = colors.brand[500], trackColor = colors.border.subtle, label,
+  color = colors.brand[500], trackColor = colors.border.subtle, label, children,
 }: ProgressRingProps) {
   const anim = useRef(new Animated.Value(0)).current;
   const r = (size - strokeWidth) / 2;
@@ -47,9 +48,13 @@ export function ProgressRing({
           rotation="-90" origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
-      <View style={styles.center}>
-        <Text style={[styles.value, { color }]}>{Math.round(clamped * 100)}%</Text>
-        {label && <Text style={styles.label}>{label}</Text>}
+      <View style={[styles.center, { width: size * 0.75 }]}>
+        {children || (
+          <>
+            <Text style={[styles.value, { color }]}>{Math.round(clamped * 100)}%</Text>
+            {label && <Text style={styles.label}>{label}</Text>}
+          </>
+        )}
       </View>
     </View>
   );

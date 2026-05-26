@@ -423,3 +423,183 @@ export function validateCoachResponse(response: string, policy: CoachPolicyDecis
 
   return { valid: issues.length === 0, issues }
 }
+
+// ══════════════════════════════════════════════════════════════
+// v4 — Multi-Turn Coach Memory & Context-Aware Coaching
+// ══════════════════════════════════════════════════════════════
+
+export interface CoachTurn {
+  timestamp: number
+  state: UserState
+  userMessage: string
+  responseType: CoachResponseType
+  outcome?: 'accepted' | 'dismissed' | 'ignored'
+}
+
+export interface CoachSessionContext {
+  isInSession: boolean
+  sessionMinutesElapsed: number
+  currentProtocol: string | null       // Active rescue protocol name
+  protocolAttemptNumber: number         // How many protocol attempts this session
+  lastMissedAction: string | null       // What the user last dismissed
+  bodyDoubleActive: boolean
+}
+
+export interface CoachMemory {
+  recentTurns: CoachTurn[]              // Last 5 coach interactions
+  sessionContext: CoachSessionContext
+  ignoredAdviceTypes: Set<CoachResponseType>  // Types user repeatedly ignores
+  preferredActionTypes: string[]        // Types user responds to best
+  personaOverride: PushStyle | null     // Temporary persona override
+}
+
+export function createCoachMemory(): CoachMemory {
+  return {
+    recentTurns: [],
+    sessionContext: {
+      isInSession: false,
+      sessionMinutesElapsed: 0,
+      currentProtocol: null,
+      protocolAttemptNumber: 0,
+      lastMissedAction: null,
+      bodyDoubleActive: false,
+    },
+    ignoredAdviceTypes: new Set(),
+    preferredActionTypes: [],
+    personaOverride: null,
+  }
+}
+
+export function recordCoachTurn(
+  memory: CoachMemory,
+  turn: CoachTurn,
+): void {
+  memory.recentTurns.push(turn)
+  // Keep last 5
+  if (memory.recentTurns.length > 5) {
+    memory.recentTurns = memory.recentTurns.slice(-5)
+  }
+
+  // Track ignored advice types
+  if (turn.outcome === 'ignored') {
+    memory.ignoredAdviceTypes.add(turn.responseType)
+  }
+
+  // Track preferred action types
+  if (turn.outcome === 'accepted') {
+    if (!memory.preferredActionTypes.includes(turn.responseType)) {
+      memory.preferredActionTypes.push(turn.responseType)
+    }
+  }
+
+  // Auto-switch persona if all recent turns ignored
+  const recentOutcomes = memory.recentTurns.slice(-3).map(t => t.outcome)
+  if (recentOutcomes.every(o => o === 'ignored' || o === 'dismissed')) {
+    memory.personaOverride = 'firm' // Escalate to firm after 3 ignored
+  }
+}
+
+export function updateCoachSessionContext(
+  memory: CoachMemory,
+  update: Partial<CoachSessionContext>,
+): void {
+  memory.sessionContext = { ...memory.sessionContext, ...update }
+}
+
+// v4: Decide coach response with session awareness and multi-turn context
+export function decideCoachResponseV2(
+  state: UserState,
+  userMessage: string,
+  hasActiveMission: boolean,
+  missionAttemptCount: number,
+  memory: CoachMemory,
+): CoachPolicyDecision {
+  const base = decideCoachResponse(state, userMessage, hasActiveMission, missionAttemptCount)
+
+  // 1. If body double is active, always offer it
+  if (memory.sessionContext.bodyDoubleActive) {
+    base.shouldOfferBodyDouble = true
+  }
+
+  // 2. If user is in a session and distracted, use capture_return
+  if (memory.sessionContext.isInSession && state === 'distracted') {
+    base.responseType = 'capture_return'
+    base.buttons = ['Back to session', 'Capture distraction', 'End session']
+  }
+
+  // 3. Avoid advice types user has repeatedly ignored
+  if (memory.ignoredAdviceTypes.has(base.responseType)) {
+    const alternatives: Record<CoachResponseType, CoachResponseType> = {
+      tiny_action: 'motivation_one',
+      shrink_scope: 'plan_minimum',
+      capture_return: 'tiny_action',
+      rest_offer: 'tiny_action',
+      motivation_one: 'tiny_action',
+      plan_minimum: 'mission_thread',
+      mission_thread: 'plan_minimum',
+      safety_redirect: 'tiny_action',
+    }
+    const altType = alternatives[base.responseType]
+    if (altType && !memory.ignoredAdviceTypes.has(altType)) {
+      base.responseType = altType
+      base.cta = 'Try this approach'
+      base.buttons = ['Try this approach', 'Something else', 'Make smaller']
+    }
+  }
+
+  // 4. Protocol-aware adaptation
+  if (memory.sessionContext.currentProtocol === '2-minute-start' && missionAttemptCount > 0) {
+    base.responseType = 'motivation_one'
+    base.maxSentences = 1
+    base.cta = 'Just start'
+    base.buttons = ['Just start', 'Shrink further', 'Body double']
+  }
+
+  if (memory.sessionContext.currentProtocol === 'brain-dump' && missionAttemptCount > 0) {
+    base.responseType = 'plan_minimum'
+    base.cta = 'Pick one item'
+    base.buttons = ['Pick one item', 'Dump more', 'Start timer']
+  }
+
+  // 5. If last action was missed, adjust
+  if (memory.sessionContext.lastMissedAction) {
+    base.shouldOfferShrink = true
+    base.cta = 'Make it even smaller'
+  }
+
+  // 6. If user has preferred actions, bias toward them
+  if (memory.preferredActionTypes.length > 0 && !memory.ignoredAdviceTypes.has(base.responseType)) {
+    // Try preferred type if it's different but applicable
+    const preferred = memory.preferredActionTypes[0] as CoachResponseType
+    const preferredTemplates: Partial<Record<CoachResponseType, UserState[]>> = {
+      tiny_action: ['stuck', 'avoiding', 'tired'],
+      shrink_scope: ['overwhelmed', 'scattered'],
+      capture_return: ['distracted'],
+      motivation_one: ['ready', 'avoiding'],
+      plan_minimum: ['overwhelmed', 'scattered'],
+    }
+    const applicableStates = preferredTemplates[preferred]
+    if (applicableStates?.includes(state)) {
+      base.responseType = preferred
+    }
+  }
+
+  return base
+}
+
+// v4: Generate body-double-specific coaching adaptation
+export function adaptForBodyDouble(
+  response: string,
+  bodyDoubleMode: 'presence' | 'voice' | 'screen_share' | 'none',
+): string {
+  switch (bodyDoubleMode) {
+    case 'presence':
+      return `${response}\n\nI'm here with you. No pressure. Just presence.`
+    case 'voice':
+      return `${response}\n\nSay it out loud — saying it makes it real.`
+    case 'screen_share':
+      return `${response}\n\nI can see your screen. Let's start together.`
+    case 'none':
+      return response
+  }
+}

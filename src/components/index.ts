@@ -15,4 +15,4 @@ export { Slider } from './Slider';
 export { Skeleton } from './Skeleton';
 
 // ── Legacy components (Screen, BarChart, StreakBadge, TabBar) ─
-export { Screen, BarChart, StreakBadge, TabBar, ErrorBoundary } from './Legacy';
+export { Screen, BarChart, StreakBadge, TabBar } from './Legacy';

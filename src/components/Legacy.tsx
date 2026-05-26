@@ -49,7 +49,7 @@ export function Screen({ children, style, scrollable = true, gradient }: ScreenP
       accessible={false}
     >
       {gradient && (
-        <LinearGradient colors={gradient} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={gradient as [string, string, ...string[]]} style={StyleSheet.absoluteFillObject} />
       )}
       {scrollable ? (
         <ScrollView
@@ -92,7 +92,6 @@ export function Card({ children, style, variant = 'default', onPress, haptic = t
 
   const handlePressIn = useCallback(() => {
     if (onPress) {
-      void 0
       Animated.spring(scaleAnim, { toValue: 0.97, ...animation.spring, useNativeDriver: true }).start()
     }
   }, [onPress])
@@ -189,7 +188,6 @@ export function Button({
   const scaleAnim = useRef(new Animated.Value(1)).current
 
   const handlePress = () => {
-    void 0
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.95, duration: animation.instant, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, ...animation.springBouncy, useNativeDriver: true }),

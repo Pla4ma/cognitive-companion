@@ -284,6 +284,119 @@ export function buildResistanceMap(
   return Object.values(entries).sort((a, b) => b.frequency - a.frequency)
 }
 
+// ── Recovery Time Calculation ──────────────────────────────────
+
+export function calculateRecoveryTime(sessions: MissionSession[]): number {
+  // Find abandons followed by a new start — the gap = recovery time
+  const sorted = [...sessions].sort(
+    (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()
+  )
+  let totalGapMinutes = 0
+  let gapCount = 0
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const current = sorted[i]
+    const next = sorted[i + 1]
+    if (current.status === 'abandoned' && next.status !== current.status) {
+      const gap = (new Date(next.started_at).getTime() - new Date(current.started_at).getTime()) / 60000
+      if (gap > 0 && gap < 1440) { // cap at 24h to avoid sleep gaps
+        totalGapMinutes += gap
+        gapCount++
+      }
+    }
+  }
+  return gapCount > 0 ? Math.round(totalGapMinutes / gapCount) : 0
+}
+
+// ── Drift Velocity — is drift rate accelerating or decelerating? ──
+
+export function calculateDriftVelocity(sessions: MissionSession[]): number {
+  // Positive = drifting more (worsening). Negative = drifting less (improving).
+  const now = Date.now()
+  const last7d = sessions.filter(s => (now - new Date(s.started_at).getTime()) < 7 * 86400000)
+  const prior7d = sessions.filter(s => {
+    const age = now - new Date(s.started_at).getTime()
+    return age >= 7 * 86400000 && age < 14 * 86400000
+  })
+  const recentDriftRate = last7d.length > 0
+    ? last7d.filter(s => s.status === 'abandoned' || s.status === 'salvaged').length / last7d.length
+    : 0
+  const priorDriftRate = prior7d.length > 0
+    ? prior7d.filter(s => s.status === 'abandoned' || s.status === 'salvaged').length / prior7d.length
+    : 0
+  if (last7d.length < 3 || prior7d.length < 3) return 0 // not enough data
+  return Math.round((recentDriftRate - priorDriftRate) * 100) / 100
+}
+
+// ── Optimal Hour Detection ──────────────────────────────────────
+
+export function detectOptimalHours(sessions: MissionSession[]): { mostProductive: number; leastProductive: number } {
+  const hourCompletions: number[] = new Array(24).fill(0)
+  const hourTotals: number[] = new Array(24).fill(0)
+  for (const session of sessions) {
+    const hour = new Date(session.started_at).getHours()
+    hourTotals[hour]++
+    if (session.status === 'completed') hourCompletions[hour]++
+  }
+  let mostProductive = 9
+  let leastProductive = 14
+  let bestRate = -1
+  let worstRate = Infinity
+  for (let h = 0; h < 24; h++) {
+    if (hourTotals[h] < 2) continue
+    const rate = hourCompletions[h] / hourTotals[h]
+    if (rate > bestRate) { bestRate = rate; mostProductive = h }
+    if (rate < worstRate) { worstRate = rate; leastProductive = h }
+  }
+  return { mostProductive, leastProductive }
+}
+
+// ── Decay-Weighted Pattern Vectors ─────────────────────────────
+
+export function buildDecayWeightedHourlyPattern(sessions: MissionSession[]): number[] {
+  const now = Date.now()
+  const halfLifeMs = 14 * 86400000
+  const weightedDrift: number[] = new Array(24).fill(0)
+  const weightedTotal: number[] = new Array(24).fill(0)
+  for (const session of sessions) {
+    const hour = new Date(session.started_at).getHours()
+    const ageMs = now - new Date(session.started_at).getTime()
+    const weight = Math.pow(0.5, ageMs / halfLifeMs)
+    weightedTotal[hour] += weight
+    if (session.status === 'abandoned' || session.status === 'salvaged') {
+      weightedDrift[hour] += weight
+    }
+  }
+  return weightedDrift.map((d, i) => weightedTotal[i] > 0 ? d / weightedTotal[i] : 0)
+}
+
+// ── Weekend/Weekday Separation ─────────────────────────────────
+
+export function analyzeWeekendPatterns(sessions: MissionSession[]): {
+  weekendDriftRate: number
+  weekdayDriftRate: number
+  weekendSessions: number
+  weekdaySessions: number
+} {
+  let weekendDrift = 0, weekendTotal = 0, weekdayDrift = 0, weekdayTotal = 0
+  for (const session of sessions) {
+    const day = new Date(session.started_at).getDay()
+    const isWeekend = day === 0 || day === 6
+    if (isWeekend) {
+      weekendTotal++
+      if (session.status === 'abandoned' || session.status === 'salvaged') weekendDrift++
+    } else {
+      weekdayTotal++
+      if (session.status === 'abandoned' || session.status === 'salvaged') weekdayDrift++
+    }
+  }
+  return {
+    weekendDriftRate: weekendTotal > 0 ? weekendDrift / weekendTotal : 0,
+    weekdayDriftRate: weekdayTotal > 0 ? weekdayDrift / weekdayTotal : 0,
+    weekendSessions: weekendTotal,
+    weekdaySessions: weekdayTotal,
+  }
+}
+
 // ── Trend Analysis ───────────────────────────────────────────
 
 export function analyzeTrend(events: MomentumEvent[], days: number = 14): 'improving' | 'stable' | 'declining' {
@@ -413,6 +526,39 @@ export function predictDrift(context: {
     })
   }
 
+  // 6. Drift velocity factor — are things getting worse?
+  const driftVelocity = calculateDriftVelocity(sessions)
+  if (driftVelocity > 0.1) {
+    factors.push({
+      type: 'pattern_match',
+      label: `Drift rate accelerating (${driftVelocity > 0 ? '+' : ''}${Math.round(driftVelocity * 100)}%)`,
+      impact: Math.min(driftVelocity * 1.5, 1),
+      weight: 0.15,
+    })
+  } else if (driftVelocity < -0.1) {
+    factors.push({
+      type: 'pattern_match',
+      label: 'Drift rate decelerating — improving',
+      impact: Math.max(driftVelocity * 0.5, -0.2),
+      weight: 0.1,
+    })
+  }
+
+  // 7. Weekend/weekday factor
+  const weekendPatterns = analyzeWeekendPatterns(sessions)
+  const isWeekend = currentDay === 0 || currentDay === 6
+  if (isWeekend && weekendPatterns.weekendSessions >= 3) {
+    const weekendImpact = weekendPatterns.weekendDriftRate * 0.8
+    if (weekendImpact > 0.1) {
+      factors.push({
+        type: 'time_of_day',
+        label: 'Weekend pattern detected',
+        impact: weekendImpact,
+        weight: 0.1,
+      })
+    }
+  }
+
   // Calculate overall risk
   const totalWeight = factors.reduce((s, f) => s + f.weight, 0)
   const weightedRisk = factors.reduce((s, f) => s + f.impact * f.weight, 0)
@@ -512,7 +658,7 @@ export function buildIntelligenceProfile(context: {
   const timeSlots = analyzeTimeSlots(sessions)
   const dangerWindows = detectDangerWindows(timeSlots)
   const resistanceMap = buildResistanceMap(patterns, sessions)
-  const hourlyPattern = buildHourlyPattern(sessions)
+  const hourlyPattern = buildDecayWeightedHourlyPattern(sessions)
   const dailyPattern = buildDailyPattern(sessions)
   const completed = sessions.filter(s => s.status === 'completed')
   const avgDuration = completed.length > 0
@@ -522,6 +668,9 @@ export function buildIntelligenceProfile(context: {
   const avgAbandon = abandoned.length > 0
     ? abandoned.reduce((s, ses) => s + (ses.actual_seconds || 0) / 60, 0) / abandoned.length
     : 0
+  const recoveryTime = calculateRecoveryTime(sessions)
+  const { mostProductive, leastProductive } = detectOptimalHours(sessions)
+  const weekendPatterns = analyzeWeekendPatterns(sessions)
 
   return {
     timeSlots,
@@ -531,9 +680,9 @@ export function buildIntelligenceProfile(context: {
     dailyPattern,
     avgSessionDuration: Math.round(avgDuration),
     avgAbandonTime: Math.round(avgAbandon),
-    recoveryTime: 0,
-    mostProductiveHour: 9,
-    leastProductiveHour: 14,
+    recoveryTime,
+    mostProductiveHour: mostProductive,
+    leastProductiveHour: leastProductive,
     totalDataPoints: sessions.length,
     lastUpdated: new Date().toISOString(),
     patternConfidence: sessions.length >= 10 ? 0.8 : sessions.length >= 5 ? 0.5 : 0.2,

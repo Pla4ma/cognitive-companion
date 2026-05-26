@@ -119,6 +119,11 @@ export {
   buildResistanceMap,
   analyzeTrend,
   calculateStreakMomentum,
+  calculateRecoveryTime,
+  calculateDriftVelocity,
+  detectOptimalHours,
+  buildDecayWeightedHourlyPattern,
+  analyzeWeekendPatterns,
   } from './predictiveEngine'
 
 export type {
@@ -130,14 +135,161 @@ export type {
   UserIntelligenceProfile,
 } from './predictiveEngine'
 
+// ── Merged Engine Modules ──────────────────────────────────
+
+export {
+  createAttentionReceipt,
+  getReceiptTitle,
+  getReceiptEmoji,
+  getReceiptNextCopy,
+} from './sessionEngines'
+export type { AttentionReceipt, AttentionReceiptOutcome } from '../types/attentionReceipt'
+
+export {
+  createMissionThread,
+  addThreadEvent,
+  getThreadSummary,
+  setCurrentNextAction,
+  setBestProtocol,
+  setLastBlocker,
+  completeThread,
+  getCurrentNextAction,
+  getThreadProgressPercent,
+  type MissionThread,
+  type ThreadEvent,
+} from './sessionEngines'
+
+export {
+  type PersonalPlaybook,
+  type PlaybookRule,
+  createEmptyPlaybook,
+  updatePlaybookFromOutcome,
+  getPlaybookForState,
+  getPlaybookSummary,
+  getPlaybookStats,
+  type PlaybookOutcome,
+} from './sessionEngines'
+
+export {
+  generateCandidates,
+  selectBestCandidate,
+  explainCandidateChoice,
+  type MissionCandidate,
+  type CandidateScores,
+  recordOutcome,
+  getActiveWeights,
+  resetWeights,
+  type WeightSet,
+} from './missionEngines'
+
+export {
+  generateSalvagePlan,
+  type SalvageInput,
+  type SalvagePlan,
+  SALVAGE_COPY,
+} from './missionEngines'
+
+export {
+  getOutcomeMeta,
+  isProgress,
+  getOutcomeOptions,
+  getOutcomeCopy,
+  getOutcomePrompt,
+  type MissionOutcome,
+  type OutcomeRecord,
+  type OutcomeMeta,
+} from './missionEngines'
+
+export {
+  createIntentLockState,
+  recordExitAttempt,
+  shouldShowExitFriction,
+  getExitFrictionCopy,
+  getExitFrictionOptions,
+  getExitOptionLabel,
+  deactivateIntentLock,
+  type IntentLockState,
+  type ExitFrictionOption,
+} from './stateEngines'
+
+export {
+  createOpenLoop,
+  createLoopFromCapsule,
+  createLoopFromFailure,
+  createLoopFromDistraction,
+  updateLoopStatus,
+  touchLoop,
+  detectRepeatedDistractions,
+  getOpenLoopCopy,
+  getOpenLoopsHeader,
+  getOpenLoopReliefCopy,
+} from './stateEngines'
+export type { OpenLoop, OpenLoopSource, OpenLoopStatus } from '../types/openLoop'
+
+export {
+  calculateIntentScore,
+  getScoreDisclaimer,
+  getScoreTrend,
+  type IntentScore,
+  type IntentScoreComponents,
+} from './stateEngines'
+
+export {
+  getEmergencyStartMission,
+  getEmergencyStartForState,
+  getEmergencyStartCopy,
+  getEmergencyStartSubcopy,
+  getEmergencyStartSuccessCopy,
+  recordProtocolSuccess,
+  getLastSuccessful,
+} from './stateEngines'
+
+export {
+  type StarterDefault,
+  type MissionFeedback,
+  type FeedbackEvent,
+  STARTER_DEFAULTS,
+  getStarterDefault,
+  processFeedback,
+  isNewUser,
+  getNewUserCopy,
+  getDay0Copy,
+} from './stateEngines'
+
+export {
+  generateDriftMirrorInsight,
+  getMirrorTitle,
+  getMirrorSubcopy,
+  getMirrorRejectionCopy,
+  getMirrorAcceptanceCopy,
+  getCommonMirrorPatterns,
+  type DriftMirrorInsight,
+} from './insights'
+
+export {
+  generateCommandlessRecommendation,
+  getCommandlessCopy,
+  getCommandlessReasonCopy,
+  type CommandlessRecommendation,
+  type DisplayMode,
+  type RecommendedSurface,
+} from './insights'
+
+export {
+  detectPlanningLoop,
+  generatePlanningLoopCopy,
+  type PlanningLoopSignal,
+  resetLoopHistory,
+  getLoopDetectionCount,
+  DAY_PART,
+} from './insights'
+
 // ── v4 Engines (Anti-Drift Agent) ───────────────────────────
 
 export { runAntiDriftAgent } from '../agents/antiDriftAgent'
-export { compileMission, scoreMission, rejectMission, estimateSuccessProbability } from './missionCompiler'
-export { createEmptyGraph, recordEvent, computeInsights, getBestProtocol, getBestDuration, getStrongestSignal, getBestComebackStrategy, getBestSurface, summarizeGraph } from './personalDriftGraph'
-export { generateSalvagePlan } from './salvageEngine'
+export { compileMission, scoreMission, rejectMission, estimateSuccessProbability, generateNextStep } from './missionCompiler'
+export { createEmptyGraph, recordEvent, computeInsights, getBestProtocol, getBestDuration, getStrongestSignal, getBestComebackStrategy, getBestSurface, summarizeGraph, decayEdges, analyzeRecoverySequences, analyzeDriftChains } from './personalDriftGraph'
 export { routeAgent, shouldUseRemoteAI } from '../services/ai/orchestrator'
 export { recordRetentionEvent, getComebackMessage, shouldShowPaywall } from '../services/retention/retentionEngine'
 export { mark, measure, getMeasure, getAllMeasures, isWithinBudget, PERFORMANCE_BUDGETS } from '../services/performance/performanceMarks'
 export type { GraphEvent } from './personalDriftGraph'
-export type { SalvageInput, SalvagePlan } from './salvageEngine'

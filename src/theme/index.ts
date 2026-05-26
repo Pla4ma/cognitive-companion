@@ -118,37 +118,30 @@ export const radius = {
 
 // ── Typography ────────────────────────────────────────────
 
-export const typography = {
-  // Display
-  hero: { fontSize: 40, lineHeight: 44, fontWeight: '800' as const, letterSpacing: -1.5 },
-  display: { fontSize: 32, lineHeight: 38, fontWeight: '700' as const, letterSpacing: -1 },
-  headline: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const, letterSpacing: -0.5 },
-  
-  // Headings
-  h1: { fontSize: 24, lineHeight: 30, fontWeight: '700' as const, letterSpacing: -0.5 },
-  h2: { fontSize: 20, lineHeight: 26, fontWeight: '600' as const, letterSpacing: -0.3 },
-  h3: { fontSize: 18, lineHeight: 24, fontWeight: '600' as const },
-  
-  // Body
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
-  bodyMedium: { fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
-  bodySmall: { fontSize: 12, lineHeight: 16, fontWeight: '400' as const },
-  
-  // UI
-  label: { fontSize: 14, lineHeight: 16, fontWeight: '600' as const, letterSpacing: 0.5 },
-  labelSmall: { fontSize: 11, lineHeight: 14, fontWeight: '600' as const, letterSpacing: 0.8 },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: '500' as const },
-  button: { fontSize: 16, lineHeight: 20, fontWeight: '600' as const },
-  buttonSmall: { fontSize: 14, lineHeight: 16, fontWeight: '600' as const },
-  
-  // Monospace (for timer, stats)
-  mono: { fontSize: 48, lineHeight: 52, fontWeight: '700' as const, fontVariant: ['tabular-nums'] as const },
-  monoSmall: { fontSize: 24, lineHeight: 28, fontWeight: '600' as const, fontVariant: ['tabular-nums'] as const },
-} as const
+export const typography: Record<string, import('react-native').TextStyle> = {
+  hero: { fontSize: 40, lineHeight: 44, fontWeight: '800', letterSpacing: -1.5 },
+  display: { fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -1 },
+  headline: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.5 },
+  h1: { fontSize: 24, lineHeight: 30, fontWeight: '700', letterSpacing: -0.5 },
+  h2: { fontSize: 20, lineHeight: 26, fontWeight: '600', letterSpacing: -0.3 },
+  h3: { fontSize: 18, lineHeight: 24, fontWeight: '600' },
+  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' },
+  bodyMedium: { fontSize: 14, lineHeight: 20, fontWeight: '400' },
+  bodySmall: { fontSize: 12, lineHeight: 16, fontWeight: '400' },
+  label: { fontSize: 14, lineHeight: 16, fontWeight: '600', letterSpacing: 0.5 },
+  labelSmall: { fontSize: 11, lineHeight: 14, fontWeight: '600', letterSpacing: 0.8 },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '500' },
+  button: { fontSize: 16, lineHeight: 20, fontWeight: '600' },
+  buttonSmall: { fontSize: 14, lineHeight: 16, fontWeight: '600' },
+  mono: { fontSize: 48, lineHeight: 52, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  monoSmall: { fontSize: 24, lineHeight: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },
+}
 
 // ── Shadows ───────────────────────────────────────────────
 
-export const shadows = {
+import type { ViewStyle } from 'react-native'
+
+export const shadows: Record<string, ViewStyle> = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -184,7 +177,7 @@ export const shadows = {
     shadowRadius: 20,
     elevation: 10,
   },
-} as const
+}
 
 // ── Animation Durations ───────────────────────────────────
 

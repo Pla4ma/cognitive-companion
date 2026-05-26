@@ -7,7 +7,7 @@
 import { 
   UserState, StateChip, STATE_CHIPS, Mission, MicroMission,
   ResistanceLevel, ResistancePattern, Distraction, BrainDump,
-  PushStyle, MissionSession
+  PushStyle, MissionSession, EnergyLevel, BodyDoubleMode,
 } from '../types'
 
 // ── State Detection ───────────────────────────────────────
@@ -321,6 +321,234 @@ export function analyzeResistancePatterns(
 }
 
 // ── Distraction Categorizer ────────────────────────────────
+
+// ── Salvage Tiers v4 ───────────────────────────────────────
+
+export type SalvageTier = 'complete' | 'gold' | 'silver' | 'bronze' | 'none'
+
+export interface SalvageTierResult {
+  tier: SalvageTier
+  label: string
+  encouragement: string
+  adjustedMinutes: number
+  momentumPoints: number
+  nextAction: string        // What to do next after salvage
+}
+
+export function evaluateSalvageTier(session: {
+  actual_seconds: number
+  planned_minutes: number
+}): SalvageTierResult {
+  const actualMinutes = Math.round(session.actual_seconds / 60)
+  const ratio = session.actual_seconds / Math.max(session.planned_minutes * 60, 1)
+
+  if (ratio >= 0.9) {
+    return {
+      tier: 'complete',
+      label: 'Completed',
+      encouragement: 'You did it. Every minute counts.',
+      adjustedMinutes: actualMinutes,
+      momentumPoints: 30,
+      nextAction: 'mark_complete',
+    }
+  }
+
+  if (ratio >= 0.6) {
+    return {
+      tier: 'gold',
+      label: 'Strong Session',
+      encouragement: `You did ${actualMinutes} of ${session.planned_minutes} planned minutes. That is a win.`,
+      adjustedMinutes: actualMinutes,
+      momentumPoints: 22,
+      nextAction: 'salvage_session',
+    }
+  }
+
+  if (ratio >= 0.35) {
+    return {
+      tier: 'silver',
+      label: 'Partial Progress',
+      encouragement: `${actualMinutes} minutes is real progress. Most people do zero. You showed up.`,
+      adjustedMinutes: actualMinutes,
+      momentumPoints: 15,
+      nextAction: 'salvage_session',
+    }
+  }
+
+  if (ratio >= 0.15) {
+    return {
+      tier: 'bronze',
+      label: 'Tiny Win',
+      encouragement: `Even ${actualMinutes} minutes moves the needle. Momentum > perfection.`,
+      adjustedMinutes: Math.max(actualMinutes, 1),
+      momentumPoints: 8,
+      nextAction: 'capture_distraction_and_retry',
+    }
+  }
+
+  return {
+    tier: 'none',
+    label: 'Not Salvageable',
+    encouragement: 'That is okay. Sometimes the timing is wrong. Try again when you are ready.',
+    adjustedMinutes: 0,
+    momentumPoints: 5,
+    nextAction: 'start_fresh',
+  }
+}
+
+// ── Mission Chaining v4 ─────────────────────────────────────
+
+export interface ChainSuggestion {
+  title: string
+  description: string
+  estimatedMinutes: number
+  type: 'continue' | 'deepen' | 'switch' | 'rest'
+}
+
+export function suggestNextMission(
+  completedMission: { title: string; actual_seconds: number; planned_minutes: number },
+  state: UserState,
+): ChainSuggestion {
+  const ratio = completedMission.actual_seconds / Math.max(completedMission.planned_minutes * 60, 1)
+
+  // If they completed most of the mission, suggest deepening
+  if (ratio >= 0.7) {
+    return {
+      title: `Keep going: ${completedMission.title}`,
+      description: 'You are in motion. Continue for another session while the momentum is there.',
+      estimatedMinutes: completedMission.planned_minutes,
+      type: 'continue',
+    }
+  }
+
+  // If they did a bit but stopped, suggest a smaller version
+  if (ratio >= 0.3) {
+    return {
+      title: `Easier version: ${completedMission.title}`,
+      description: 'Make it even smaller. What is the absolute minimum next step?',
+      estimatedMinutes: Math.max(2, Math.round(completedMission.planned_minutes / 2)),
+      type: 'deepen',
+    }
+  }
+
+  // State-based suggestions
+  switch (state) {
+    case 'overwhelmed':
+      return {
+        title: 'Brain dump what is left',
+        description: 'Write down everything still on your mind. One item at a time.',
+        estimatedMinutes: 3,
+        type: 'switch',
+      }
+    case 'tired':
+      return {
+        title: 'Rest intentionally',
+        description: 'Set a timer for 10 minutes. Close your eyes. No guilt.',
+        estimatedMinutes: 10,
+        type: 'rest',
+      }
+    case 'distracted':
+      return {
+        title: 'Capture remaining distractions',
+        description: 'Write down anything still pulling at your attention.',
+        estimatedMinutes: 2,
+        type: 'switch',
+      }
+    default:
+      return {
+        title: `Tiny next: ${completedMission.title}`,
+        description: 'What is one more tiny thing you can do?',
+        estimatedMinutes: 2,
+        type: 'continue',
+      }
+  }
+}
+
+// ── Context-Aware Micro-Mission Generation v4 ─────────────
+
+export interface ContextAwareMissionParams {
+  state: UserState
+  mission: Mission | null
+  pushStyle: PushStyle
+  availableMinutes: number
+  resistanceHistory: ResistancePattern[]
+  timeOfDay: number        // 0-23
+  energyLevel: EnergyLevel
+  lastSessionOutcome: 'completed' | 'abandoned' | 'salvaged' | null
+  consecutiveFailures: number  // How many recent sessions were abandoned
+}
+
+export function generateContextAwareMission(params: ContextAwareMissionParams): {
+  title: string
+  description: string
+  estimatedMinutes: number
+  bodyDoubleMode: BodyDoubleMode
+  resistanceAcknowledgment: string
+  adjustments: string[]      // Why the mission was adapted
+} {
+  const adjustments: string[] = []
+  const base = generateMicroMission({
+    state: params.state,
+    mission: params.mission,
+    push_style: params.pushStyle,
+    availableMinutes: params.availableMinutes,
+    resistanceHistory: params.resistanceHistory,
+  })
+
+  // 1. Cap duration to available time
+  let estimatedMinutes = base.estimated_minutes
+  if (params.availableMinutes < estimatedMinutes) {
+    estimatedMinutes = Math.max(params.availableMinutes, 1)
+    adjustments.push(`Capped to ${estimatedMinutes}m (${params.availableMinutes}m available)`)
+  }
+
+  // 2. Shrink if energy is depleted
+  if (params.energyLevel === 'depleted') {
+    estimatedMinutes = Math.min(estimatedMinutes, 2)
+    adjustments.push('Depleted energy: shrunk to 2 min')
+  }
+
+  // 3. Enlarge if last session was completed and they have energy
+  if (params.lastSessionOutcome === 'completed' && params.energyLevel === 'high') {
+    estimatedMinutes = Math.min(estimatedMinutes + 5, 30)
+    adjustments.push('Momentum boost: extended duration')
+  }
+
+  // 4. Shrink further if consecutive failures
+  if (params.consecutiveFailures >= 2) {
+    estimatedMinutes = Math.min(estimatedMinutes, 2)
+    adjustments.push(`${params.consecutiveFailures} consecutive failures: minimized to 2 min`)
+  }
+
+  // 5. Late-night adjustment
+  if (params.timeOfDay >= 22 || params.timeOfDay < 6) {
+    estimatedMinutes = Math.min(estimatedMinutes, 5)
+    if (base.body_double_mode !== 'none') {
+      adjustments.push('Late hour: minimal body double mode')
+    }
+  }
+
+  // 6. Pattern-aware resistance acknowledgment
+  let resistanceAcknowledgment = base.resistance_acknowledgment
+  const matchingPattern = params.resistanceHistory.find(p =>
+    p.avoidance_state === params.state && p.frequency >= 3
+  )
+  if (matchingPattern) {
+    resistanceAcknowledgment = `${base.resistance_acknowledgment} This is a familiar pattern (${matchingPattern.frequency}x). You have broken it before.`
+    adjustments.push('Pattern match: added familiarity acknowledgment')
+  }
+
+  return {
+    title: estimatedMinutes <= 2
+      ? `Tiny: ${base.title}`
+      : base.title,
+    description: base.description,
+    estimatedMinutes,
+    bodyDoubleMode: base.body_double_mode as BodyDoubleMode,
+    resistanceAcknowledgment,
+    adjustments,
+  }
+}
 
 export function categorizeDistraction(content: string): Distraction['category'] {
   const lower = content.toLowerCase()

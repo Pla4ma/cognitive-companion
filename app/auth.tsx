@@ -41,7 +41,6 @@ export default function AuthScreen() {
     }
 
     setLoading(true)
-    void 0
 
     try {
       // In production, this calls Supabase auth
@@ -64,7 +63,6 @@ export default function AuthScreen() {
       }
 
       setUser(user)
-      void 0
       router.replace('/onboarding')
     } catch (error) {
       Alert.alert('Error', 'Authentication failed. Please try again.')
@@ -81,7 +79,6 @@ export default function AuthScreen() {
     setMode(mode === 'signin' ? 'signup' : 'signin')
     setPassword('')
     setConfirmPassword('')
-    void 0
   }
 
   return (

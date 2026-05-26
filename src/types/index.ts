@@ -129,7 +129,7 @@ export interface MissionSession {
   mode: 'focus' | 'salvage' | 'body_double'
   planned_minutes: number
   actual_seconds: number
-  status: 'active' | 'completed' | 'salvaged' | 'abandoned'
+  status: 'active' | 'paused' | 'completed' | 'salvaged' | 'abandoned'
   started_at: string
   ended_at: string | null
   distractions_captured: number

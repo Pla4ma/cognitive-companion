@@ -50,7 +50,7 @@ export function compileMission(input: MissionCompilationInput): CompiledMission 
   }
 
   // Generate fallback
-  const fallbackText = generateFallback(primaryText, protocol)
+  const fallbackText = generateFallback(primaryText, protocol, input.energy)
   const fallback: MicroMission = {
     ...primary,
     id: `mission_fallback_${Date.now()}`,
@@ -100,6 +100,12 @@ export function generatePrimaryMission(input: MissionCompilationInput, protocol:
     return generateContextualMission(contextText, state, availableMinutes, protocol)
   }
 
+  // Check blocker-specific missions (more precise than state alone)
+  if (blocker) {
+    const blockerMission = generateBlockerAwareMission(state, blocker, availableMinutes, energy)
+    if (blockerMission) return blockerMission
+  }
+
   // State-based missions (no context)
   const missions: Record<UserState, () => string> = {
     avoiding: () => `Open the thing you're avoiding and write its name. That's it.`,
@@ -124,33 +130,67 @@ export function generatePrimaryMission(input: MissionCompilationInput, protocol:
   return missions[state]() || `Open the thing you need to work on and do one small action in ${availableMinutes} minutes.`
 }
 
+// ── Blocker-Aware Missions ─────────────────────────────────
+
+function generateBlockerAwareMission(
+  state: UserState, blocker: string, minutes: number, energy: string,
+): string | null {
+  const pairs: Record<string, string> = {
+    'avoiding-too_big': `Open the thing and do just one piece. Set a ${Math.min(minutes, 2)}-minute timer.`,
+    'avoiding-unknown': `Write: "I don't know where to start because _______." Then open the thing.`,
+    'overwhelmed-too_big': `Write down the 3 biggest pieces. Pick the smallest 2-minute version.`,
+    'overwhelmed-many_tasks': `Write down every task. Cross out all but ONE. Do only that.`,
+    'perfectionism-detailed': `Set a ${Math.min(minutes, 5)}-minute timer. Write the worst possible version.`,
+    'perfectionism-fear_of_failure': `Write: "The worst that can happen is _______." Then start ugly.`,
+    'stuck-confused': `Write: "I don't know how to start because _______." Then try 2 minutes.`,
+    'stuck-missing_info': `Write down what info you need. Send one message or open one search.`,
+    'tired-depleted': `Do 2 minutes. Not 5. Two minutes of the easiest action. Then rest.`,
+    'distracted-digital': `Turn off phone notifications. ${minutes}-minute sprint. Then check.`,
+  }
+
+  const key = `${state}-${blocker}`
+  if (pairs[key]) return pairs[key]
+
+  // Energy adjustments
+  if ((energy === 'depleted' || energy === 'low') && (state === 'tired' || state === 'avoiding')) {
+    return `Do the smallest possible version for 2 minutes. Not 1 minute more.`
+  }
+
+  return null
+}
+
 function generateContextualMission(context: string, state: UserState, minutes: number, protocol: RescueProtocol): string {
-  // Extract key info from context
   const hasDeadline = /\b(due|deadline|by|before|tomorrow|friday|monday|week)\b/i.test(context)
   const hasAssignment = /\b(assignment|essay|paper|project|report|homework)\b/i.test(context)
   const hasEmail = /\b(email|message|reply|send)\b/i.test(context)
   const hasMeeting = /\b(meeting|call|zoom|presentation)\b/i.test(context)
+  const hasReading = /\b(read|chapter|book|article|page|section|textbook)\b/i.test(context)
+  const hasCoding = /\b(code|debug|bug|fix|pull request|PR|merge|branch|commit)\b/i.test(context)
+  const hasCleaning = /\b(clean|tidy|organize|declutter|wash|dishes|laundry|room)\b/i.test(context)
+  const hasStudying = /\b(study|exam|test|quiz|review|flashcard|memorize)\b/i.test(context)
+  const hasFitness = /\b(run|gym|exercise|workout|walk|stretch|yoga)\b/i.test(context)
+  const hasCreative = /\b(write|draw|paint|design|create|edit|draft)\b/i.test(context)
 
-  if (hasAssignment && state === 'perfectionism') {
-    return `Open your assignment doc and write one ugly sentence under the heading.`
-  }
-  if (hasAssignment && state === 'avoiding') {
-    return `Open your assignment and copy the prompt into a new document. That's it.`
-  }
-  if (hasAssignment && state === 'overwhelmed') {
-    return `Open your assignment. Write down the 3 sub-tasks. Pick the smallest.`
-  }
-  if (hasEmail && state === 'avoiding') {
-    return `Open the email and write only the subject line.`
-  }
-  if (hasMeeting && state === 'anxious') {
-    return `Write down 3 questions you might be asked. Prepare one answer.`
-  }
-  if (hasDeadline && state === 'time_pressure') {
-    return `Write: "Done means _______." Define "enough" in one sentence.`
-  }
+  if (hasAssignment && state === 'perfectionism') return `Open your assignment doc and write one ugly sentence under the heading.`
+  if (hasAssignment && state === 'avoiding') return `Open your assignment and copy the prompt into a new document. That's it.`
+  if (hasAssignment && state === 'overwhelmed') return `Open your assignment. Write down the 3 sub-tasks. Pick the smallest.`
+  if (hasEmail && state === 'avoiding') return `Open the email and write only the subject line.`
+  if (hasMeeting && state === 'anxious') return `Write down 3 questions you might be asked. Prepare one answer.`
+  if (hasDeadline && state === 'time_pressure') return `Write: "Done means _______." Define "enough" in one sentence.`
+  if (hasReading && state === 'avoiding') return `Open the book/article and read the first paragraph. That's it.`
+  if (hasReading && state === 'tired') return `Read one paragraph. If you want to keep going, great. Otherwise stop.`
+  if (hasCoding && state === 'stuck') return `Write down what the code should do in one sentence. Then open the relevant file.`
+  if (hasCoding && state === 'avoiding') return `Open the codebase. Find the relevant file. Read one function.`
+  if (hasCleaning && state === 'tired') return `Set a 5-minute timer. Clean only during the timer. Then stop.`
+  if (hasCleaning && state === 'overwhelmed') return `Pick one surface. Clear only that surface. That's the mission.`
+  if (hasStudying && state === 'avoiding') return `Open your notes. Read one heading. Close them. That's done.`
+  if (hasStudying && state === 'shame_spiral') return `Open one flashcard. Read it. You showed up. That counts.`
+  if (hasFitness && state === 'avoiding') return `Put on your workout clothes/shoes. Nothing else required.`
+  if (hasFitness && state === 'tired') return `Do 3 minutes. Three minutes only. Then decide.`
+  if (hasCreative && state === 'perfectionism') return `Write/draw the worst possible version. Make it intentionally bad.`
+  if (hasCreative && state === 'stuck') return `Set a ${Math.min(minutes, 5)}-minute timer. Create anything. No judgment.`
+  if (hasEmail && state === 'overwhelmed') return `Open your inbox. Find 3 emails that need replies. Reply to the shortest one.`
 
-  // Default contextual mission
   return `Open the relevant document and do one small action related to: ${context.slice(0, 50)}...`
 }
 
@@ -275,8 +315,16 @@ export function rewriteMission(mission: string, targetMinutes: number, state: Us
   return mission
 }
 
-export function generateFallback(mission: string, protocol: RescueProtocol): string {
+export function generateFallback(mission: string, protocol: RescueProtocol, energy?: string): string {
   const fallbackMinutes = protocol.salvageRules.maxFallbackMinutes
+
+  // Energy-aware fallback — lower energy = smaller action
+  if (energy === 'depleted') {
+    return `Put your hands on the keyboard. Just that. No typing required.`
+  }
+  if (energy === 'low') {
+    return `Open the thing. Read one word. That's the whole mission.`
+  }
 
   if (fallbackMinutes <= 1) {
     return `Open the thing. That's it. Just open it.`
@@ -357,6 +405,31 @@ export function generateCompletionCriteria(mission: string, durationMinutes: num
 }
 
 // ── Success Probability ─────────────────────────────────────
+
+// ── Mission Chaining — what to do next ─────────────────────
+
+export function generateNextStep(
+  completedMission: string,
+  state: UserState,
+  outcome: 'completed' | 'salvaged' | 'partial',
+): string {
+  const lower = completedMission.toLowerCase()
+  if (outcome === 'salvaged' || outcome === 'partial') {
+    if (lower.includes('open')) return `You opened it. Now try: read one sentence.`
+    if (lower.includes('write') || lower.includes('sentence')) return `You wrote something. Try: write one more sentence.`
+    if (lower.includes('pick') || lower.includes('choose')) return `You picked something. Try: do it for 2 minutes.`
+    return `Set a 2-minute timer. Do the tiniest next action.`
+  }
+  // Completed — suggest the natural next
+  if (state === 'perfectionism') return `Good. Now read what you wrote without changing anything. That's the next step.`
+  if (state === 'avoiding') return `You started. Next: stay for 2 more minutes or take a break. Your choice.`
+  if (state === 'overwhelmed') return `You picked one thing. Next: do the next smallest action on that thing.`
+  if (state === 'tired') return `You did something. That's enough. Rest now.`
+  if (state === 'anxious') return `You started. That was the hard part. Next: one more small step.`
+  if (state === 'shame_spiral') return `You showed up. That's a win. Take a breath. You can do more later.`
+  if (state === 'doomscroll_risk') return `You did a tiny action. Now choose: continue or scroll?`
+  return `Next step: do one more small action or take a reset break.`
+}
 
 export function estimateSuccessProbability(input: MissionCompilationInput): number {
   let probability = 0.6 // Base

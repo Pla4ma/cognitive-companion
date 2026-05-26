@@ -71,7 +71,7 @@ export interface DriftGraphInsight {
   text: string
   confidence: DriftConfidence
   eventCount: number
-  category: 'best_duration' | 'best_protocol' | 'worst_task' | 'strongest_signal' | 'best_comeback' | 'best_surface' | 'best_push_tone' | 'high_risk_pattern' | 'mission_quality_trend'
+  category: 'best_duration' | 'best_protocol' | 'worst_task' | 'strongest_signal' | 'best_comeback' | 'best_surface' | 'best_push_tone' | 'high_risk_pattern' | 'mission_quality_trend' | 'recovery_sequence' | 'drift_chain'
   relatedNodeIds: string[]
   generatedAt: string
 }

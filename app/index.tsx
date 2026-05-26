@@ -9,7 +9,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
+import { useRouter, type Href } from 'expo-router'
 import {
   Zap, Shield, Brain, ChevronRight, Play, Flame,
 } from 'lucide-react-native'
@@ -34,10 +34,10 @@ const STATE_CHIPS: { id: UserState; emoji: string; label: string; color: string 
   { id: 'ready', emoji: '🚀', label: 'Ready', color: '#10B981' },
 ]
 
-const QUICK_ACTIONS = [
-  { id: 'before_scroll', emoji: '📱', label: 'Before I Scroll', screen: '/before-scroll' as const },
-  { id: 'body_double', emoji: '🛡️', label: 'Body Double', screen: '/live' as const },
-  { id: 'paste_chaos', emoji: '📋', label: 'Paste Chaos', screen: '/coach' as const },
+const QUICK_ACTIONS: { id: string; emoji: string; label: string; screen: Href }[] = [
+  { id: 'before_scroll', emoji: '📱', label: 'Before I Scroll', screen: '/before-scroll' },
+  { id: 'body_double', emoji: '🛡️', label: 'Body Double', screen: '/live' },
+  { id: 'paste_chaos', emoji: '📋', label: 'Paste Chaos', screen: '/coach' },
 ]
 
 export default function HomeScreen() {
@@ -140,8 +140,8 @@ export default function HomeScreen() {
     router.push('/live')
   }, [selectedState, selectedMinutes, store, router])
 
-  const handleQuickAction = useCallback((screen: string) => {
-    router.push(screen as any)
+  const handleQuickAction = useCallback((screen: Href) => {
+    router.push(screen)
   }, [router])
 
   // ── Rescue Active ──
@@ -267,7 +267,7 @@ export default function HomeScreen() {
         {/* Tiny Insight */}
         {agentInsight && (
           <Card variant="subtle" style={styles.insightCard}>
-            <Text style={styles.insightText}>{agentInsight}</Text>
+            <Text style={styles.insightText}>{agentInsight?.message ?? agentInsight}</Text>
           </Card>
         )}
 

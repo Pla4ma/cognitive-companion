@@ -37,7 +37,6 @@ export default function MissionsScreen() {
 
   const handleCreate = () => {
     if (!newTitle.trim()) return
-    void 0
     addMission(newTitle.trim(), newDesc.trim())
     setNewTitle('')
     setNewDesc('')

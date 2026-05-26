@@ -1,96 +1,61 @@
-# COGNITIVE COMPANION
+# INTENT
 
-**The AI-Powered Second Brain for 2026** - A revolutionary mobile app that transforms how humans think, create, and collaborate with AI.
+**Anti-procrastination agent for your pocket.** No dashboard. No AI hype. One screen: "About to drift? Pick your state. I'll shrink the action."
 
-## 🚀 FEATURES
+## What It Does
 
-### Core AI Features
-- **Multi-Modal Intelligence**: Text, voice, and image processing
-- **Proactive Assistance**: Predicts needs before you ask
-- **Real-Time Collaboration**: Works alongside you in real-time
-- **Cognitive Flow Visualization**: See your thoughts mapped in real-time
-- **Memory Augmentation**: Never forget an idea or context
+INTENT is a local-first mobile app that intercepts avoidance before it becomes a scroll hole.
 
-### 2026 Breakthrough Features
-- **Neural Thread Sync**: Your persistent AI assistant across sessions
-- **Thought Graph Engine**: AI-powered mind mapping
-- **Predictive Insights**: Anticipates next steps and blockers
-- **Multi-Agent Orchestration**: Multiple AI personas working together
-- **Haptic Feedback Loop**: Physical responses to AI interactions
+1. **State selection** — Name how you feel (avoiding, overwhelmed, stuck, tired, etc.)
+2. **Protocol match** — The app selects a rescue protocol tuned to that state
+3. **Micro-mission** — You get a tiny, concrete action (2–5 minutes, physically doable)
+4. **Live session** — Body-double timer with distraction capture
+5. **Complete or salvage** — Every outcome is progress data
 
-## 🎨 DESIGN SYSTEM
-
-### Color Palette (OKLCH Dark Theme)
-```
-Background: oklch(0.08 0.005 260) - Deep space black
-Primary: oklch(0.7 0.15 240) - Electric cyan
-Secondary: oklch(0.7 0.15 340) - Neon magenta
-Accent: oklch(0.7 0.15 180) - Bio-lime
-Success: oklch(0.7 0.15 150) - Quantum green
-```
-
-### Glassmorphism UI
-- Frosted glass panels with dynamic blur
-- Neon accent borders
-- Subtle glow effects on interactions
-- Fluid animations and transitions
-
-## 🛠️ TECH STACK
-
-### Expo SDK 56
-- React 19 + React Native 0.76
-- Expo Router v4 (file-based routing)
-- NativeWind for Tailwind styling
-- Reanimated 3 for buttery animations
-
-### AI Infrastructure
-- Vercel AI SDK for streaming responses
-- Multi-provider support (OpenAI, Anthropic, Google)
-- Edge functions for low-latency responses
-- Vector embeddings for memory
-
-### State Management
-- Zustand for client state
-- React Query for server state
-- Async Storage for persistence
-
-## 📱 NAVIGATION
+## Core Screens
 
 ```
-/                    - Main Chat Interface
-/cognitive-flow      - Thought Visualization
-/settings            - Preferences & AI Configuration
-/memories            - Long-term Memory Archive
-/agents              - Multi-Agent Collaboration
+/              — Home: state selector + rescue button
+/live          — Active mission session (timer, distractions)
+/focus         — Body-double accountability session
+/coach         — Text-to-mission (paste chaos, get action)
+/before-scroll — Intercept before you open social media
+/progress      — Minimal stats (minutes rescued, streak)
+/settings      — App preferences
+/onboarding    — First-run setup
 ```
 
-## 🔧 SETUP
+## Tech Stack
+
+- **Expo SDK 56** — React Native 0.76, Expo Router v4
+- **Deterministic engine** — No remote AI dependency. Rescue protocols, mission compiler, drift graph all run on-device.
+- **Zustand** — Client state
+- **Async Storage** — Persistence
+- **Optional Sentry** — Crash reporting (consent-gated, PII-scrubbed)
+
+## Why No Remote AI?
+
+Every feature works 100% offline. Rescue protocols are matched by state, not by LLM. The app doesn't need an API key, a cloud backend, or a subscription to help you start.
+
+Remote AI (if configured) is strictly additive — it can refine mission quality, but the deterministic fallback is always there. No data ever leaves the device without explicit consent.
+
+## Setup
 
 ```bash
-# Install dependencies
+git clone <repo>
+cd cognitive-companion
 npm install
-
-# Run development server
-npm run ios     # iOS simulator
-npm run android # Android emulator
-npm run web     # Web browser
-
-# Build for production
-eas build --platform all
+npx expo start
 ```
 
-## 🎯 TARGET USE CASES
+## Design Principles
 
-1. **Creative Professionals**: Generate ideas, refine concepts, collaborate
-2. **Executives**: Strategic thinking, meeting prep, decision analysis
-3. **Developers**: Code assistance, architecture planning, debugging
-4. **Researchers**: Literature synthesis, hypothesis generation
-5. **Students**: Learning companion, concept mapping, exam prep
+1. **One decisive action per open** — No dashboard museum. The home screen asks one question.
+2. **Smallest possible intervention** — 2-minute actions beat 25-minute plans.
+3. **Failure is data, not judgment** — Salvage is always an option. Shame is the enemy.
+4. **Local-first, always** — No cloud dependency for core functionality.
+5. **Privacy is the product** — PII is never collected. Crash reports are opt-in and scrubbed.
 
-## 🌟 VISION
+## Status
 
-Cognitive Companion represents the next evolution of human-AI interaction - not just answering questions, but **augmenting human cognition itself**. By 2026, this is how we'll all work with AI: seamlessly integrated, visually stunning, and cognitively amplifying.
-
----
-
-*Created May 2026 - The future of intelligent assistance.*
+Working prototype. Core loop (state select → rescue → live → complete/salvage) is functional. Overbuilt features are being trimmed. TypeScript-clean build.

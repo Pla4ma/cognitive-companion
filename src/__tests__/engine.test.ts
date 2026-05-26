@@ -5,7 +5,7 @@
 
 import { compileMission, scoreMission, rejectMission, estimateSuccessProbability } from '../engine/missionCompiler'
 import { createEmptyGraph, recordEvent, computeInsights, getBestProtocol, getBestDuration } from '../engine/personalDriftGraph'
-import { generateSalvagePlan } from '../engine/salvageEngine'
+import { generateSalvagePlan } from '../engine/missionEngines'
 import { classifyInput, rewriteShameLanguage, isMissionSafe, buildSafetyStatus } from '../agents/antiDriftAgent/safety'
 import { RESCUE_PROTOCOLS, getProtocolForState, getFallbackProtocol } from '../types/rescue'
 import type { MissionCompilationInput, UserState, EnergyLevel, BlockerType } from '../types'

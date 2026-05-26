@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert, ViewStyle } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BlurView } from 'expo-blur'
 import { Pause, Play, Square, CheckCircle2, SkipForward, AlertTriangle, Brain, X } from 'lucide-react-native'
@@ -299,11 +299,11 @@ const styles = StyleSheet.create({
   distractionCounter: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: colors.accent.pink + '15', paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs, radius: radius.full, marginBottom: spacing.md,
+    paddingVertical: spacing.xs, borderRadius: radius.full, marginBottom: spacing.md,
   },
   distractionCountText: { ...typography.caption, color: colors.accent.pink },
   controls: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  mainBtn: { ...shadows.glow },
+  mainBtn: shadows.glow as ViewStyle,
   captureBtn: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     marginTop: spacing.md, padding: spacing.sm,

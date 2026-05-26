@@ -137,7 +137,7 @@ export function runAntiDriftAgent(input: AntiDriftInput): AntiDriftOutput {
   return {
     decision,
     recommendedProtocol: protocol,
-    compiledMission: null, // Filled by Mission Compiler (Phase 4)
+    compiledMission: null, // Filled asynchronously by Mission Compiler
     coachPulse,
     interventions,
     proposedTools,

@@ -107,6 +107,12 @@ export interface OrchestratorConfig {
   respectQuietHours: boolean
   quietHoursStart: number         // 22 = 10pm
   quietHoursEnd: number           // 7 = 7am
+  // v4 additions
+  signalCooldownMinutes: number           // Don't repeat same signal type in this window
+  surfacePriorityMap: Partial<Record<DriftSignalType, SurfaceType[]>>
+  strategyChain: Partial<Record<InterceptionType, InterceptionType[]>>
+  adaptiveCooldown: boolean               // Increase cooldown for ineffective types
+  maxPerTypePerDay: number
 }
 
 const DEFAULT_CONFIG: OrchestratorConfig = {
@@ -117,6 +123,11 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
   respectQuietHours: true,
   quietHoursStart: 22,
   quietHoursEnd: 7,
+  signalCooldownMinutes: 90,
+  surfacePriorityMap: {},
+  strategyChain: {},
+  adaptiveCooldown: true,
+  maxPerTypePerDay: 5,
 }
 
 export class DriftInterceptionOrchestrator {
@@ -124,6 +135,12 @@ export class DriftInterceptionOrchestrator {
   private patternProfile: UserPatternProfile | null
   private config: OrchestratorConfig
   private signalHistory: DriftSignal[] = []
+  // v4: strategy chain tracking
+  private strategyChainState: Map<string, { chainIndex: number; startedAt: number }> = new Map()
+  // v4: per-signal-type cooldown
+  private lastSignalTimestamps: Map<DriftSignalType, number[]> = new Map()
+  // v4: per-type effectiveness tracking
+  private typeEffectiveness: Map<InterceptionType, { attempted: number; succeeded: number }> = new Map()
 
   constructor(config: Partial<OrchestratorConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -366,13 +383,19 @@ export class DriftInterceptionOrchestrator {
       }
     }
 
-    // Check rate limiting
+    // v4: Signal deduplication — don't re-fire same signal type on cooldown
+    if (this.isSignalOnCooldown(signal.type)) {
+      return { should: false, reason: `Signal ${signal.type} on cooldown (${this.config.signalCooldownMinutes}m)` }
+    }
+
+    // v4: Adaptive cooldown based on interception type effectiveness
+    const effectiveCooldown = this.getEffectiveCooldown(signal.suggestedInterception.type)
     const recentInterceptions = this.agentState.activeInterceptions.filter(i => {
       const age = (Date.now() - new Date(i.created_at).getTime()) / 60000
-      return age < this.config.minInterceptionIntervalMinutes
+      return age < effectiveCooldown
     })
     if (recentInterceptions.length > 0) {
-      return { should: false, reason: 'Rate limited' }
+      return { should: false, reason: `Adaptive rate limited (cooldown: ${effectiveCooldown}m)` }
     }
 
     // Check max per hour
@@ -384,6 +407,11 @@ export class DriftInterceptionOrchestrator {
       return { should: false, reason: 'Max per hour reached' }
     }
 
+    // v4: Per-type daily limit
+    if (this.hasExceededDailyLimit(signal.suggestedInterception.type)) {
+      return { should: false, reason: `Daily limit reached for ${signal.suggestedInterception.type}` }
+    }
+
     // Check escalation: count recent interceptions of any type
     const recentCount = this.agentState.activeInterceptions.filter(i => {
       const age = (Date.now() - new Date(i.created_at).getTime()) / 60000
@@ -393,10 +421,15 @@ export class DriftInterceptionOrchestrator {
       signal.suggestedInterception = this.selectInterception('escalating_intervention', signal.state)
     }
 
+    // Record signal fire for deduplication tracking
+    this.recordSignalFire(signal.type)
+
+    // Init strategy chain for this signal
+    this.initStrategyChain(signal.id, signal.suggestedInterception.type)
+
     // Safety check
     const safetyCheck = checkSafetyBoundaries(signal.suggestedInterception.message)
     if (!safetyCheck.safe) {
-      // Filter the message through shame filter
       const filtered = filterShameLanguage(signal.suggestedInterception.message)
       signal.suggestedInterception.message = filtered.filtered
     }
@@ -462,22 +495,64 @@ export class DriftInterceptionOrchestrator {
 
   // ── LEARN Phase ────────────────────────────────────────────
 
-  recordInterceptionOutcome(interceptionId: string, outcome: 'acted' | 'dismissed' | 'ignored' | 'expired'): void {
+  recordInterceptionOutcome(
+    interceptionId: string,
+    outcome: 'acted' | 'dismissed' | 'ignored' | 'expired',
+    signalId?: string,
+  ): { nextInterception: InterceptionType | null } | void {
     const interception = this.agentState.activeInterceptions.find(i => i.id === interceptionId)
     if (!interception) return
 
+    // Track per-type effectiveness
+    const type = this.resolveInterceptionType(interception)
+    const stats = this.typeEffectiveness.get(type) || { attempted: 0, succeeded: 0 }
+
     if (outcome === 'acted') {
       interception.actedUpon = true
-      // Boost pattern confidence
+      stats.succeeded++
+      this.typeEffectiveness.set(type, stats)
       this.agentState.patternConfidence = Math.min(
-        this.agentState.patternConfidence + 0.05,
+        this.agentState.patternConfidence + 0.08, // +0.08 for acted (vs 0.05 before)
         1.0,
       )
-    } else if (outcome === 'dismissed') {
+      return { nextInterception: null }
+    }
+
+    if (outcome === 'dismissed') {
       interception.dismissed = true
+      stats.attempted++
+      this.typeEffectiveness.set(type, stats)
+      this.agentState.patternConfidence = Math.max(this.agentState.patternConfidence - 0.02, 0)
+    }
+
+    if (outcome === 'ignored') {
+      stats.attempted += 2 // Ignored counts more against the type
+      this.typeEffectiveness.set(type, stats)
     }
 
     this.agentState.lastInterception = new Date().toISOString()
+
+    // Strategy chaining: on dismiss/ignore, try next in chain
+    if ((outcome === 'dismissed' || outcome === 'ignored') && signalId) {
+      const nextType = this.nextStrategyAfter(type, signalId)
+      if (nextType) {
+        return { nextInterception: nextType }
+      }
+    }
+
+    return { nextInterception: null }
+  }
+
+  private resolveInterceptionType(interception: AgentInterception): InterceptionType {
+    // Map AgentInterception type back to InterceptionType
+    const map: Record<string, InterceptionType> = {
+      drift_warning: 'gentle_nudge',
+      pattern_match: 'pattern_insight',
+      avoidance_detected: 'escalating_intervention',
+      energy_mismatch: 'body_double_prompt',
+      comeback_opportunity: 'comeback_invitation',
+    }
+    return map[interception.type] || 'gentle_nudge'
   }
 
   // ── Helper Methods ─────────────────────────────────────────
@@ -548,6 +623,83 @@ export class DriftInterceptionOrchestrator {
       crisis_intervention: 'Get support',
     }
     return labels[type]
+  }
+
+  // ── v4: Strategy Chaining ──────────────────────────────────
+  // Each InterceptionType can have fallbacks in priority order.
+  // When one fails (dismissed/ignored), the next in chain fires.
+  private getStrategyChain(type: InterceptionType): InterceptionType[] {
+    const customChain = this.config.strategyChain[type]
+    if (customChain) return [type, ...customChain]
+
+    // Default chains per signal
+    const defaultChains: Partial<Record<InterceptionType, InterceptionType[]>> = {
+      gentle_nudge: ['gentle_nudge', 'pattern_insight', 'micro_mission_push'],
+      pattern_insight: ['pattern_insight', 'body_double_prompt', 'streak_reminder'],
+      salvage_offer: ['salvage_offer', 'mission_simplify', 'micro_mission_push'],
+      distraction_shield: ['distraction_shield', 'body_double_prompt', 'gentle_nudge'],
+      streak_reminder: ['streak_reminder', 'comeback_invitation', 'gentle_nudge'],
+      comeback_invitation: ['comeback_invitation', 'salvage_offer', 'micro_mission_push'],
+      micro_mission_push: ['micro_mission_push', 'body_double_prompt', 'gentle_nudge'],
+      mission_simplify: ['mission_simplify', 'micro_mission_push', 'gentle_nudge'],
+      body_double_prompt: ['body_double_prompt', 'micro_mission_push', 'gentle_nudge'],
+      escalating_intervention: ['escalating_intervention', 'crisis_intervention', 'comeback_invitation'],
+    }
+    return defaultChains[type] || [type]
+  }
+
+  // Get the next strategy in the chain after a failure
+  nextStrategyAfter(current: InterceptionType, signalId: string): InterceptionType | null {
+    const state = this.strategyChainState.get(signalId)
+    if (!state) return null
+    const chain = this.getStrategyChain(current)
+    const nextIndex = state.chainIndex + 1
+    if (nextIndex >= chain.length) return null
+    // Update chain position
+    this.strategyChainState.set(signalId, { chainIndex: nextIndex, startedAt: state.startedAt })
+    return chain[nextIndex]
+  }
+
+  // Start or reset strategy chain for a signal
+  initStrategyChain(signalId: string, type: InterceptionType): void {
+    this.strategyChainState.set(signalId, { chainIndex: 0, startedAt: Date.now() })
+  }
+
+  // v4: Signal deduplication — don't fire same type within cooldown window
+  private isSignalOnCooldown(type: DriftSignalType): boolean {
+    const timestamps = this.lastSignalTimestamps.get(type)
+    if (!timestamps || timestamps.length === 0) return false
+    const now = Date.now()
+    // Count fires in cooldown window
+    const recentFires = timestamps.filter(t => (now - t) < this.config.signalCooldownMinutes * 60000)
+    this.lastSignalTimestamps.set(type, recentFires) // cleanup stale
+    return recentFires.length > 0
+  }
+
+  private recordSignalFire(type: DriftSignalType): void {
+    const timestamps = this.lastSignalTimestamps.get(type) || []
+    timestamps.push(Date.now())
+    // Keep last 10
+    if (timestamps.length > 10) timestamps.splice(0, timestamps.length - 10)
+    this.lastSignalTimestamps.set(type, timestamps)
+  }
+
+  // v4: Per-type daily limit
+  private hasExceededDailyLimit(type: InterceptionType): boolean {
+    const stats = this.typeEffectiveness.get(type)
+    if (!stats) return false
+    return stats.attempted >= this.config.maxPerTypePerDay
+  }
+
+  // v4: Adaptive cooldown — if a type has <30% success rate, increase its cooldown
+  private getEffectiveCooldown(type: InterceptionType): number {
+    if (!this.config.adaptiveCooldown) return this.config.minInterceptionIntervalMinutes
+    const stats = this.typeEffectiveness.get(type)
+    if (!stats || stats.attempted < 3) return this.config.minInterceptionIntervalMinutes
+    const successRate = stats.succeeded / stats.attempted
+    if (successRate < 0.2) return this.config.minInterceptionIntervalMinutes * 3
+    if (successRate < 0.35) return this.config.minInterceptionIntervalMinutes * 2
+    return this.config.minInterceptionIntervalMinutes
   }
 
   private getInactivityMessage(state: UserState, name: string): string {
@@ -652,6 +804,24 @@ export class DriftInterceptionOrchestrator {
 
   getConfig(): OrchestratorConfig {
     return { ...this.config }
+  }
+
+  // v4: Expose effectiveness stats for UI/learning
+  getTypeEffectiveness(): Map<InterceptionType, { attempted: number; succeeded: number }> {
+    return new Map(this.typeEffectiveness)
+  }
+
+  getTypeSuccessRate(type: InterceptionType): number | null {
+    const stats = this.typeEffectiveness.get(type)
+    if (!stats || stats.attempted === 0) return null
+    return stats.succeeded / stats.attempted
+  }
+
+  // v4: Reset adaptive tracking (e.g., on profile change)
+  resetAdaptiveTracking(): void {
+    this.typeEffectiveness.clear()
+    this.strategyChainState.clear()
+    this.lastSignalTimestamps.clear()
   }
 }
 

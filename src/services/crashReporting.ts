@@ -51,7 +51,7 @@ function scrubPII(obj: unknown, depth = 0): unknown {
 
 // ── beforeSend Hook ─────────────────────────────────────────
 
-function beforeSendHook(event: Sentry.Event): Sentry.Event | null {
+function beforeSendHook(event: Sentry.ErrorEvent, _hint: unknown): Sentry.ErrorEvent | null {
   if (!_consentGranted) return null
 
   // Scrub PII from all relevant fields
@@ -99,11 +99,6 @@ export function initCrashReporting(dsn: string): void {
     environment: __DEV__ ? 'development' : 'production',
     // Default to disabled until consent is confirmed
     enabled: false,
-    integrations: [
-      new Sentry.ReactNativeTracing({
-        enableNativeFramesTracking: !__DEV__,
-      }),
-    ],
     attachStacktrace: true,
     // Don't send PII fields that Sentry might auto-collect
     sendDefaultPii: false,

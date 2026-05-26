@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
-  View, Text, StyleSheet, Animated, Dimensions,
+  View, Text, StyleSheet, Animated, Dimensions, ViewStyle,
   TouchableOpacity, TextInput,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
   },
   distractionCountText: { ...typography.caption, color: colors.accent.pink },
   controls: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  mainBtn: { ...shadows.glow },
+  mainBtn: shadows.glow as ViewStyle,
   captureBtn: {
     flexDirection: 'row',
     alignItems: 'center',

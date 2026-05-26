@@ -9,13 +9,17 @@ interface SectionHeaderProps {
   actionLabel?: string;
   onAction?: () => void;
   style?: ViewStyle;
+  icon?: React.ReactNode;
 }
 
-export function SectionHeader({ title, subtitle, actionLabel, onAction, style }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, actionLabel, onAction, style, icon }: SectionHeaderProps) {
   return (
     <View style={[styles.row, style]}>
       <View style={styles.left}>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.titleRow}>
+          {icon}
+          <Text style={styles.title}>{title}</Text>
+        </View>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
       {actionLabel && onAction && (
@@ -36,6 +40,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   left: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   title: { ...typography.label, color: colors.text.secondary },
   subtitle: { ...typography.caption, color: colors.text.tertiary, marginTop: 2 },
   action: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },

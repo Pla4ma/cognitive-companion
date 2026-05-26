@@ -62,19 +62,54 @@ export interface AgentAction {
 }
 
 // ══════════════════════════════════════════════════════════════
-// DRIFT DETECTOR — Proactive interception engine
+// DRIFT DETECTOR v4 — Weighted multi-signal detection engine
 // ══════════════════════════════════════════════════════════════
 
-interface DriftSignals {
-  timeSinceLastSession: number
-  sessionsToday: number
-  plannedSessionsToday: number
-  abandonedSessionsToday: number
-  distractionsPerSession: number
-  timeOfDay: number
-  dayOfWeek: number
-  resistancePatternMatch: boolean
-  energyIndicator: 'low' | 'medium' | 'high'
+// Signal definitions with calibrated weights and thresholds
+interface SignalDef {
+  weight: number           // How much this signal contributes
+  minConfidence: number    // Minimum data points needed
+  decayHours: number       // Signal half-life in hours
+}
+
+const SIGNAL_WEIGHTS: Record<string, SignalDef> = {
+  timeGap:          { weight: 0.35, minConfidence: 1,   decayHours: 4 },
+  abandonRate:      { weight: 0.30, minConfidence: 2,   decayHours: 6 },
+  distractionRate:  { weight: 0.20, minConfidence: 2,   decayHours: 8 },
+  timeProfile:      { weight: 0.15, minConfidence: 1,   decayHours: 12 },
+  patternRecurrence:{ weight: 0.25, minConfidence: 3,   decayHours: 24 },
+  frictionLevel:    { weight: 0.15, minConfidence: 1,   decayHours: 4 },
+  sessionQuality:   { weight: 0.20, minConfidence: 2,   decayHours: 12 },
+}
+
+// Time-of-day profiles — what state is common at what hour
+const TIME_PROFILES: Record<string, { state: AvoidanceState; urgencyBoost: number }> = {
+  late_night:   { state: 'tired',    urgencyBoost: 0.0 },
+  early_morning:{ state: 'avoiding',  urgencyBoost: 0.1 },
+  morning:      { state: 'avoiding',  urgencyBoost: 0.0 },
+  afternoon:    { state: 'stuck',     urgencyBoost: 0.1 },
+  evening:      { state: 'scattered', urgencyBoost: 0.0 },
+  deep_night:   { state: 'shame_spiral', urgencyBoost: 0.2 },
+}
+
+function getTimeProfile(hour: number): { state: AvoidanceState; urgencyBoost: number } {
+  if (hour >= 1 && hour < 5) return TIME_PROFILES.deep_night
+  if (hour >= 5 && hour < 8) return TIME_PROFILES.early_morning
+  if (hour >= 8 && hour < 12) return TIME_PROFILES.morning
+  if (hour >= 12 && hour < 17) return TIME_PROFILES.afternoon
+  if (hour >= 17 && hour < 22) return TIME_PROFILES.evening
+  return TIME_PROFILES.late_night
+}
+
+// Per-state signal accumulators for escalation tracking
+let lastDetectedState: AvoidanceState | null = null
+let consecutiveSameStateCount = 0
+let lastDetectionHour = -1
+
+export function resetDriftDetectionState(): void {
+  lastDetectedState = null
+  consecutiveSameStateCount = 0
+  lastDetectionHour = -1
 }
 
 export function detectDrift(
@@ -98,98 +133,167 @@ export function detectDrift(
   const completedToday = todaySessions.filter(s => s.status === 'completed' || s.status === 'salvaged')
   const abandonedToday = todaySessions.filter(s => s.status === 'abandoned')
   const lastSession = sessions[0]
-  const timeSinceLast = lastSession 
+  const timeSinceLast = lastSession
     ? (now.getTime() - new Date(lastSession.ended_at || lastSession.started_at).getTime()) / 60000
     : Infinity
 
   const todayDistractions = distractions.filter(d => d.captured_at.slice(0, 10) === todayStr)
-  const avgDistractionsPerSession = completedToday.length > 0 
-    ? todayDistractions.length / completedToday.length 
+
+  // ── Signal 1: Time gap ──────────────────────────────────
+  const gapHours = timeSinceLast / 60
+  const gapScore = Math.min(gapHours / 6, 1) // 6 hours = full signal
+  const gapConfidence = sessions.length > 0 ? Math.min(sessions.length / 5, 1) : 0
+
+  // ── Signal 2: Abandon rate ──────────────────────────────
+  const abandonRate = todaySessions.length > 0
+    ? abandonedToday.length / todaySessions.length
     : 0
+  const abandonScore = abandonRate
 
-  // ── Signal analysis ─────────────────────────────────────
+  // ── Signal 3: Distraction rate ──────────────────────────
+  const avgDistractions = completedToday.length > 0
+    ? todayDistractions.length / completedToday.length
+    : 0
+  const distractionScore = Math.min(avgDistractions / 5, 1)
 
-  // Long gap since last session
-  const isAvoiding = timeSinceLast > 180 && completedToday.length === 0 // 3+ hours, no sessions
-  const isOverwhelmed = abandonedToday.length >= 2 // Multiple abandoned attempts
-  const isDistracted = avgDistractionsPerSession > 3 // High distraction rate
-  const isTired = (hour >= 22 || hour < 7) && completedToday.length === 0
-  const isStuck = abandonedToday.length === 1 && completedToday.length === 0 // One abandoned, nothing since
-  const isScattered = todayDistractions.filter(d => d.category === 'thought').length > 5
-  const isAnxious = todayDistractions.filter(d => d.category === 'emotion').length > 2
+  // ── Signal 4: Time-of-day profile ───────────────────────
+  const timeProfile = getTimeProfile(hour)
+  const timeProfileScore = timeProfile.urgencyBoost + (completedToday.length === 0 ? 0.2 : 0)
 
-  // ── Confidence scoring ──────────────────────────────────
+  // ── Signal 5: Pattern recurrence ────────────────────────
+  let patternScore = 0
+  let patternState: AvoidanceState | null = null
+  for (const p of resistanceHistory) {
+    if (p.frequency >= 2 && (now.getTime() - new Date(p.last_occurred).getTime()) < 7 * 86400000) {
+      patternScore += Math.min(p.frequency / 5, 1) * 0.3
+      patternState = p.avoidance_state as AvoidanceState
+    }
+  }
 
-  let confidence = 0
+  // ── Signal 6: Session quality ────────────────────────────
+  const recentSessions = sessions.filter(s =>
+    (now.getTime() - new Date(s.started_at).getTime()) < 3 * 86400000
+  )
+  const qualityRatio = recentSessions.length > 0
+    ? recentSessions.filter(s => s.status === 'completed').length / recentSessions.length
+    : 0.5
+  const frictionScore = Math.max(0, 1 - qualityRatio * 2) // Low quality = high friction
+
+  // ── Weighted state candidates ─────────────────────────────
+  type StateCandidate = { state: AvoidanceState; score: number; reasons: string[] }
+  const candidates: StateCandidate[] = [
+    { state: 'avoiding',  score: 0, reasons: [] },
+    { state: 'overwhelmed',score: 0, reasons: [] },
+    { state: 'stuck',     score: 0, reasons: [] },
+    { state: 'tired',     score: 0, reasons: [] },
+    { state: 'scattered', score: 0, reasons: [] },
+    { state: 'anxious',   score: 0, reasons: [] },
+    { state: 'distracted',score: 0, reasons: [] },
+    { state: 'shame_spiral',score: 0, reasons: [] },
+    { state: 'ready',     score: 0, reasons: [] },
+  ]
+
+  // Feed signals into state candidates
+  if (gapScore > 0.3 && completedToday.length === 0) {
+    const c = candidates.find(c => c.state === 'avoiding')!
+    c.score += gapScore * SIGNAL_WEIGHTS.timeGap.weight
+    c.reasons.push(`No sessions in ${Math.round(gapHours * 10) / 10}h`)
+  }
+
+  if (abandonScore > 0.4) {
+    const overwhelmed = candidates.find(c => c.state === 'overwhelmed')!
+    overwhelmed.score += abandonScore * SIGNAL_WEIGHTS.abandonRate.weight
+    overwhelmed.reasons.push(`${abandonedToday.length}/${todaySessions.length} sessions abandoned`)
+  }
+
+  if (distractionScore > 0.4) {
+    const distracted = candidates.find(c => c.state === 'distracted')!
+    distracted.score += distractionScore * SIGNAL_WEIGHTS.distractionRate.weight
+    distracted.reasons.push(`${avgDistractions.toFixed(1)} avg distractions/session`)
+    if (todayDistractions.filter(d => d.category === 'thought').length > 5) {
+      const scattered = candidates.find(c => c.state === 'scattered')!
+      scattered.score += distractionScore * 0.3
+      scattered.reasons.push('High thought-distraction count')
+    }
+    if (todayDistractions.filter(d => d.category === 'emotion').length > 2) {
+      const anxious = candidates.find(c => c.state === 'anxious')!
+      anxious.score += distractionScore * 0.25
+      anxious.reasons.push('Emotional distractions detected')
+    }
+  }
+
+  if (timeProfileScore > 0) {
+    const c = candidates.find(c => c.state === timeProfile.state)!
+    c.score += timeProfileScore * SIGNAL_WEIGHTS.timeProfile.weight
+    c.reasons.push(`Time-of-day (${hour}:00) suggests ${timeProfile.state}`)
+  }
+
+  if (patternScore > 0 && patternState) {
+    const c = candidates.find(c => c.state === patternState)!
+    c.score += patternScore * SIGNAL_WEIGHTS.patternRecurrence.weight
+    c.reasons.push(`Historical pattern match: ${patternState}`)
+  }
+
+  if (frictionScore > 0.3 && recentSessions.length >= 2) {
+    const stuck = candidates.find(c => c.state === 'stuck')!
+    stuck.score += frictionScore * SIGNAL_WEIGHTS.frictionLevel.weight
+    stuck.reasons.push('Recent sessions show high friction')
+  }
+
+  // ── Rank and select ───────────────────────────────────────
+  const sorted = candidates
+    .filter(c => c.score > 0.01)
+    .sort((a, b) => b.score - a.score)
+
+  const topCandidate = sorted[0]
+  const isDrifting = topCandidate && topCandidate.score >= 0.12 && topCandidate.state !== 'ready'
+
   let detectedState: AvoidanceState = 'ready'
+  let confidence: AgentConfidence = 'low'
   let urgency: 'low' | 'medium' | 'high' = 'low'
   let reasoning = ''
 
-  if (isAvoiding) {
-    confidence += 0.4
-    detectedState = 'avoiding'
-    urgency = timeSinceLast > 360 ? 'high' : 'medium'
-    reasoning = `No sessions in ${Math.round(timeSinceLast)}m. User is likely avoiding.`
+  if (isDrifting && topCandidate) {
+    detectedState = topCandidate.state
+    const rawConfidence = Math.min(topCandidate.score * 2.5, 1)
+    confidence = rawConfidence >= 0.7 ? 'high' : rawConfidence >= 0.4 ? 'medium' : 'low'
+
+    // Urgency: base on score + escalation
+    urgency = rawConfidence >= 0.6 ? 'high' : rawConfidence >= 0.35 ? 'medium' : 'low'
+
+    // Escalation: same state detected consecutively?
+    if (detectedState === lastDetectedState && hour === lastDetectionHour) {
+      consecutiveSameStateCount++
+    } else if (detectedState === lastDetectedState) {
+      consecutiveSameStateCount = Math.max(1, consecutiveSameStateCount)
+    } else {
+      consecutiveSameStateCount = 0
+    }
+    lastDetectedState = detectedState
+    lastDetectionHour = hour
+
+    if (consecutiveSameStateCount >= 2) {
+      urgency = 'high'
+    }
+
+    // Urgency boost from time profile
+    if (timeProfile.urgencyBoost > 0.1 && completedToday.length === 0) {
+      const c = candidates.find(c => c.state === timeProfile.state)
+      if (c && c.state === detectedState) urgency = 'high'
+    }
+
+    reasoning = topCandidate.reasons.join('; ')
+    if (consecutiveSameStateCount >= 1) {
+      reasoning += `. Pattern repeated ${consecutiveSameStateCount + 1}x (escalated).`
+    }
   }
 
-  if (isOverwhelmed) {
-    confidence += 0.3
-    detectedState = 'overwhelmed'
-    urgency = 'high'
-    reasoning = `${abandonedToday.length} abandoned sessions today. User is overwhelmed.`
-  }
-
-  if (isDistracted) {
-    confidence += 0.2
-    detectedState = isDistracted && isAnxious ? 'anxious' : 'distracted'
-    urgency = 'medium'
-    reasoning = `${avgDistractionsPerSession.toFixed(1)} distractions per session. Environment is not focused.`
-  }
-
-  if (isTired) {
-    confidence += 0.3
-    detectedState = 'tired'
-    urgency = 'low'
-    reasoning = `Late hour (${hour}:00) with no sessions. User may be tired.`
-  }
-
-  if (isStuck) {
-    confidence += 0.25
-    detectedState = 'stuck'
-    urgency = 'medium'
-    reasoning = `One abandoned session, nothing since. User may be stuck.`
-  }
-
-  if (isScattered) {
-    confidence += 0.2
-    detectedState = 'scattered'
-    urgency = 'medium'
-    reasoning = `${todayDistractions.filter(d => d.category === 'thought').length} thought-distractions today. Mind is scattered.`
-  }
-
-  // Pattern matching from history
-  const patternMatch = resistanceHistory.find(p => 
-    p.avoidance_state === detectedState && 
-    p.frequency >= 3 &&
-    (now.getTime() - new Date(p.last_occurred).getTime()) < 7 * 86400000
-  )
-  if (patternMatch) {
-    confidence += 0.15
-    reasoning += ` Pattern match: ${patternMatch.frequency} previous occurrences of ${detectedState}.`
-  }
-
-  // Weekend adjustment
+  // Weekend dampening
   if (dayOfWeek === 0 || dayOfWeek === 6) {
-    confidence *= 0.7 // Lower confidence on weekends
+    if (urgency === 'high') urgency = 'medium'
   }
 
-  const isDrifting = confidence >= 0.3
-  const agentConfidence: AgentConfidence = 
-    confidence >= 0.8 ? 'certain' :
-    confidence >= 0.6 ? 'high' :
-    confidence >= 0.4 ? 'medium' : 'low'
-
-  return { isDrifting, confidence: agentConfidence, detectedState, urgency, reasoning }
+  return { isDrifting, confidence, detectedState, urgency, reasoning }
 }
 
 // ════════════════════════════════════════════════════════════──

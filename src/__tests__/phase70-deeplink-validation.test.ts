@@ -1,6 +1,4 @@
-// ══════════════════════════════════════════════════════════════
-// INTENT — Phase 70: Deep Link Validation Tests
-// ══════════════════════════════════════════════════════════════
+// ── Deep Link Validation Tests ───────────────────────────────
 
 import { parseIntentUrl, validateDeepLink, routeDeepLink } from '../services/deeplinks/deepLinkService'
 

@@ -18,6 +18,8 @@ export type RescueProtocolId =
   | 'comeback_seed'
   | 'planning_loop_breaker'
   | 'doomscroll_intercept'
+  | 'fallback'
+  | 'emergency_start'
 
 export interface MissionCompilationRules {
   requirePhysicalFirstAction: boolean
@@ -368,7 +370,56 @@ export const RESCUE_PROTOCOLS: Record<RescueProtocolId, RescueProtocol> = {
     contraindications: [],
     safetyNotes: ['Never shame scrolling. Frame as intentional choice.'],
   },
+
+  fallback: {
+    id: 'fallback',
+    name: 'Fallback',
+    description: 'Generic rescue when no specific protocol matches your state.',
+    bestForStates: ['avoiding', 'tired', 'low_confidence', 'bored', 'distracted'],
+    avoidForStates: [],
+    defaultDurationMinutes: 2,
+    minDurationMinutes: 1,
+    maxDurationMinutes: 5,
+    recommendedEnergyLevels: ['depleted', 'low', 'medium', 'high'],
+    missionCompilationRules: {
+      requirePhysicalFirstAction: true, maxDurationMinutes: 5, minDurationMinutes: 1,
+      allowVagueActions: false, requireCompletionCriteria: true, templateStyle: 'gentle',
+    },
+    coachToneRules: { defaultTone: 'gentle', maxResponseLength: 80, useEmoji: true, allowQuestions: false, checkInFrequencyMinutes: null },
+    salvageRules: { offerPartialCredit: true, maxFallbackMinutes: 1, suggestBodyDouble: true, suggestProtocolSwitch: true, noShameLanguage: true },
+    bodyDoubleRules: { defaultMode: 'emergency_2min', checkInIntervalMinutes: 2, maxPromptsPerSession: 3, binaryQuestionsOnly: true },
+    notificationRules: { enabled: true, maxPerDay: 3, quietHoursStart: 22, quietHoursEnd: 7, actionLabels: ['Tiny start', 'Snooze', 'Not today'] },
+    successDefinitionTemplate: 'You took action. That counts.',
+    fallbackTemplate: 'One tiny step. You can stop after.',
+    contraindications: [],
+    safetyNotes: ['Keep it gentle. User may already feel bad.'],
+  },
+
+  emergency_start: {
+    id: 'emergency_start',
+    name: 'Emergency Start',
+    description: 'Bypass all deliberation. Start a 2-minute body double immediately.',
+    bestForStates: ['stuck', 'avoiding', 'overwhelmed', 'anxious'],
+    avoidForStates: ['ready'],
+    defaultDurationMinutes: 2,
+    minDurationMinutes: 1,
+    maxDurationMinutes: 5,
+    recommendedEnergyLevels: ['depleted', 'low', 'medium', 'high'],
+    missionCompilationRules: {
+      requirePhysicalFirstAction: true, maxDurationMinutes: 5, minDurationMinutes: 1,
+      allowVagueActions: false, requireCompletionCriteria: true, templateStyle: 'imperative',
+    },
+    coachToneRules: { defaultTone: 'firm', maxResponseLength: 40, useEmoji: false, allowQuestions: false, checkInFrequencyMinutes: null },
+    salvageRules: { offerPartialCredit: true, maxFallbackMinutes: 1, suggestBodyDouble: false, suggestProtocolSwitch: false, noShameLanguage: true },
+    bodyDoubleRules: { defaultMode: 'emergency_2min', checkInIntervalMinutes: 1, maxPromptsPerSession: 2, binaryQuestionsOnly: true },
+    notificationRules: { enabled: false, maxPerDay: 0, quietHoursStart: 22, quietHoursEnd: 7, actionLabels: [] },
+    successDefinitionTemplate: 'You started. That\'s all that matters.',
+    fallbackTemplate: 'Just one minute. I\'ll be here.',
+    contraindications: ['crisis_state'],
+    safetyNotes: ['Emergency start bypasses normal prompting. Use with care.'],
+  },
 }
+
 
 export function getProtocolForState(state: UserState): RescueProtocolId {
   const mapping: Record<UserState, RescueProtocolId> = {
@@ -406,7 +457,9 @@ export function getFallbackProtocol(protocolId: RescueProtocolId): RescueProtoco
     decision_breaker: 'two_minute_ignition',
     comeback_seed: 'maintenance_spark',
     planning_loop_breaker: 'two_minute_ignition',
-    doomscroll_intercept: 'two_minute_ignition',
-  }
+  doomscroll_intercept: 'two_minute_ignition',
+  fallback: 'two_minute_ignition',
+  emergency_start: 'two_minute_ignition',
+}
   return fallbacks[protocolId]
 }

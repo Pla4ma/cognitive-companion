@@ -33,6 +33,9 @@ export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): Perso
   const newNodes = new Map(graph.nodes)
   const newEdges = [...graph.edges]
   const now = new Date().toISOString()
+  const eventHour = new Date(event.timestamp).getHours()
+  const eventDay = new Date(event.timestamp).getDay()
+  const isWeekend = eventDay === 0 || eventDay === 6
 
   const stateKey = `state:${event.state}`
   const protocolKey = `protocol:${event.protocolId}`
@@ -40,6 +43,8 @@ export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): Perso
   const energyKey = `energy:${event.energy}`
   const surfaceKey = `surface:${event.surface}`
   const durationKey = `duration:${event.durationMinutes}`
+  const hourKey = `hour:${String(eventHour).padStart(2, '0')}`
+  const dayKindKey = isWeekend ? 'day_kind:weekend' : 'day_kind:weekday'
 
   if (!newNodes.has(stateKey)) newNodes.set(stateKey, { kind: 'state', value: event.state })
   if (!newNodes.has(protocolKey)) newNodes.set(protocolKey, { kind: 'protocol', value: event.protocolId })
@@ -47,6 +52,8 @@ export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): Perso
   if (!newNodes.has(energyKey)) newNodes.set(energyKey, { kind: 'energy', value: event.energy })
   if (!newNodes.has(surfaceKey)) newNodes.set(surfaceKey, { kind: 'surface', value: event.surface })
   if (!newNodes.has(durationKey)) newNodes.set(durationKey, { kind: 'duration', value: event.durationMinutes })
+  if (!newNodes.has(hourKey)) newNodes.set(hourKey, { kind: 'time_of_day', value: `${String(eventHour).padStart(2, '0')}:00` })
+  if (!newNodes.has(dayKindKey)) newNodes.set(dayKindKey, { kind: 'time_of_day', value: isWeekend ? 'weekend' : 'weekday' })
   if (event.blocker) {
     const blockerKey = `blocker:${event.blocker}`
     if (!newNodes.has(blockerKey)) newNodes.set(blockerKey, { kind: 'blocker', value: event.blocker })
@@ -72,8 +79,151 @@ export function recordEvent(graph: PersonalDriftGraph, event: GraphEvent): Perso
   updateEdge(surfaceKey, outcomeKey, `${event.surface} → ${event.outcome}`)
   updateEdge(stateKey, durationKey, `${event.state} → ${event.durationMinutes}min`)
   if (event.blocker) updateEdge(stateKey, `blocker:${event.blocker}`, `${event.state} → ${event.blocker}`)
+  updateEdge(hourKey, stateKey, `at ${eventHour}:00 → ${event.state}`)
+  updateEdge(dayKindKey, stateKey, `${isWeekend ? 'weekend' : 'weekday'} → ${event.state}`)
 
   return { ...graph, nodes: newNodes, edges: newEdges, totalEvents: graph.totalEvents + 1, lastComputed: now }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Edge Decay — older events carry less weight
+// ══════════════════════════════════════════════════════════════
+
+export function decayEdges(graph: PersonalDriftGraph, daysHalfLife: number = 14): PersonalDriftGraph {
+  const now = Date.now()
+  const halfLifeMs = daysHalfLife * 86400000
+  const newEdges = graph.edges.map(edge => {
+    const ageMs = now - new Date(edge.lastUpdated).getTime()
+    if (ageMs <= 0) return edge
+    const decayFactor = Math.pow(0.5, ageMs / halfLifeMs)
+    return { ...edge, weight: Math.max(0.01, edge.weight * decayFactor) }
+  })
+  return { ...graph, edges: newEdges, lastComputed: new Date().toISOString() }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Recovery Sequences — what works after a failure
+// ══════════════════════════════════════════════════════════════
+
+export interface RecoverySequence {
+  state: string
+  blocker: string | null
+  recoveryProtocol: string
+  recoveryDuration: number
+  successRate: number
+  sampleSize: number
+}
+
+export function analyzeRecoverySequences(graph: PersonalDriftGraph): RecoverySequence[] {
+  if (graph.totalEvents < 6) return []
+  const sequences: RecoverySequence[] = []
+  const abandons = graph.edges.filter(e => e.to === 'outcome:abandoned')
+
+  for (const abandon of abandons) {
+    if (!abandon.from.startsWith('protocol:')) continue
+    const protocol = abandon.from.replace('protocol:', '')
+    const stateEdges = graph.edges.filter(e => e.from.startsWith('state:') && e.to === abandon.from)
+    if (stateEdges.length === 0) continue
+
+    const stateNode = stateEdges[0].from.replace('state:', '')
+    const blockerEdge = graph.edges.find(e =>
+      e.from === `state:${stateNode}` && e.to.startsWith('blocker:')
+    )
+    const blocker = blockerEdge ? blockerEdge.to.replace('blocker:', '') : null
+
+    const comebackEdges = graph.edges.filter(e =>
+      e.from.startsWith('protocol:') && e.to === 'outcome:completed'
+    )
+    const recoveryProtocols: Record<string, { ok: number; total: number }> = {}
+
+    for (const ce of comebackEdges) {
+      const rp = ce.from.replace('protocol:', '')
+      if (!recoveryProtocols[rp]) recoveryProtocols[rp] = { ok: 0, total: 0 }
+      recoveryProtocols[rp].total += ce.eventCount
+      recoveryProtocols[rp].ok += ce.eventCount
+    }
+
+    const sorted = Object.entries(recoveryProtocols)
+      .filter(([_, v]) => v.total >= 2)
+      .sort((a, b) => (b[1].ok / b[1].total) - (a[1].ok / a[1].total))
+
+    if (sorted.length > 0) {
+      const [bestProto, stats] = sorted[0]
+      const durEdge = graph.edges.find(e =>
+        e.from === `state:${stateNode}` && e.to.startsWith('duration:')
+      )
+      const duration = durEdge ? parseInt(durEdge.to.replace('duration:', ''), 10) || 2 : 2
+      sequences.push({
+        state: stateNode,
+        blocker,
+        recoveryProtocol: bestProto,
+        recoveryDuration: duration,
+        successRate: stats.ok / stats.total,
+        sampleSize: stats.total,
+      })
+    }
+  }
+
+  return sequences.sort((a, b) => b.successRate - a.successRate)
+}
+
+// ══════════════════════════════════════════════════════════════
+// Drift Chain Analysis — multi-step pattern detection
+// ══════════════════════════════════════════════════════════════
+
+export interface DriftChain {
+  triggerState: string
+  blocker: string | null
+  escapeProtocol: string
+  chainLength: number
+  frequency: number
+}
+
+export function analyzeDriftChains(graph: PersonalDriftGraph): DriftChain[] {
+  if (graph.totalEvents < 8) return []
+  const chains: DriftChain[] = []
+
+  // Find state→blocker→outcome:abandoned patterns
+  const stateBlockers = new Map<string, Map<string, number>>()
+  for (const edge of graph.edges) {
+    if (edge.from.startsWith('state:') && edge.to.startsWith('blocker:')) {
+      const state = edge.from.replace('state:', '')
+      const blocker = edge.to.replace('blocker:', '')
+      if (!stateBlockers.has(state)) stateBlockers.set(state, new Map())
+      stateBlockers.get(state)!.set(blocker, (stateBlockers.get(state)!.get(blocker) || 0) + edge.eventCount)
+    }
+  }
+
+  for (const [state, blockers] of stateBlockers) {
+    for (const [blocker, freq] of blockers) {
+      // Find what protocol follows this state+blocker pair
+      const protocolEdges = graph.edges.filter(e =>
+        e.from === `state:${state}` && e.to.startsWith('protocol:')
+      )
+      if (protocolEdges.length === 0) continue
+
+      const escaped = protocolEdges
+        .filter(e => {
+          const outcomeEdges = graph.edges.filter(oe =>
+            oe.from === e.to && oe.to === 'outcome:completed'
+          )
+          return outcomeEdges.length > 0
+        })
+        .sort((a, b) => b.weight - a.weight)
+
+      if (escaped.length > 0) {
+        chains.push({
+          triggerState: state,
+          blocker,
+          escapeProtocol: escaped[0].to.replace('protocol:', ''),
+          chainLength: 4,
+          frequency: freq,
+        })
+      }
+    }
+  }
+
+  return chains.sort((a, b) => b.frequency - a.frequency)
 }
 
 // ── Insights ────────────────────────────────────────────────
@@ -183,6 +333,29 @@ export function computeInsights(graph: PersonalDriftGraph): DriftGraphInsight[] 
     })
   }
 
+  // ── Recovery Sequence Insights ─────────────────────────────
+  const recoverySequences = analyzeRecoverySequences(graph)
+  for (const seq of recoverySequences.slice(0, 3)) {
+    const blockerText = seq.blocker ? ` after ${seq.blocker}` : ''
+    insights.push({
+      id: `insight_recovery_${seq.state}_${seq.recoveryProtocol}`,
+      text: `When ${seq.state}${blockerText}, ${seq.recoveryProtocol} recovers you (${Math.round(seq.successRate * 100)}% success, ${seq.sampleSize}x).`,
+      confidence: getConfidence(seq.sampleSize), eventCount: seq.sampleSize,
+      category: 'recovery_sequence', relatedNodeIds: [`state:${seq.state}`], generatedAt: now,
+    })
+  }
+
+  // ── Drift Chain Insights ───────────────────────────────────
+  const driftChains = analyzeDriftChains(graph)
+  for (const chain of driftChains.slice(0, 2)) {
+    insights.push({
+      id: `insight_chain_${chain.triggerState}_${chain.blocker}`,
+      text: `Common drift pattern: ${chain.triggerState} + ${chain.blocker} → recover with ${chain.escapeProtocol} (${chain.frequency}x).`,
+      confidence: getConfidence(chain.frequency), eventCount: chain.frequency,
+      category: 'drift_chain', relatedNodeIds: [`state:${chain.triggerState}`], generatedAt: now,
+    })
+  }
+
   return insights
 }
 
@@ -270,6 +443,16 @@ export function summarizeGraph(graph: PersonalDriftGraph): string {
   if (strongest) parts.push(`Strongest drift pattern: ${strongest}.`)
   const bestSurface = getBestSurface(graph)
   if (bestSurface) parts.push(`Best entry point: ${bestSurface}.`)
+  const chains = analyzeDriftChains(graph)
+  if (chains.length > 0) {
+    const top = chains[0]
+    parts.push(`Common chain: ${top.triggerState} + ${top.blocker} → ${top.escapeProtocol} (${top.frequency}x).`)
+  }
+  const recoveries = analyzeRecoverySequences(graph)
+  if (recoveries.length > 0) {
+    const top = recoveries[0]
+    parts.push(`Best recovery: ${top.state} → ${top.recoveryProtocol} (${Math.round(top.successRate * 100)}%).`)
+  }
   return parts.join(' ')
 }
 

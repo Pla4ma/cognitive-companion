@@ -247,7 +247,7 @@ export const useAppStore = create<AppState>()(
         activeSession: s.activeSession?.id === sessionId ? { ...s.activeSession, actual_seconds: seconds } : s.activeSession,
       })),
       pauseSession: () => set((s) => ({
-        activeSession: s.activeSession ? { ...s.activeSession, status: 'active' } : null, // toggle
+        activeSession: s.activeSession ? { ...s.activeSession, status: 'paused' } : null,
       })),
       resumeSession: () => set((s) => ({
         activeSession: s.activeSession ? { ...s.activeSession, status: 'active' } : null,

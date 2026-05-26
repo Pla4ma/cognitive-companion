@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#060608"
     },
@@ -27,7 +27,7 @@
         "LSApplicationQueriesSchemes": ["intent"],
         "NSUserTrackingUsageDescription": "INTENT uses analytics to improve your focus experience. All data stays on-device unless you opt in to sharing."
       },
-      "associatedDomains": ["applinks:intentapp.com"]
+      "associatedDomains": []
     },
     "android": {
       "adaptiveIcon": {
@@ -69,13 +69,9 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
+    "icon": "./assets/icon.png",
           "color": "#6C3AED",
-          "sounds": [
-            "./assets/sounds/rescue-prompt.wav",
-            "./assets/sounds/drift-check.wav",
-            "./assets/sounds/session-complete.wav"
-          ],
+      "sounds": [],
           "mode": "production"
         }
       ],
@@ -93,17 +89,13 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "your-project-id"
       }
     },
-    "owner": "your-org",
     "privacy": "unlisted",
     "primaryColor": "#6C3AED",
     "platforms": ["ios", "android"],
     "notification": {
-      "icon": "./assets/notification-icon.png",
+      "icon": "./assets/icon.png",
       "color": "#6C3AED",
       "iosDisplayInForeground": true,
       "androidMode": "production",
