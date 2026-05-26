@@ -24,6 +24,7 @@ export { ProgressiveProfiling } from './ProgressiveProfiling';
 // ── Animated components ────────────────────────────────────
 export { AnimatedStateChip } from './AnimatedStateChip';
 export { AnimatedRescueButton } from './AnimatedRescueButton';
+export { WeeklyShareCard } from './WeeklyShareCard';
 
 // ── Legacy components (Screen, BarChart, StreakBadge, TabBar) ─
 export { Screen, BarChart, StreakBadge, TabBar } from './Legacy';

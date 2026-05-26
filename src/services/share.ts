@@ -4,6 +4,9 @@
 // ══════════════════════════════════════════════════════════════
 
 import { Share, Platform } from 'react-native'
+import { captureRef } from 'react-native-view-shot'
+import type { RefObject } from 'react'
+import type { View } from 'react-native'
 
 export interface WeeklySummaryCard {
   weekOf: string
@@ -100,6 +103,18 @@ export async function shareCard(card: WeeklySummaryCard): Promise<boolean> {
     return result.action === Share.sharedAction
   } catch {
     return false
+  }
+}
+
+/**
+ * Capture a React Native view as a PNG image URI
+ */
+export async function generateWeeklyImageCard(cardRef: RefObject<View>): Promise<string | null> {
+  try {
+    const uri = await captureRef(cardRef, { format: 'png', quality: 1 })
+    return uri
+  } catch {
+    return null
   }
 }
 

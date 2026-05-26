@@ -3,16 +3,19 @@
 // Weekly narrative, stats, intelligence panel, heatmap
 // ══════════════════════════════════════════════════════════════
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { TrendingUp, Share2, Brain, Calendar, ChevronDown, ChevronUp } from 'lucide-react-native'
+import { FlashList } from '@shopify/flash-list'
+import { TrendingUp, Share2, Brain, Calendar } from 'lucide-react-native'
 import { MMKV } from 'react-native-mmkv'
+import { Share } from 'react-native'
 import { useAppStore } from '../../src/store'
 import { calculateMomentumScore, analyzeResistancePatterns } from '../../src/engine'
 import { colors, spacing, radius, typography, layout } from '../../src/theme'
 import { Screen, Card, SectionHeader } from '../../src/components'
 import { generateWeeklyNarrative } from '../../src/engine/insights'
-import { generateWeeklySummaryCard, shareCard } from '../../src/services/share'
+import { generateWeeklySummaryCard, shareCard, generateWeeklyImageCard } from '../../src/services/share'
+import { WeeklyShareCard } from '../../src/components/WeeklyShareCard'
 import { useDriftIntelligence } from '../../src/hooks/useDriftIntelligence'
 import { IntelligenceCard } from '../../src/components/IntelligenceCard'
 import { DangerWindowHeatmap } from '../../src/components/DangerWindowHeatmap'
@@ -32,6 +35,7 @@ function getWeekKey(): string {
 // ── Component ───────────────────────────────────────────────
 
 export default function ProgressScreen() {
+  const shareCardRef = useRef<View>(null)
   const sessions = useAppStore((s) => s.sessions)
   const resistancePatterns = useAppStore((s) => s.resistancePatterns)
   const distractions = useAppStore((s) => s.distractions)
@@ -39,8 +43,6 @@ export default function ProgressScreen() {
   const user = useAppStore((s) => s.user)
   const sessionCount = useAppStore((s) => s.sessions.length)
   const plan = user?.plan ?? 'free'
-
-  const [heatmapOpen, setHeatmapOpen] = useState(false)
 
   // ── Weekly Narrative (cached in MMKV) ──
   const weekKey = getWeekKey()
@@ -111,14 +113,24 @@ export default function ProgressScreen() {
   // ── Recent sessions ──
   const recentSessions = sessions.slice(0, 10)
 
-  const handleShare = () => {
-    const todaySessions = sessions.filter(
-      (s) => s.started_at.slice(0, 10) === new Date().toISOString().slice(0, 10) &&
-        (s.status === 'completed' || s.status === 'salvaged'),
-    )
+  const handleShare = async () => {
+    const minutes = Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60)
+
+    // Try image share first
+    const imageUri = await generateWeeklyImageCard(shareCardRef)
+    if (imageUri) {
+      try {
+        await Share.share({ url: imageUri, title: 'My INTENT Week' })
+        return
+      } catch {
+        // fall through to text share
+      }
+    }
+
+    // Fallback to text share
     const card = generateWeeklySummaryCard({
       sessions: rescuedCount,
-      minutes: Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60),
+      minutes,
       streak: 0,
       rescues: rescuedCount,
       topState: 'avoiding',
@@ -146,6 +158,7 @@ export default function ProgressScreen() {
           </TouchableOpacity>
         </View>
         <Text style={styles.narrativeText}>{weeklyNarrative}</Text>
+        <Text style={styles.narrativeTimestamp}>Generated {new Date().toLocaleDateString()}</Text>
       </Card>
 
       {/* ── Stats Row ── */}
@@ -167,6 +180,12 @@ export default function ProgressScreen() {
       {/* ── 4-Week Trend ── */}
       <SectionHeader title="4-Week Trend" icon={<TrendingUp size={16} color={colors.accent.pink} />} />
       <Card variant="default" style={styles.trendCard}>
+        <View style={styles.trendBarsContainer}>
+          <View style={styles.trendYAxis}>
+            <Text style={styles.trendBarValue}>{maxBar}</Text>
+            <Text style={styles.trendBarValue}>{Math.round(maxBar/2)}</Text>
+            <Text style={styles.trendBarValue}>0</Text>
+          </View>
         <View style={styles.trendBars}>
           {trendData.map((bar, i) => (
             <View key={i} style={styles.trendBarCol}>
@@ -186,6 +205,7 @@ export default function ProgressScreen() {
             </View>
           ))}
         </View>
+        </View>
       </Card>
 
       {/* ── Intelligence Panel (7+ sessions, Pro only) ── */}
@@ -196,20 +216,7 @@ export default function ProgressScreen() {
             <>
               <IntelligenceCard profile={intelligence.profile} prediction={intelligence.prediction} />
 
-              <TouchableOpacity
-                style={styles.heatmapToggle}
-                onPress={() => setHeatmapOpen((v) => !v)}
-                accessibilityRole="button"
-                accessibilityLabel={heatmapOpen ? 'Collapse danger window heatmap' : 'Expand danger window heatmap'}
-              >
-                <Text style={styles.heatmapToggleText}>Danger Window Heatmap</Text>
-                {heatmapOpen
-                  ? <ChevronUp size={16} color={colors.text.tertiary} />
-                  : <ChevronDown size={16} color={colors.text.tertiary} />
-                }
-              </TouchableOpacity>
-
-              {heatmapOpen && intelligence.profile.timeSlots.length > 0 && (
+              {intelligence.profile.timeSlots.length > 0 && (
                 <Card variant="default" style={styles.heatmapCard}>
                   <DangerWindowHeatmap timeSlots={intelligence.profile.timeSlots} />
                 </Card>
@@ -218,10 +225,10 @@ export default function ProgressScreen() {
           ) : (
             <Card variant="default" style={styles.heatmapCard}>
               <Text style={styles.resistanceInsight}>
-                After 7 sessions, INTENT maps your hardest hours and predicts when you'll drift.
+                Your peak danger window is detected. After {sessions.length} sessions, INTENT maps your hardest hours.
               </Text>
               <Text style={[styles.resistanceInsight, { marginTop: 8, color: colors.brand[400] }]}>
-                Upgrade to Pro to unlock your full resistance map →
+                Upgrade to Pro to see your full resistance map →
               </Text>
             </Card>
           )}
@@ -256,25 +263,32 @@ export default function ProgressScreen() {
       {recentSessions.length > 0 && (
         <>
           <SectionHeader title="Recent Sessions" icon={<Calendar size={16} color={colors.brand[400]} />} />
-          {recentSessions.map((s, i) => {
-            const statusColor =
-              s.status === 'completed' ? colors.accent.green
-                : s.status === 'salvaged' ? colors.accent.orange
-                : colors.text.tertiary
-            return (
-              <Card key={i} variant="default" style={styles.sessionRow}>
-                <View style={styles.sessionRowInner}>
-                  <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                  <View style={styles.sessionInfo}>
-                    <Text style={styles.sessionStatus}>{s.status}</Text>
-                    <Text style={styles.sessionTime}>
-                      {new Date(s.started_at).toLocaleDateString()} · {Math.round(s.actual_seconds / 60)}m
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            )
-          })}
+          <View style={{ height: recentSessions.length * 64 }}>
+            <FlashList
+              data={recentSessions}
+              estimatedItemSize={64}
+              renderItem={({ item: s }) => {
+                const statusColor =
+                  s.status === 'completed' ? colors.accent.green
+                    : s.status === 'salvaged' ? colors.accent.orange
+                    : colors.text.tertiary
+                return (
+                  <Card variant="default" style={styles.sessionRow}>
+                    <View style={styles.sessionRowInner}>
+                      <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                      <View style={styles.sessionInfo}>
+                        <Text style={styles.sessionStatus}>{s.status}</Text>
+                        <Text style={styles.sessionTime}>
+                          {new Date(s.started_at).toLocaleDateString()} · {Math.round(s.actual_seconds / 60)}m
+                        </Text>
+                      </View>
+                    </View>
+                  </Card>
+                )
+              }}
+              keyExtractor={(item, i) => item.id ?? String(i)}
+            />
+          </View>
         </>
       )}
 
@@ -286,6 +300,18 @@ export default function ProgressScreen() {
           </Text>
         </Card>
       )}
+
+      {/* ── Off-screen share card (for image capture) ── */}
+      <View style={styles.offScreen} pointerEvents="none">
+        <WeeklyShareCard
+          ref={shareCardRef}
+          rescues={rescuedCount}
+          minutes={Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60)}
+          completionRate={completionRate}
+          narrative={weeklyNarrative}
+          userName={user?.display_name ?? 'User'}
+        />
+      </View>
 
       <View style={{ height: layout.tabBarHeight + spacing.lg }} />
     </Screen>
@@ -305,6 +331,7 @@ const styles = StyleSheet.create({
   narrativeHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   narrativeLabel: { ...typography.labelSmall, color: colors.text.secondary, letterSpacing: 1 },
   narrativeText: { ...typography.bodyMedium, color: colors.text.primary, lineHeight: 22 },
+  narrativeTimestamp: { ...typography.caption, color: colors.text.disabled, marginTop: spacing.xs },
   shareBtn: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xxs,
     paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs,
@@ -322,7 +349,9 @@ const styles = StyleSheet.create({
 
   // 4-Week Trend
   trendCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
-  trendBars: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 100 },
+  trendBarsContainer: { flexDirection: 'row' },
+  trendYAxis: { justifyContent: 'space-between', height: 60, marginRight: spacing.xs },
+  trendBars: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 100, flex: 1 },
   trendBarCol: { alignItems: 'center', gap: spacing.xxs },
   trendBarValue: { ...typography.caption, color: colors.text.tertiary },
   trendBarTrack: {
@@ -332,13 +361,7 @@ const styles = StyleSheet.create({
   trendBarFill: { width: '100%', borderRadius: radius.sm },
   trendBarLabel: { ...typography.caption, color: colors.text.tertiary },
 
-  // Heatmap toggle
-  heatmapToggle: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  heatmapToggleText: { ...typography.bodyMedium, color: colors.text.secondary },
+  // Heatmap
   heatmapCard: { padding: spacing.md, marginBottom: spacing.sectionGap },
 
   // Resistance
@@ -360,4 +383,7 @@ const styles = StyleSheet.create({
   // Empty
   emptyCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
   emptyText: { ...typography.bodyMedium, color: colors.text.tertiary, textAlign: 'center' },
+
+  // Off-screen (for image capture)
+  offScreen: { position: 'absolute', left: -9999, top: -9999, opacity: 0 },
 })
