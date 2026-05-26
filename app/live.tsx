@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert, ViewStyle, AccessibilityInfo } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Alert, ViewStyle, AccessibilityInfo, AppState } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BlurView } from 'expo-blur'
 import { Pause, Play, Square, CheckCircle2, SkipForward, AlertTriangle, Brain, X } from 'lucide-react-native'
@@ -13,7 +13,8 @@ import { formatTime } from '../src/utils/formatTime'
 import { colors, spacing, radius, typography, shadows } from '../src/theme'
 import { Screen, Button, ProgressRing, ProPaywall } from '../src/components'
 import { showSessionCompleteNotification, requestNotificationPermissionsWithContext } from '../src/services/notifications'
-import { getSocialProofStat, getActivationCelebration } from '../src/services/retention/retentionEngine'
+import { getVariant } from '../src/services/abTesting'
+import { getSocialProofStat, getActivationCelebration, getDaysSinceActivation } from '../src/services/retention/retentionEngine'
 import type { UserState } from '../src/types'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
@@ -57,6 +58,17 @@ export default function LiveMissionScreen() {
   const sessionStartRef = useRef<number>(0)
   const handleCompleteRef = useRef<(() => void) | null>(null)
 
+  // Recalibrate elapsed time when app returns from background (BUG #2)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active' && activeSession?.status === 'active') {
+        const realElapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+        setElapsedSeconds(realElapsed)
+      }
+    })
+    return () => subscription.remove()
+  }, [activeSession?.status])
+
   const activeMission = missions.find(m => m.status === 'active')
   const activeMicro = microMissions.find(mm => mm.status === 'in_progress' || mm.status === 'pending')
 
@@ -67,7 +79,10 @@ export default function LiveMissionScreen() {
       timerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
         setElapsedSeconds(elapsed)
-        updateSessionTimer(activeSession.id, elapsed)
+        // Only sync to store every 10 seconds to reduce re-renders
+        if (elapsed % 10 === 0) {
+          updateSessionTimer(activeSession.id, elapsed)
+        }
         if (elapsed >= activeSession.planned_minutes * 60) {
           handleCompleteRef.current?.()
         }
@@ -96,10 +111,8 @@ export default function LiveMissionScreen() {
     }
   }, [activeSession?.status])
 
-  // Keep handleCompleteRef in sync with latest handleComplete
-  useEffect(() => {
-    handleCompleteRef.current = handleComplete
-  }, [handleComplete])
+  // Keep handleCompleteRef in sync — direct assignment (BUG #3)
+  // (moved below handleComplete definition to avoid before-declaration error)
 
   const handleComplete = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -128,14 +141,28 @@ export default function LiveMissionScreen() {
       }, 3500)
     }
 
-    // Paywall trigger: session 20 on free plan
-    if (sessionCount >= 20 && plan === 'free') {
-      setTimeout(() => setShowPaywall(true), 2000)
-    }
+    // Paywall trigger: session 5+ or Day 14 for free users
+    const paywallTrigger = getVariant('paywall_trigger')
+    const daysSinceActivation = getDaysSinceActivation(retentionState)
+    const shouldShowPaywall = (sessionCount >= paywallTrigger || daysSinceActivation >= 14) && plan === 'free'
 
     // Start post-session flow
     startFlow(activeSession ?? { mode: 'focus', actual_seconds: elapsedSeconds, planned_minutes: selectedDuration, status: 'completed' })
   }, [completeSession, sessionNotes, elapsedSeconds, activeSession, sessionCount, plan, startFlow, selectedDuration])
+
+  // Show paywall after post-session flow completes
+  const retentionStateForPaywall = useAppStore(s => s.retentionState)
+  useEffect(() => {
+    const daysSince = getDaysSinceActivation(retentionStateForPaywall)
+    const paywallTrigger = getVariant('paywall_trigger')
+    if (postSessionState.isComplete && (sessionCount >= paywallTrigger || daysSince >= 14) && plan === 'free') {
+      const timer = setTimeout(() => setShowPaywall(true), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [postSessionState.isComplete, sessionCount, plan, retentionStateForPaywall])
+
+  // Direct assignment — no useEffect timing gap (BUG #3)
+  handleCompleteRef.current = handleComplete
 
   const handleAbandon = () => {
     Alert.alert(
@@ -217,6 +244,8 @@ export default function LiveMissionScreen() {
   const progress = Math.min(elapsedSeconds / totalPlanned, 1)
   const timeLeft = Math.max(totalPlanned - elapsedSeconds, 0)
   const isActive = activeSession.status === 'active'
+  const isLast60 = timeLeft <= 60 && timeLeft > 0
+  const timerColor = isLast60 ? colors.accent.green : colors.brand[500]
 
   return (
     <Screen scrollable={false} gradient={['rgba(108,58,237,0.08)', 'transparent']}>
@@ -227,7 +256,7 @@ export default function LiveMissionScreen() {
             <>
               <Text style={styles.missionTitle}>{activeMission.title}</Text>
               {activeMicro && (
-                <Text style={styles.microTitle}>→ {activeMicro.title}</Text>
+                <Text style={styles.microTitle}>→ {activeMicro.exactAction || activeMicro.title}</Text>
               )}
             </>
           )}
@@ -238,7 +267,7 @@ export default function LiveMissionScreen() {
 
         {/* Timer */}
         <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
-          <ProgressRing progress={progress} size={220} strokeWidth={8} color={colors.brand[500]}>
+          <ProgressRing progress={progress} size={220} strokeWidth={8} color={timerColor}>
             <View style={styles.timerDisplay}>
               <Text accessibilityRole="timer" accessibilityLiveRegion="polite" accessibilityLabel={`${Math.floor(timeLeft / 60)} minutes and ${timeLeft % 60} seconds remaining`} style={[typography.mono, { color: colors.text.primary, fontSize: 48 }]}
                 adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1}>
@@ -250,6 +279,17 @@ export default function LiveMissionScreen() {
             </View>
           </ProgressRing>
         </Animated.View>
+
+        {/* Mid-session encouragement */}
+        {elapsedSeconds > 0 && elapsedSeconds < totalPlanned && (
+          <Text style={styles.encouragement}>
+            {progress < 0.25 ? "You started. That's the hardest part." :
+             progress < 0.5 ? 'Building momentum...' :
+             progress < 0.75 ? "Halfway there. You're doing it." :
+             progress < 0.9 ? 'Almost done. Keep going.' :
+             'Final stretch!'}
+          </Text>
+        )}
 
         {/* Distraction counter */}
         {activeSession.distractions_captured > 0 && (
@@ -273,15 +313,20 @@ export default function LiveMissionScreen() {
               style={[styles.mainBtn, { width: 72, height: 72, borderRadius: 36 }]}
               icon={<Play size={28} color={colors.text.inverse} />} />
           )}
-          <Button title="Done" onPress={() => setShowSalvage(true)} variant="secondary" size="sm" accessibilityLabel="Complete session"
+          <Button title="Finish Early" onPress={() => setShowSalvage(true)} variant="secondary" size="sm" accessibilityLabel="Complete session"
             icon={<CheckCircle2 size={16} color={colors.accent.green} />} />
         </View>
 
         {/* Capture Distraction */}
         {!showDistractionCapture ? (
-          <TouchableOpacity style={styles.captureBtn} onPress={() => setShowDistractionCapture(true)} accessibilityLabel="Capture a distraction">
-            <Brain size={16} color={colors.text.tertiary} />
-            <Text style={styles.captureBtnText}>Capture a distraction</Text>
+          <TouchableOpacity
+            style={styles.distractionFab}
+            onPress={() => setShowDistractionCapture(true)}
+            accessibilityLabel="Capture a distraction"
+            accessibilityHint="Opens a text field to note what distracted you"
+          >
+            <Brain size={20} color={colors.brand[400]} />
+            <Text style={styles.distractionFabText}>Capture</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.distractionInput}>
@@ -541,6 +586,16 @@ const styles = StyleSheet.create({
   distractionTextInput: { ...typography.bodyMedium, color: colors.text.primary, minHeight: 40 },
   distractionActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs },
   captureSubmit: { ...typography.bodyMedium, color: colors.brand[400], fontWeight: '600' },
+  encouragement: { ...typography.bodySmall, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.sm, fontStyle: 'italic' },
+  distractionFab: {
+    position: 'absolute', bottom: 100, right: 20,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    backgroundColor: colors.bg.elevated, borderRadius: radius.full,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    borderWidth: 1, borderColor: colors.brand[500] + '33',
+    ...shadows.md,
+  },
+  distractionFabText: { ...typography.caption, color: colors.brand[400] },
 
   salvageOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
   salvageModal: {
