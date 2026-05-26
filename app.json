@@ -1,0 +1,113 @@
+{
+  "expo": {
+    "name": "INTENT",
+    "slug": "intent-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#060608"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.intent.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Microphone access for voice coaching and body-double mode",
+        "UIBackgroundModes": ["audio", "fetch", "processing"],
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["intent"]
+          }
+        ],
+        "LSApplicationQueriesSchemes": ["intent"],
+        "NSUserTrackingUsageDescription": "INTENT uses analytics to improve your focus experience. All data stays on-device unless you opt in to sharing."
+      },
+      "associatedDomains": ["applinks:intentapp.com"]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#060608"
+      },
+      "package": "com.intent.app",
+      "versionCode": 1,
+      "permissions": [
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "intentapp.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6C3AED",
+          "sounds": [
+            "./assets/sounds/rescue-prompt.wav",
+            "./assets/sounds/drift-check.wav",
+            "./assets/sounds/session-complete.wav"
+          ],
+          "mode": "production"
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "INTENT uses Face ID to protect your focus data."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "intent",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "owner": "your-org",
+    "privacy": "unlisted",
+    "primaryColor": "#6C3AED",
+    "platforms": ["ios", "android"],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#6C3AED",
+      "iosDisplayInForeground": true,
+      "androidMode": "production",
+      "androidDefaultChannel": "default"
+    }
+  }
+}
