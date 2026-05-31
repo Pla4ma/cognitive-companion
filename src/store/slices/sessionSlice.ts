@@ -8,6 +8,10 @@ import type { MissionSession } from '../../types'
 import type { CrossSliceActions } from '../types'
 import { uid } from '../../utils/uid'
 import { updateSessionAnalytics } from '../../services/analytics'
+import { syncWidgetData } from '../../services/widgets/widgetSync'
+import { donateShortcut } from '../../services/shortcuts'
+import { endLiveActivity } from '../../services/liveActivity'
+import { processEmergentEvent } from '../../services/systemBridge'
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
@@ -124,6 +128,35 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
           trackSystemEvent({ type: 'session_completed', session: latestSession }, response)
         }
       } catch {}
+      // Wire: sync widget data
+      try { syncWidgetData(cross()) } catch {}
+      // Wire: donate shortcut
+      try { donateShortcut('rescue_me').catch(() => {}) } catch {}
+      // Wire: end live activity
+      try { endLiveActivity().catch(() => {}) } catch {}
+      // Wire: emergent event chains
+      try {
+        const emergentContext = cross()
+        const emergentSession = emergentContext.sessions[0]
+        if (emergentSession) {
+          processEmergentEvent(
+            { type: 'session_completed', session: emergentSession },
+            {
+              retentionState: emergentContext.retentionState,
+              sessions: emergentContext.sessions,
+              patterns: emergentContext.resistancePatterns,
+              distractions: emergentContext.distractions,
+              momentumEvents: emergentContext.momentumEvents,
+              missions: emergentContext.missions,
+              microMissions: emergentContext.microMissions,
+              brainDumps: emergentContext.brainDumps,
+              userPatterns: null,
+              quietHours: null,
+              userName: emergentContext.user?.display_name ?? null,
+            },
+          )
+        }
+      } catch {}
     },
 
     abandonSession: () => {
@@ -138,6 +171,8 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
         sessions: [abandoned, ...s.sessions],
         activeSession: null,
       }))
+      // Wire: end live activity on abandon
+      try { endLiveActivity().catch(() => {}) } catch {}
     },
 
     cancelSession: () => {
@@ -171,6 +206,10 @@ export const createSessionSlice: StateCreator<SessionSlice, [], [], SessionSlice
       const minutes = Math.round(session.actual_seconds / 60)
       state.recordRetention('rescue_salvaged', { state: session.mode, minutes: minutes || session.planned_minutes, protocol: 'salvage' })
       updateSessionAnalytics(false, session.mode, 'salvage', minutes || session.planned_minutes)
+      // Wire: sync widget data after salvage
+      try { syncWidgetData(cross()) } catch {}
+      // Wire: end live activity after salvage
+      try { endLiveActivity().catch(() => {}) } catch {}
     },
 
     getSessionsToday: () => {

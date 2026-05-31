@@ -16,7 +16,13 @@ import { showSessionCompleteNotification, requestNotificationPermissionsWithCont
 import { getVariant } from '../src/services/abTesting'
 import { getSocialProofStat, getActivationCelebration, getDaysSinceActivation } from '../src/services/retention/retentionEngine'
 import type { UserState } from '../src/types'
-import * as Haptics from 'expo-haptics'
+import { HapticPatterns } from '../src/services/haptics'
+import { startFocusLiveActivity, updateLiveActivity, endLiveActivity } from '../src/services/liveActivity'
+import { syncWidgetData } from '../src/services/widgets/widgetSync'
+import { handleRapidCompletion } from '../src/services/edgeCases'
+import { formatUserFacingError } from '../src/services/errorHandling'
+import { motion, getAnimationDuration } from '../src/theme/motion'
+import { announceForScreenReader, shouldAnimate } from '../src/utils/accessibility'
 import { useRouter } from 'expo-router'
 import { usePostSessionFlow } from '../src/hooks/usePostSessionFlow'
 import { useProgressiveProfiling } from '../src/hooks/useProgressiveProfiling'
@@ -47,6 +53,8 @@ export default function LiveMissionScreen() {
   const [socialProof, setSocialProof] = useState<string | null>(null)
   const [activationCelebration, setActivationCelebration] = useState<{ show: boolean; message: string; submessage: string } | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [tickCounter, setTickCounter] = useState(0)
+  const [rapidCompletionMessage, setRapidCompletionMessage] = useState<string | null>(null)
 
   const { postSessionState, startFlow, advanceMoment, skipToEnd } = usePostSessionFlow()
 
@@ -69,6 +77,17 @@ export default function LiveMissionScreen() {
     return () => subscription.remove()
   }, [activeSession?.status])
 
+  // Rescue haptic when first distraction/checkpoint appears
+  const prevDistractionCountRef = useRef(0)
+  useEffect(() => {
+    const count = activeSession?.distractions_captured ?? 0
+    if (count > 0 && prevDistractionCountRef.current === 0) {
+      HapticPatterns.rescue()
+      announceForScreenReader('Checkpoint captured')
+    }
+    prevDistractionCountRef.current = count
+  }, [activeSession?.distractions_captured])
+
   const activeMission = missions.find(m => m.status === 'active')
   const activeMicro = microMissions.find(mm => mm.status === 'in_progress' || mm.status === 'pending')
 
@@ -79,9 +98,20 @@ export default function LiveMissionScreen() {
       timerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
         setElapsedSeconds(elapsed)
+        setTickCounter(prev => prev + 1)
         // Only sync to store every 10 seconds to reduce re-renders
         if (elapsed % 10 === 0) {
           updateSessionTimer(activeSession.id, elapsed)
+        }
+        // Update live activity every 30 seconds
+        if (elapsed % 30 === 0 && elapsed > 0) {
+          const minutesRemaining = Math.max(Math.ceil((activeSession.planned_minutes * 60 - elapsed) / 60), 0)
+          updateLiveActivity(minutesRemaining, 'active').catch(() => {})
+        }
+        // Tick haptic for last 10 seconds countdown
+        const remaining = activeSession.planned_minutes * 60 - elapsed
+        if (remaining > 0 && remaining <= 10) {
+          HapticPatterns.tick()
         }
         if (elapsed >= activeSession.planned_minutes * 60) {
           handleCompleteRef.current?.()
@@ -100,8 +130,8 @@ export default function LiveMissionScreen() {
         if (!reduceMotion) {
           Animated.loop(
             Animated.sequence([
-              Animated.timing(pulseAnim, { toValue: 1.02, duration: 2000, useNativeDriver: true }),
-              Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+              Animated.timing(pulseAnim, { toValue: 1.02, duration: getAnimationDuration(motion.duration.breathe), useNativeDriver: true }),
+              Animated.timing(pulseAnim, { toValue: 1, duration: getAnimationDuration(motion.duration.breathe), useNativeDriver: true }),
             ])
           ).start()
         }
@@ -116,12 +146,26 @@ export default function LiveMissionScreen() {
 
   const handleComplete = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
-    completeSession(sessionNotes)
-    // Triple pulse haptic for completion celebration
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 100)
-    setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 200)
+    try {
+      completeSession(sessionNotes)
+    } catch (error) {
+      const userError = formatUserFacingError(error)
+      Alert.alert(userError.title, userError.message)
+    }
+    // Completion haptic + screen reader announcement
+    HapticPatterns.success()
+    announceForScreenReader('Session complete. Great work!')
     showSessionCompleteNotification(Math.round(elapsedSeconds / 60), 0)
+
+    // End live activity and sync widget data
+    endLiveActivity().catch(() => {})
+    syncWidgetData(useAppStore.getState() as Parameters<typeof syncWidgetData>[0]).catch(() => {})
+
+    // Check for rapid completion (suspiciously fast sessions)
+    const rapidResult = handleRapidCompletion(elapsedSeconds)
+    if (rapidResult.suspicious && rapidResult.message) {
+      setRapidCompletionMessage(rapidResult.message)
+    }
 
     // Show social proof stat after completion
     const proof = getSocialProofStat(
@@ -170,8 +214,8 @@ export default function LiveMissionScreen() {
       'Your effort still counts. We can salvage what you did.',
       [
         { text: 'Keep Going', style: 'cancel' },
-        { text: 'Salvage', style: 'default', onPress: () => { salvageSession(sessionNotes); setShowSalvage(false) } },
-        { text: 'Abandon', style: 'destructive', onPress: abandonSession },
+        { text: 'Salvage', style: 'default', onPress: () => { HapticPatterns.gentle(); salvageSession(sessionNotes); setShowSalvage(false) } },
+        { text: 'Abandon', style: 'destructive', onPress: () => { HapticPatterns.gentle(); endLiveActivity().catch(() => {}); abandonSession() } },
       ]
     )
   }
@@ -179,7 +223,7 @@ export default function LiveMissionScreen() {
   const handleCaptureDistraction = () => {
     if (distractionInput.trim()) {
       captureDistraction(distractionInput.trim())
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      HapticPatterns.tap()
       setDistractionInput('')
       setShowDistractionCapture(false)
     }
@@ -211,7 +255,7 @@ export default function LiveMissionScreen() {
               accessibilityState={{ selected: selectedDuration === d }}
               accessibilityLabel={`${d} minutes`}
               style={[styles.durationChip, selectedDuration === d && styles.durationChipActive]}
-              onPress={() => { setSelectedDuration(d); Haptics.selectionAsync() }}
+              onPress={() => { setSelectedDuration(d); HapticPatterns.selection() }}
             >
               <Text style={[styles.durationChipText, selectedDuration === d && styles.durationChipTextActive]}>{d}m</Text>
             </TouchableOpacity>
@@ -220,7 +264,13 @@ export default function LiveMissionScreen() {
 
         <Button
           title="Start Mission"
-          onPress={() => startSession(activeMission?.id, activeMicro?.id, 'focus', selectedDuration)}
+          onPress={() => {
+            HapticPatterns.action()
+            announceForScreenReader('Focus session started')
+            startSession(activeMission?.id, activeMicro?.id, 'focus', selectedDuration)
+            const missionTitle = activeMission?.title ?? 'Focus Session'
+            startFocusLiveActivity(selectedDuration, missionTitle).catch(() => {})
+          }}
           variant="gradient"
           size="lg"
           style={{ width: '100%', marginTop: spacing.lg }}
@@ -228,7 +278,12 @@ export default function LiveMissionScreen() {
 
         <Button
           title="Just Show Me the Timer"
-          onPress={() => startSession(undefined, undefined, 'focus', Math.min(selectedDuration, 5))}
+          onPress={() => {
+            HapticPatterns.breathe()
+            announceForScreenReader('Body double session started')
+            startSession(undefined, undefined, 'focus', Math.min(selectedDuration, 5))
+            startFocusLiveActivity(Math.min(selectedDuration, 5), 'Body Double').catch(() => {})
+          }}
           variant="ghost"
           size="sm"
           style={{ width: '100%', marginTop: spacing.sm }}
@@ -410,6 +465,16 @@ export default function LiveMissionScreen() {
             </View>
           </View>
         </BlurView>
+      )}
+
+      {/* Rapid Completion Notice */}
+      {rapidCompletionMessage && (
+        <View style={styles.socialProofContainer}>
+          <Text style={styles.socialProofText}>{rapidCompletionMessage}</Text>
+          <TouchableOpacity onPress={() => setRapidCompletionMessage(null)}>
+            <Text style={styles.socialProofDismiss}>✕</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {showPaywall && (

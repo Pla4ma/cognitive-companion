@@ -462,6 +462,41 @@ export function getSocialProofStat(
   return proofs[Math.floor(Math.random() * proofs.length)]
 }
 
+/**
+ * Generate a user-data-driven social proof stat from retention state.
+ * Falls back to null if not enough data for a meaningful stat.
+ */
+export function getDynamicSocialProof(retentionState: RetentionState): string | null {
+  const { totalRescues, totalSalvages, momentumWindows } = retentionState
+
+  // Need at least 3 rescues for meaningful stats
+  if (totalRescues < 3) return null
+
+  const completionRate = Math.round(((totalRescues - totalSalvages) / totalRescues) * 100)
+
+  // Weekly momentum stat
+  if (momentumWindows.last7Days >= 5) {
+    return `${momentumWindows.last7Days} rescues this week — you're in the top 15% of users.`
+  }
+
+  // Completion rate stat
+  if (totalRescues >= 5 && completionRate >= 80) {
+    return `${completionRate}% completion rate across ${totalRescues} rescues. You finish what you start.`
+  }
+
+  // Salvage appreciation
+  if (totalSalvages > 0 && totalRescues >= 5) {
+    return `You've salvaged ${totalSalvages} sessions. That's not failing — that's being honest and still showing up.`
+  }
+
+  // Milestone stat
+  if (totalRescues === 10) return '10 rescues. You\'re building something real.'
+  if (totalRescues === 25) return '25 rescues. This is a pattern now, not a phase.'
+  if (totalRescues === 50) return '50 rescues. You\'ve rewired your default from drift to action.'
+
+  return null
+}
+
 // ── Paywall Trigger ──────────────────────────────────────────
 
 export type PaywallTrigger =
@@ -917,9 +952,10 @@ export function getPostSessionMoments(
     })
   }
 
-  // Social proof — show after 3+ rescues
+  // Social proof — show after 3+ rescues. Prefer dynamic stat, fall back to static.
   if (state.totalRescues >= 3) {
-    const socialProof = getSocialProofStat(
+    const dynamicStat = getDynamicSocialProof(state)
+    const socialProof = dynamicStat ?? getSocialProofStat(
       sessionJustCompleted.notes ?? null,
       sessionJustCompleted.status === 'completed',
     )

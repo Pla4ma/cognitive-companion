@@ -1,6 +1,7 @@
 // ══════════════════════════════════════════════════════════════
 // INTENT — Zustand Store v3 (Sliced)
 // Composed from 6 domain slices with migration support
+// For granular per-field subscriptions, see optimizedSelectors.ts
 // ══════════════════════════════════════════════════════════════
 
 import { create } from 'zustand'
@@ -14,7 +15,10 @@ import {
   type RetentionState as RetentionEngineState,
 } from '../services/retention/retentionEngine'
 
+import { AppState as RNAppState } from 'react-native'
 import { syncStoreData } from '../services/sync'
+import { flushPendingWrites } from './debouncedWrite'
+import { syncWidgetData } from '../services/widgets/widgetSync'
 import { createUserSlice, UserSlice } from './slices/userSlice'
 import { createSessionSlice, SessionSlice } from './slices/sessionSlice'
 import { createMissionSlice, MissionSlice } from './slices/missionSlice'
@@ -164,6 +168,25 @@ useAppStore.subscribe((state) => {
         retentionState: state.retentionState,
       }
       void syncStoreData(partialized)
+      syncWidgetData({
+        sessions: state.sessions,
+        patterns: state.resistancePatterns,
+        momentumEvents: state.momentumEvents,
+        missions: state.missions,
+        userName: state.user?.name,
+      }).catch(() => {})
     }
   }
 })
+
+// ── Flush Debounced Writes on Background ─────────────────────
+// When the app goes to background, any in-flight debounced MMKV
+// writes (e.g. from rapid session timer ticks) are flushed
+// immediately so no data is lost before the OS suspends the process.
+if (typeof RNAppState?.addEventListener === 'function') {
+  RNAppState.addEventListener('change', (nextState) => {
+    if (nextState === 'background' || nextState === 'inactive') {
+      flushPendingWrites()
+    }
+  })
+}

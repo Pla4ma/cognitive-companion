@@ -9,9 +9,11 @@ interface CardProps {
   variant?: 'default' | 'elevated' | 'subtle' | 'glow';
   onPress?: () => void;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: 'button' | 'link' | 'none';
 }
 
-export const Card = React.memo(function Card({ children, style, variant = 'default', onPress, accessibilityLabel }: CardProps) {
+export const Card = React.memo(function Card({ children, style, variant = 'default', onPress, accessibilityLabel, accessibilityHint, accessibilityRole }: CardProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handleIn = useCallback(() => {
@@ -30,7 +32,7 @@ export const Card = React.memo(function Card({ children, style, variant = 'defau
   };
 
   const content = (
-    <Animated.View style={{ transform: [{ scale }] }} accessibilityLabel={accessibilityLabel}>
+    <Animated.View style={{ transform: [{ scale }] }}>
       <BlurView intensity={glass.medium.blur} style={[styles.base, variantMap[variant], style]}>
         {children}
       </BlurView>
@@ -39,12 +41,19 @@ export const Card = React.memo(function Card({ children, style, variant = 'defau
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} onPressIn={handleIn} onPressOut={handleOut} accessibilityRole="button">
+      <Pressable
+        onPress={onPress}
+        onPressIn={handleIn}
+        onPressOut={handleOut}
+        accessibilityRole={accessibilityRole ?? 'button'}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+      >
         {content}
       </Pressable>
     );
   }
-  return content;
+  return <View accessible={true} accessibilityLabel={accessibilityLabel}>{content}</View>;
 });
 
 const styles = StyleSheet.create({

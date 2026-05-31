@@ -84,6 +84,7 @@ export interface CoachContext {
   recentAvoidance: AvoidanceState | null
   driftRisk?: string
   dangerWindows?: number
+  sessionCount: number
 }
 
 /**

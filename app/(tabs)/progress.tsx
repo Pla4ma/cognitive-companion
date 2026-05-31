@@ -3,10 +3,10 @@
 // Weekly narrative, stats, intelligence panel, heatmap
 // ══════════════════════════════════════════════════════════════
 
-import React, { useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
-import { TrendingUp, Share2, Brain, Calendar } from 'lucide-react-native'
+import { TrendingUp, Share2, Brain, Calendar, Sparkles, Lightbulb } from 'lucide-react-native'
 import { MMKV } from 'react-native-mmkv'
 import { Share } from 'react-native'
 import { useAppStore } from '../../src/store'
@@ -20,6 +20,16 @@ import { useDriftIntelligence } from '../../src/hooks/useDriftIntelligence'
 import { IntelligenceCard } from '../../src/components/IntelligenceCard'
 import { DangerWindowHeatmap } from '../../src/components/DangerWindowHeatmap'
 import { scheduleWeeklyNarrative } from '../../src/services/notifications'
+import { generateWeeklyStory, minutesToHumanExperience } from '../../src/engine/humanMetrics'
+import { generatePatternName } from '../../src/engine/patternNaming'
+import { generateAnalyticsInsights } from '../../src/engine/analyticsFeedback'
+import { HapticPatterns } from '../../src/services/haptics'
+import { getEmotionalColor } from '../../src/theme/emotionalColors'
+import { syncWidgetData } from '../../src/services/widgets/widgetSync'
+import { appendPrivacyAudit } from '../../src/services/privacyAudit'
+import type { AnalyticsInsight } from '../../src/engine/analyticsFeedback'
+import type { PatternName } from '../../src/engine/patternNaming'
+import type { UserState } from '../../src/types/moment'
 
 const storage = new MMKV()
 
@@ -68,6 +78,11 @@ export default function ProgressScreen() {
     }
   }, [weeklyNarrative, sessions.length, weekKey])
 
+  // ── Sync widget data when progress screen is focused ──
+  useEffect(() => {
+    syncWidgetData(useAppStore.getState()).catch(() => {})
+  }, [])
+
   // ── Weekly stats ──
   const weekAgo = Date.now() - 7 * 86400000
   const weekSessions = useMemo(
@@ -110,10 +125,48 @@ export default function ProgressScreen() {
   // ── Intelligence (7+ sessions) ──
   const intelligence = useDriftIntelligence()
 
+  // ── Weekly Story (generateWeeklyStory — rich narrative) ──
+  const weeklyStory = useMemo(() => {
+    return generateWeeklyStory(weekSessions, user?.display_name ?? '')
+  }, [weekSessions, user?.display_name])
+
+  // ── Pattern Name (7+ sessions) ──
+  const patternName = useMemo<PatternName | null>(() => {
+    return generatePatternName(sessions, resistancePatterns)
+  }, [sessions, resistancePatterns])
+
+  // ── Analytics Insights ──
+  const analyticsInsights = useMemo<AnalyticsInsight[]>(() => {
+    return generateAnalyticsInsights(sessions, resistancePatterns)
+  }, [sessions, resistancePatterns])
+
+  // ── State distribution for emotional colors ──
+  const stateDistribution = useMemo(() => {
+    const counts: Partial<Record<UserState, number>> = {}
+    for (const s of weekSessions) {
+      counts[s.mode] = (counts[s.mode] ?? 0) + 1
+    }
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([state, count]) => ({
+        state: state as UserState,
+        count,
+        pct: weekSessions.length > 0 ? Math.round((count / weekSessions.length) * 100) : 0,
+        color: getEmotionalColor(state as UserState),
+      }))
+  }, [weekSessions])
+
   // ── Recent sessions ──
   const recentSessions = sessions.slice(0, 10)
 
   const handleShare = async () => {
+    // Haptic feedback on share
+    HapticPatterns.success().catch(() => {})
+
+    // Track share in privacy audit
+    appendPrivacyAudit({ action: 'data_shared', detail: 'Weekly share card', source: 'progress_screen' }).catch(() => {})
+
     const minutes = Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60)
 
     // Try image share first
@@ -145,6 +198,31 @@ export default function ProgressScreen() {
     <Screen gradient={['rgba(139,92,246,0.04)', 'transparent']}>
       <Text accessibilityRole="header" style={styles.title}>Progress</Text>
 
+      {/* ── Weekly Story Headline (prominent first thing) ── */}
+      {weeklyStory && (
+        <Card variant="default" style={styles.storyHeadlineCard}>
+          <Text style={styles.storyHeadline}>{weeklyStory.headline}</Text>
+          <Text style={styles.storyHighlight}>{weeklyStory.highlight}</Text>
+        </Card>
+      )}
+
+      {/* ── Pattern Name Card (7+ sessions) ── */}
+      {patternName && (
+        <Card variant="default" style={styles.patternCard}>
+          <View style={styles.patternHeader}>
+            <Sparkles size={16} color={colors.brand[400]} />
+            <Text style={styles.patternLabel}>YOUR PATTERN</Text>
+          </View>
+          <View style={styles.patternContent}>
+            <Text style={styles.patternIcon}>{patternName.icon}</Text>
+            <View style={styles.patternTextBlock}>
+              <Text style={styles.patternName}>{patternName.name}</Text>
+              <Text style={styles.patternDescription}>{patternName.description}</Text>
+            </View>
+          </View>
+        </Card>
+      )}
+
       {/* ── Weekly Narrative ── */}
       <Card variant="default" style={styles.narrativeCard}>
         <View style={styles.narrativeHeader}>
@@ -152,20 +230,27 @@ export default function ProgressScreen() {
             <Calendar size={14} color={colors.brand[400]} />
             <Text style={styles.narrativeLabel}>THIS WEEK</Text>
           </View>
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare} accessibilityLabel="Share this week's progress">
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare} accessibilityLabel="Share this week's progress" activeOpacity={0.7}>
             <Share2 size={16} color={colors.brand[400]} />
             <Text style={styles.shareBtnText}>Share this week</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.narrativeText}>{weeklyNarrative}</Text>
+        {weeklyStory ? (
+          <Text style={styles.narrativeText}>{weeklyStory.body}</Text>
+        ) : (
+          <Text style={styles.narrativeText}>{weeklyNarrative}</Text>
+        )}
         <Text style={styles.narrativeTimestamp}>Generated {new Date().toLocaleDateString()}</Text>
       </Card>
 
       {/* ── Stats Row ── */}
       <View style={styles.statsRow}>
-        <Card variant="default" style={styles.statCard} accessibilityLabel={`${rescuedCount} rescued this week`}>
+        <Card variant="default" style={styles.statCard} accessibilityLabel={`${rescuedCount} rescued this week — about ${minutesToHumanExperience(Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60))}`}>
           <Text style={styles.statValue}>{rescuedCount}</Text>
           <Text style={styles.statLabel}>Rescued this week</Text>
+          <Text style={styles.statSublabel}>
+            ≈ {minutesToHumanExperience(Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60))}
+          </Text>
         </Card>
         <Card variant="default" style={styles.statCard} accessibilityLabel={`${completionRate} percent completion rate`}>
           <Text style={styles.statValue}>{completionRate}%</Text>
@@ -255,7 +340,66 @@ export default function ProgressScreen() {
                 <Text style={styles.resistanceStatValue}>{resistanceAnalysis.trend}</Text>
               </View>
             </View>
+            {/* ── Emotional State Distribution ── */}
+            {stateDistribution.length > 0 && (
+              <View style={styles.stateDistribution}>
+                <Text style={styles.stateDistributionLabel}>Emotional state breakdown</Text>
+                {stateDistribution.map((s) => (
+                  <View key={s.state} style={styles.stateRow}>
+                    <View style={[styles.stateDot, { backgroundColor: s.color.primary }]} />
+                    <Text style={[styles.stateName, { color: s.color.primary }]}>{s.state}</Text>
+                    <View style={styles.stateBarTrack}>
+                      <View
+                        style={[
+                          styles.stateBarFill,
+                          {
+                            width: `${s.pct}%`,
+                            backgroundColor: s.color.primary,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.statePct, { color: s.color.primary }]}>{s.pct}%</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </Card>
+        </>
+      )}
+
+      {/* ── Analytics Insights ── */}
+      {analyticsInsights.length > 0 && (
+        <>
+          <SectionHeader title="Insights" icon={<Lightbulb size={16} color={colors.accent.orange} />} />
+          {analyticsInsights.slice(0, 3).map((insight, i) => {
+            const typeColors: Record<string, string> = {
+              pattern: colors.accent.purple,
+              anomaly: colors.accent.orange,
+              milestone: colors.accent.green,
+              regression: colors.accent.red,
+            }
+            const typeIcons: Record<string, string> = {
+              pattern: '🔄',
+              anomaly: '⚡',
+              milestone: '🏆',
+              regression: '📉',
+            }
+            return (
+              <Card key={i} variant="default" style={styles.insightCard}>
+                <View style={styles.insightHeader}>
+                  <Text style={styles.insightIcon}>{typeIcons[insight.type] ?? '💡'}</Text>
+                  <Text style={[styles.insightType, { color: typeColors[insight.type] ?? colors.text.secondary }]}>
+                    {insight.type.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.insightMessage}>{insight.message}</Text>
+                {insight.actionable && insight.suggestedAction && (
+                  <Text style={styles.insightAction}>→ {insight.suggestedAction}</Text>
+                )}
+              </Card>
+            )
+          })}
         </>
       )}
 
@@ -308,8 +452,11 @@ export default function ProgressScreen() {
           rescues={rescuedCount}
           minutes={Math.round(weekSessions.reduce((sum, s) => sum + s.actual_seconds, 0) / 60)}
           completionRate={completionRate}
-          narrative={weeklyNarrative}
+          narrative={weeklyStory?.body ?? weeklyNarrative}
           userName={user?.display_name ?? 'User'}
+          headline={weeklyStory?.headline}
+          patternName={patternName?.name}
+          patternIcon={patternName?.icon}
         />
       </View>
 
@@ -323,8 +470,66 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   title: { ...typography.headline, color: colors.text.primary, marginBottom: spacing.lg },
 
+  // Story Headline
+  storyHeadlineCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.brand[500] + '10',
+    borderWidth: 1,
+    borderColor: colors.brand[500] + '25',
+  },
+  storyHeadline: {
+    ...typography.h2,
+    color: colors.brand[300],
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  storyHighlight: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+
+  // Pattern Name
+  patternCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  patternHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  patternLabel: {
+    ...typography.labelSmall,
+    color: colors.text.secondary,
+    letterSpacing: 1,
+  },
+  patternContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  patternIcon: {
+    fontSize: 36,
+  },
+  patternTextBlock: {
+    flex: 1,
+  },
+  patternName: {
+    ...typography.h3,
+    color: colors.text.primary,
+    marginBottom: spacing.xxs,
+  },
+  patternDescription: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    lineHeight: 20,
+  },
+
   // Narrative
-  narrativeCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
+  narrativeCard: { padding: spacing.lg, marginBottom: spacing.sm },
   narrativeHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm,
   },
@@ -342,10 +547,11 @@ const styles = StyleSheet.create({
   shareBtnText: { ...typography.caption, color: colors.brand[400] },
 
   // Stats
-  statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sectionGap },
+  statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sectionGap, marginTop: spacing.sm },
   statCard: { flex: 1, padding: spacing.md, alignItems: 'center' },
   statValue: { ...typography.h2, color: colors.text.primary },
   statLabel: { ...typography.caption, color: colors.text.tertiary, textAlign: 'center', marginTop: 2 },
+  statSublabel: { ...typography.caption, color: colors.brand[400], textAlign: 'center', marginTop: 2 },
 
   // 4-Week Trend
   trendCard: { padding: spacing.lg, marginBottom: spacing.sectionGap },
@@ -371,6 +577,81 @@ const styles = StyleSheet.create({
   resistanceStat: { flex: 1, alignItems: 'center' },
   resistanceStatLabel: { ...typography.caption, color: colors.text.tertiary },
   resistanceStatValue: { ...typography.bodySmall, color: colors.text.primary, marginTop: 2, fontWeight: '600' },
+
+  // State Distribution (emotional colors)
+  stateDistribution: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.subtle,
+  },
+  stateDistributionLabel: {
+    ...typography.labelSmall,
+    color: colors.text.tertiary,
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+  },
+  stateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  stateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  stateName: {
+    ...typography.caption,
+    width: 80,
+    textTransform: 'capitalize',
+  },
+  stateBarTrack: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.border.subtle,
+    overflow: 'hidden',
+  },
+  stateBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  statePct: {
+    ...typography.caption,
+    width: 32,
+    textAlign: 'right',
+  },
+
+  // Analytics Insights
+  insightCard: {
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  insightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    marginBottom: spacing.xs,
+  },
+  insightIcon: {
+    fontSize: 14,
+  },
+  insightType: {
+    ...typography.labelSmall,
+    letterSpacing: 0.5,
+  },
+  insightMessage: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+    lineHeight: 20,
+  },
+  insightAction: {
+    ...typography.bodySmall,
+    color: colors.brand[400],
+    marginTop: spacing.xs,
+  },
 
   // Recent Sessions
   sessionRow: { padding: spacing.md, marginBottom: spacing.xs },

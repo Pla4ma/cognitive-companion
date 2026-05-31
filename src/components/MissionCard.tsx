@@ -89,7 +89,13 @@ export const MissionCard = React.memo(function MissionCard({
   ).length;
 
   return (
-    <Card variant="default" onPress={() => onExpand(mission)} style={styles.card}>
+    <Card
+      variant="default"
+      onPress={() => onExpand(mission)}
+      style={styles.card}
+      accessibilityLabel={`${mission.title}, ${completedCount} of ${microMissions.length} steps, ${resistance.label}`}
+      accessibilityHint="Double tap to expand mission details"
+    >
       <View style={styles.inner}>
         {/* ── Header Row ── */}
         <View style={styles.headerRow}>
@@ -133,7 +139,7 @@ export const MissionCard = React.memo(function MissionCard({
 
         {/* ── Staleness Warning ── */}
         {isStale && (
-          <View style={styles.staleWarning}>
+          <View style={styles.staleWarning} accessibilityLabel={`${daysSince} days since last session`} accessibilityRole="alert">
             <Clock size={14} color={colors.warning} />
             <Text style={styles.staleText}>
               {daysSince} days since last session

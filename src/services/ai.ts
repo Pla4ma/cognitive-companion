@@ -24,12 +24,27 @@ function buildSystemPrompt(
     recentAvoidance: AvoidanceState | null
     driftRisk?: string
     dangerWindows?: number
+    sessionCount?: number
   }
 ): string {
   const styleGuide: Record<PushStyle, string> = {
     gentle: 'Be warm and understanding. Use soft language. Frame everything as suggestions, not demands. "You might want to..." "Perhaps try..."',
     firm: 'Be direct and clear. No hedging. "Do this." "Stop that." Still respectful, but no fluff.',
     emergency: 'Be urgent and commanding. Short sentences. Imperatives. "Now." "Move." "Stop thinking. Start doing."',
+  }
+
+  // ── Progress Tier: adapt coaching style to user experience level ──
+  const sessionCount = context.sessionCount ?? 0
+  const tier = sessionCount < 5 ? 'newcomer'
+    : sessionCount < 20 ? 'developing'
+    : sessionCount < 50 ? 'established'
+    : 'veteran'
+
+  const tierGuidance: Record<string, string> = {
+    newcomer: 'This person is new to INTENT. Keep responses extra short (2-3 sentences max). Focus on one tiny action. Celebrate everything. Don\'t explain the system — they\'ll learn by doing.',
+    developing: 'This person is building a pattern. You can reference their history. Note patterns emerging. Be encouraging but start being specific about their tendencies.',
+    established: 'This person knows the system. Skip basic explanations. Be more direct. Challenge them gently. Reference their actual data.',
+    veteran: 'This person is experienced. Be almost blunt. Reference their data aggressively. Push them harder. They can take it.',
   }
 
   // Build danger context for the AI
@@ -44,6 +59,8 @@ function buildSystemPrompt(
     : ''
 
   return `You are the Rescue Coach for the INTENT app. You are NOT a generic chatbot. You are an anti-avoidance specialist.
+
+COACHING TIER (${tier}): ${tierGuidance[tier]}
 
 YOUR CORE RULES:
 1. **ALWAYS be action-first.** Your first sentence must be a specific action. Not empathy first. Not explanation first. ACTION first.

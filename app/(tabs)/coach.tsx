@@ -16,7 +16,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  KeyboardAvoidingView, Platform, TouchableOpacity, Animated,
+  KeyboardAvoidingView, Platform, TouchableOpacity, Animated, LayoutAnimation,
 } from 'react-native'
 import { BlurView } from 'expo-blur'
 import {
@@ -34,7 +34,13 @@ import { coachStreamResponse, CoachContext } from '../../src/services/ai'
 import { DEFAULT_PRIVACY_SETTINGS } from '../../src/types/privacy'
 import { useAIQuota } from '../../src/hooks/useAIQuota'
 import { colors, spacing, radius, typography, shadows } from '../../src/theme'
+import { HapticPatterns } from '../../src/services/haptics'
+import { motion, getAnimationDuration } from '../../src/theme/motion'
+import { announceForScreenReader } from '../../src/utils/accessibility'
 import { Screen, Card, Button, EmptyState } from '../../src/components'
+import { isOnline } from '../../src/services/connectivity'
+import { handleAIError, formatUserFacingError } from '../../src/services/errorHandling'
+import { useOfflineCapable } from '../../src/hooks/useOfflineCapable'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -75,6 +81,7 @@ export default function CoachScreen() {
   const addMicroMission = useAppStore(s => s.addMicroMission)
   const consentLedger = useAppStore(s => s.consentLedger)
   const aiQuota = useAIQuota()
+  const { canUseAI, canRescue, isOnline: onlineStatus, offlineMessage } = useOfflineCapable()
 
   const [messages, setMessages] = useState<CoachMessage[]>([])
   const [inputText, setInputText] = useState('')
@@ -128,6 +135,8 @@ export default function CoachScreen() {
 
     // Danger alert — highest priority
     if (prediction && (prediction.currentRiskLevel === 'high' || prediction.currentRiskLevel === 'critical')) {
+      // Haptic alert when drift danger is detected
+      HapticPatterns.rescue()
       suggestions.push({
         id: 'danger_alert',
         type: 'danger_alert',
@@ -272,6 +281,7 @@ export default function CoachScreen() {
     recentAvoidance: prediction?.mostLikelyState || null,
     driftRisk: prediction?.currentRiskLevel || 'low',
     dangerWindows: profile?.dangerWindows.length || 0,
+    sessionCount: sessions.length,
   }), [user, momentumEvents, missions, sessions, prediction, profile])
 
   useEffect(() => {
@@ -311,8 +321,9 @@ export default function CoachScreen() {
   }, [isListening])
 
   const handleSend = useCallback(async () => {
-    if (!inputText.trim() || isStreaming) return
+    if (!inputText.trim() || isStreaming || !canUseAI) return
 
+    HapticPatterns.tap()
     // ── AI daily limit enforcement ──
     if (!aiQuota.canSendMessage) {
       setMessages(prev => [...prev, {
@@ -360,14 +371,21 @@ export default function CoachScreen() {
       recentAvoidance: contextData.recentAvoidance,
       driftRisk: contextData.driftRisk,
       dangerWindows: contextData.dangerWindows,
+      sessionCount: contextData.sessionCount,
     }
 
     try {
       // 30-second streaming timeout
       timeoutRef.current = setTimeout(() => {
+        const timeoutError = formatUserFacingError('The AI coach timed out.')
         setIsStreaming(false)
         setStreamingText('')
-        setMessages(prev => [...prev, { id: (Date.now() + 2).toString(), role: 'assistant', content: 'I took too long. Try again?', timestamp: new Date().toISOString() }])
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: `${timeoutError.message}${timeoutError.action ? ` ${timeoutError.action}?` : ''}`,
+          timestamp: new Date().toISOString(),
+        }])
       }, 30000)
 
       await coachStreamResponse(
@@ -376,9 +394,14 @@ export default function CoachScreen() {
         coachContext,
         consentLedger,
         DEFAULT_PRIVACY_SETTINGS,
-        (text) => setStreamingText(text),
+        (text) => {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+          setStreamingText(text)
+        },
         (fullText) => {
           clearTimeout(timeoutRef.current)
+          // Announce AI response for screen readers
+          announceForScreenReader(fullText)
           setMessages(prev => [...prev, {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
@@ -389,12 +412,16 @@ export default function CoachScreen() {
           setIsStreaming(false)
         },
       )
-    } catch {
+    } catch (error) {
       clearTimeout(timeoutRef.current)
+      const appError = handleAIError(error)
+      const userError = formatUserFacingError(appError)
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Something went wrong. Try again.',
+        content: appError.recoverable
+          ? `${userError.message}\n\n${appError.suggestedAction || ''}`
+          : userError.message,
         timestamp: new Date().toISOString(),
       }])
       setStreamingText('')
@@ -403,6 +430,7 @@ export default function CoachScreen() {
   }, [inputText, isStreaming, messages, contextData, user, consentLedger, aiQuota])
 
   const handleQuickAction = useCallback((suggestion: ActionSuggestion) => {
+    HapticPatterns.confirm()
     suggestion.onPress()
     // Add a user message to trigger AI response
     const actionMsg: CoachMessage = {
@@ -485,6 +513,12 @@ export default function CoachScreen() {
               <Trash2 size={18} color={colors.text.tertiary} />
             </TouchableOpacity>
           )}
+          {/* Offline indicator in header */}
+          {!onlineStatus && (
+            <View style={styles.offlineIndicator}>
+              <Text style={styles.offlineIndicatorText}>Offline</Text>
+            </View>
+          )}
         </View>
 
         {/* Messages */}
@@ -494,6 +528,19 @@ export default function CoachScreen() {
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Offline Banner */}
+          {!canUseAI && (
+            <View style={styles.offlineBanner}>
+              <Text style={styles.offlineBannerIcon}>📡</Text>
+              <View style={styles.offlineBannerContent}>
+                <Text style={styles.offlineBannerTitle}>You're offline</Text>
+                <Text style={styles.offlineBannerText}>
+                  AI coaching unavailable. Rescue sessions still work.
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Welcome + Action Suggestions */}
           {(!hasMessages || actionsExpanded) && (
             <View style={styles.welcomeSection}>
@@ -594,7 +641,7 @@ export default function CoachScreen() {
           <TouchableOpacity
             style={[styles.micBtn, isListening && styles.micBtnActive]}
             onPress={toggleVoiceInput}
-            disabled={isStreaming}
+            disabled={isStreaming || !canUseAI}
             accessibilityLabel={isListening ? 'Stop voice input' : 'Start voice input'}
             accessibilityRole="button"
           >
@@ -605,10 +652,10 @@ export default function CoachScreen() {
           <TouchableOpacity
             style={[styles.sendBtn, (!inputText.trim() || isStreaming) && styles.sendBtnDisabled]}
             onPress={handleSend}
-            disabled={!inputText.trim() || isStreaming}
+            disabled={!inputText.trim() || isStreaming || !canUseAI}
             accessibilityLabel="Send message"
           >
-            <Send size={20} color={inputText.trim() && !isStreaming ? colors.brand[400] : colors.text.disabled} />
+            <Send size={20} color={inputText.trim() && !isStreaming && canUseAI ? colors.brand[400] : colors.text.disabled} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -694,7 +741,7 @@ const styles = StyleSheet.create({
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface.card,
+    backgroundColor: colors.bg.card,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -728,7 +775,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.md,
-    backgroundColor: colors.surface.elevated,
+    backgroundColor: colors.bg.elevated,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border.subtle,
@@ -752,12 +799,12 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surface.card,
+    backgroundColor: colors.bg.card,
     borderBottomLeftRadius: spacing.xs,
   },
   systemBubble: {
     alignSelf: 'center',
-    backgroundColor: colors.surface.elevated,
+    backgroundColor: colors.bg.elevated,
     borderRadius: radius.sm,
   },
   messageText: {
@@ -786,7 +833,7 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     color: colors.text.primary,
-    backgroundColor: colors.surface.card,
+    backgroundColor: colors.bg.card,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -796,7 +843,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.surface.card,
+    backgroundColor: colors.bg.card,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -807,11 +854,51 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.surface.card,
+    backgroundColor: colors.bg.card,
     justifyContent: 'center',
     alignItems: 'center',
   },
   micBtnActive: {
     backgroundColor: colors.error + '20',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  offlineBannerIcon: {
+    fontSize: 20,
+    marginRight: spacing.sm,
+  },
+  offlineBannerContent: {
+    flex: 1,
+  },
+  offlineBannerTitle: {
+    ...typography.body,
+    color: '#92400E',
+    fontWeight: '700',
+  },
+  offlineBannerText: {
+    ...typography.caption,
+    color: '#A16207',
+    marginTop: 2,
+  },
+  offlineIndicator: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  offlineIndicatorText: {
+    ...typography.caption,
+    color: '#92400E',
+    fontWeight: '600',
   },
 })

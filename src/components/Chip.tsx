@@ -8,9 +8,11 @@ interface ChipProps {
   active: boolean;
   onPress: () => void;
   style?: ViewStyle;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export function Chip({ label, active, onPress, style }: ChipProps) {
+export function Chip({ label, active, onPress, style, accessibilityLabel, accessibilityHint }: ChipProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePress = useCallback(() => {
@@ -28,6 +30,8 @@ export function Chip({ label, active, onPress, style }: ChipProps) {
         onPress={handlePress}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={accessibilityHint ?? (active ? 'Selected. Double tap to deselect.' : 'Double tap to select.')}
         style={[
           styles.base,
           active ? styles.active : styles.inactive,

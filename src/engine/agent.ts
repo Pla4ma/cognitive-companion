@@ -102,9 +102,12 @@ function getTimeProfile(hour: number): { state: AvoidanceState; urgencyBoost: nu
 }
 
 // Per-state signal accumulators for escalation tracking.
+// ⚠️ WARNING: Module-level mutable state. Persists across JS bundle lifetime.
+// Intentional — drift detection accumulates across sessions in production.
 // Module-level because drift detection runs across invocations and needs to
 // remember the previous detected state to track consecutive same-state patterns.
 // Use `resetDriftDetectionState()` (exported) to clear between test runs.
+// In production, hot-reload may reset this — acceptable since detection rebuilds.
 let lastDetectedState: AvoidanceState | null = null
 let consecutiveSameStateCount = 0
 let lastDetectionHour = -1

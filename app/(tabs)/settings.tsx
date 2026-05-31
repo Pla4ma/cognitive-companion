@@ -9,9 +9,13 @@ import { X, User, Bell, Palette, Download, Trash2, ChevronRight, Heart, Star, Lo
 import { useRouter } from 'expo-router'
 import { useAppStore } from '../../src/store'
 import { getCoachPersona, PushStyle } from '../../src/types'
-import { createEmptyRetentionState } from '../../src/services/retention/retentionEngine'
 import { colors, spacing, radius, typography } from '../../src/theme'
 import { Screen, Card, SectionHeader } from '../../src/components'
+import { exportAllData } from '../../src/services/dataExport'
+import { deleteAllData } from '../../src/services/dataDeletion'
+import { appendPrivacyAudit, getPrivacyAuditLog } from '../../src/services/privacyAudit'
+import * as Sharing from 'expo-sharing'
+import * as FileSystem from 'expo-file-system'
 
 type SettingsTab = 'main' | 'trust' | 'data'
 
@@ -42,28 +46,41 @@ export default function SettingsScreen() {
     ])
   }
 
+  const handleExportData = async () => {
+    try {
+      const json = await exportAllData()
+      const fileUri = FileSystem.cacheDirectory + 'intent-export.json'
+      await FileSystem.writeAsStringAsync(fileUri, json)
+      appendPrivacyAudit({ action: 'data_exported', detail: 'Full JSON export', source: 'settings' })
+      await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Export Your Data' })
+    } catch {
+      Alert.alert('Export Failed', 'Could not export your data. Please try again.')
+    }
+  }
+
+  const handleViewPrivacyLog = () => {
+    const log = getPrivacyAuditLog()
+    if (log.length === 0) {
+      Alert.alert('Privacy Log', 'No privacy events recorded yet.')
+      return
+    }
+    const recent = log.slice(-10).reverse()
+    const lines = recent.map(e =>
+      `${new Date(e.timestamp).toLocaleString()}\n${e.action}: ${e.detail}`
+    ).join('\n\n')
+    Alert.alert('Recent Privacy Log', lines)
+  }
+
   const handleDeleteData = () => {
     Alert.alert('Delete All Data', 'This will permanently delete all your missions, sessions, and patterns. This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete Everything',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
           try {
-            // Clear all data in one atomic setState call
-            useAppStore.setState({
-              sessions: [],
-              activeSession: null,
-              missions: [],
-              microMissions: [],
-              resistancePatterns: [],
-              distractions: [],
-              brainDumps: [],
-              momentumEvents: [],
-              sessionCount: 0,
-              skipCount: 0,
-              retentionState: createEmptyRetentionState(),
-            })
+            appendPrivacyAudit({ action: 'data_deleted', detail: 'User initiated full deletion', source: 'settings' })
+            await deleteAllData()
             Alert.alert('Deleted', 'All data has been deleted.')
           } catch {
             Alert.alert('Error', 'Failed to delete all data. Please try again.')
@@ -184,10 +201,10 @@ export default function SettingsScreen() {
         {tab === 'data' && (
           <>
             <Card variant="default" style={styles.dataCard}>
-              <TouchableOpacity style={styles.dataRow}>
-                <Download size={18} color={colors.brand[400]} />
-                <Text style={styles.dataLabel}>Export Your Data</Text>
-                <ChevronRight size={16} color={colors.text.tertiary} />
+            <TouchableOpacity style={styles.dataRow} onPress={handleExportData}>
+              <Download size={18} color={colors.brand[400]} />
+              <Text style={styles.dataLabel}>Export Your Data</Text>
+              <ChevronRight size={16} color={colors.text.tertiary} />
               </TouchableOpacity>
             <TouchableOpacity style={styles.dataRow} onPress={() => router.push('/memory')}>
               <Database size={18} color={colors.brand[400]} />
@@ -198,6 +215,11 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.dataRow} onPress={handleDeleteData}>
                 <Trash2 size={18} color={colors.error} />
                 <Text style={[styles.dataLabel, { color: colors.error }]}>Delete All Data</Text>
+                <ChevronRight size={16} color={colors.text.tertiary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.dataRow} onPress={handleViewPrivacyLog}>
+                <Eye size={18} color={colors.brand[400]} />
+                <Text style={styles.dataLabel}>View Privacy Log</Text>
                 <ChevronRight size={16} color={colors.text.tertiary} />
               </TouchableOpacity>
             </Card>

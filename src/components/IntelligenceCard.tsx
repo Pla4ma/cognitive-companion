@@ -99,7 +99,11 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, 
   const comebackRate = totalSessions > 0 ? 1 - totalDriftSlots / totalSessions : 0;
 
   return (
-    <Card variant="elevated" style={styles.card}>
+    <Card
+      variant="elevated"
+      style={styles.card}
+      accessibilityLabel={`Your patterns: ${profile.totalDataPoints} sessions analyzed`}
+    >
       {/* ── Header ── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -113,7 +117,7 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, 
 
       {/* ── Danger Window ── */}
       {topDanger && (
-        <View style={styles.section}>
+        <View style={styles.section} accessibilityLabel={`Top danger window: ${DAY_NAMES[topDanger.dayOfWeek]} ${formatHour(topDanger.startHour)} to ${formatHour(topDanger.endHour)}, ${topDanger.riskLevel} risk, ${Math.round(topDanger.riskScore * 100)}% drift rate`}>
           <View style={styles.sectionHeader}>
             <Clock size={14} color={colors.text.tertiary} />
             <Text style={styles.sectionLabel}>TOP DANGER WINDOW</Text>
@@ -158,7 +162,7 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, 
 
       {/* ── Top Resistance Pattern ── */}
       {topResistance && (
-        <View style={styles.section}>
+        <View style={styles.section} accessibilityLabel={`Top battle: ${STATE_LABELS[topResistance.state] || topResistance.state} with ${BLOCKER_LABELS[topResistance.blocker] || topResistance.blocker} blocker, ${topResistance.frequency} times, ${Math.round(topResistance.successRate * 100)}% win rate`}>
           <View style={styles.sectionHeader}>
             <Shield size={14} color={colors.text.tertiary} />
             <Text style={styles.sectionLabel}>TOP BATTLE</Text>
@@ -185,7 +189,7 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, 
       )}
 
       {/* ── Comeback Rate ── */}
-      <View style={styles.section}>
+      <View style={styles.section} accessibilityLabel={`Comeback rate: ${Math.round(comebackRate * 100)}%, trend ${prediction.recentTrend}`}>
         <View style={styles.sectionHeader}>
           <TrendingUp size={14} color={colors.text.tertiary} />
           <Text style={styles.sectionLabel}>COMEBACK RATE</Text>
@@ -204,7 +208,7 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({ profile, 
       </View>
 
       {/* ── Current Risk Bar ── */}
-      <View style={styles.riskBarSection}>
+      <View style={styles.riskBarSection} accessibilityLabel={`Current risk level: ${prediction.currentRiskLevel}, ${Math.round(prediction.currentRisk * 100)}%`}>
         <View style={styles.riskBarHeader}>
           <Text style={styles.riskBarLabel}>Current risk</Text>
           <Text

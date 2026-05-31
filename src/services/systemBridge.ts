@@ -8,13 +8,18 @@
 // but disconnected. With it, the app feels alive.
 // ══════════════════════════════════════════════════════════════
 
-import type { MissionSession, ResistancePattern, Distraction, MomentumEvent, Mission, MicroMission, BrainDump, UserState } from '../types'
+import type { MissionSession, ResistancePattern, Distraction, MomentumEvent, Mission, MicroMission, BrainDump, UserState, CompiledMission } from '../types'
 import type { RetentionState } from './retention/retentionEngine'
 import { detectComeback, getSocialProofStat, getActivationCelebration, generateWeeklyNarrative } from './retention/retentionEngine'
 import type { DriftPrediction, DangerWindow, UserIntelligenceProfile } from '../engine/predictiveEngine'
 import { predictDrift, buildIntelligenceProfile } from '../engine/predictiveEngine'
 import { scheduleOptimalTime, type NotificationType, type UserNotificationPatterns } from './notificationScheduler'
 import type { QuietHoursConfig } from '../types/ambient'
+import { compileMission } from '../engine/missionCompiler'
+import { getProtocolForState, type RescueProtocolId } from '../types/rescue'
+import { generateComebackMessage, type ComebackMessage } from '../engine/humanMetrics'
+import { generatePatternName, type PatternName } from '../engine/patternNaming'
+import { getPendingBrainDumpItems } from './retention/retentionEngine'
 
 // ── Prescription Types ─────────────────────────────────────
 
@@ -445,4 +450,215 @@ export function getRecommendedNotificationSchedule(
   }
 
   return recommendations
+}
+
+// ══════════════════════════════════════════════════════════════
+// EMERGENT EXPERIENCE CHAINS
+// These fire when specific events create multi-step reactive flows.
+// Each chain returns typed SystemActions the UI can execute.
+// ══════════════════════════════════════════════════════════════
+
+// ── System Action Types ──────────────────────────────────────
+
+export type SystemAction =
+  | { type: 'show_brain_dump_to_mission'; pendingItems: string[]; reminderScheduled: boolean }
+  | { type: 'show_precompiled_mission'; mission: CompiledMission; dangerWindow: DangerWindow; minutesUntil: number }
+  | { type: 'show_comeback_celebration'; comeback: ComebackMessage; daysAway: number }
+  | { type: 'show_pattern_milestone'; milestone: number; patternName: PatternName }
+  | { type: 'schedule_reminder'; notificationType: NotificationType; copy: string; delayMs: number }
+  | { type: 'no_action' }
+
+// ── Chain 1: Brain Dump → Mission ────────────────────────────
+// When brain dumps are captured, suggest converting them to missions
+// and schedule a follow-up reminder for 24h later.
+
+function handleBrainDumpToMissionChain(
+  event: Extract<SystemEvent, { type: 'brain_dump_captured' }>,
+  context: SystemContext,
+): SystemAction[] {
+  const actions: SystemAction[] = []
+  const pending = getPendingBrainDumpItems(context.brainDumps)
+
+  if (pending.count > 0) {
+    actions.push({
+      type: 'show_brain_dump_to_mission',
+      pendingItems: pending.items,
+      reminderScheduled: true,
+    })
+
+    // Schedule 24h reminder to convert brain dumps to missions
+    actions.push({
+      type: 'schedule_reminder',
+      notificationType: 'rescue',
+      copy: `You have ${pending.count} item${pending.count !== 1 ? 's' : ''} from your brain dump. Ready to turn one into a tiny mission?`,
+      delayMs: 24 * 60 * 60 * 1000, // 24 hours
+    })
+  }
+
+  return actions
+}
+
+// ── Chain 2: Danger Window → Pre-compiled Mission ────────────
+// When app opens and a danger window is approaching (within 60 min),
+// pre-compile a mission for the likely state so it's ready instantly.
+
+function handleDangerWindowPrecompileChain(
+  event: Extract<SystemEvent, { type: 'app_opened' }>,
+  context: SystemContext,
+): SystemAction[] {
+  const actions: SystemAction[] = []
+  const { sessions, patterns, distractions, momentumEvents, missions, microMissions, brainDumps } = context
+
+  if (sessions.length < 5) return actions
+
+  let prediction: DriftPrediction | null = null
+  try {
+    prediction = predictDrift({ sessions, patterns, distractions, momentumEvents, missions, microMissions, brainDumps })
+  } catch {
+    return actions
+  }
+
+  if (!prediction?.nextDangerWindow) return actions
+
+  const window = prediction.nextDangerWindow
+  const now = new Date()
+  const windowStart = new Date(now)
+  windowStart.setHours(window.startHour, 0, 0, 0)
+  if (windowStart <= now) windowStart.setDate(windowStart.getDate() + 1)
+
+  const minutesUntil = Math.round((windowStart.getTime() - now.getTime()) / 60000)
+
+  // Only pre-compile if danger window is within 60 minutes
+  if (minutesUntil > 60 || minutesUntil < 0) return actions
+
+  // Determine the likely state and pre-compile a mission
+  const likelyState = window.primaryState
+  const protocolId = getProtocolForState(likelyState)
+
+  try {
+    const compiled = compileMission({
+      state: likelyState,
+      blocker: prediction.mostLikelyBlocker !== 'unknown' ? prediction.mostLikelyBlocker : null,
+      energy: 'medium',
+      availableMinutes: 5,
+      contextText: null,
+      threadId: null,
+      previousFailures: [],
+      previousSuccesses: [],
+      protocolId,
+      privacyPolicy: 'local_only',
+    })
+
+    actions.push({
+      type: 'show_precompiled_mission',
+      mission: compiled,
+      dangerWindow: window,
+      minutesUntil,
+    })
+  } catch {
+    // Never crash from pre-compilation — silently skip
+  }
+
+  return actions
+}
+
+// ── Chain 3: Comeback → Celebration ──────────────────────────
+// When a comeback is detected, generate a personalized celebration
+// using the humanMetrics module for warm, contextual messaging.
+
+function handleComebackCelebrationChain(
+  event: Extract<SystemEvent, { type: 'comeback_detected' }>,
+  context: SystemContext,
+): SystemAction[] {
+  const actions: SystemAction[] = []
+
+  const comeback = generateComebackMessage(event.daysAway)
+
+  actions.push({
+    type: 'show_comeback_celebration',
+    comeback,
+    daysAway: event.daysAway,
+  })
+
+  return actions
+}
+
+// ── Chain 4: Pattern Milestone ───────────────────────────────
+// When session count hits milestones (10, 25, 50, 100),
+// generate a pattern name if the user qualifies.
+
+const PATTERN_MILESTONES = [10, 25, 50, 100] as const
+
+function handlePatternMilestoneChain(
+  event: Extract<SystemEvent, { type: 'session_completed' | 'session_salvaged' }>,
+  context: SystemContext,
+): SystemAction[] {
+  const actions: SystemAction[] = []
+  const { retentionState, sessions, patterns } = context
+  const totalRescues = retentionState.totalRescues
+
+  // Check if we just hit a milestone
+  const isMilestone = PATTERN_MILESTONES.some(m => m === totalRescues)
+  if (!isMilestone) return actions
+
+  // Try to generate a pattern name
+  const patternName = generatePatternName(sessions, patterns)
+  if (!patternName) return actions
+
+  actions.push({
+    type: 'show_pattern_milestone',
+    milestone: totalRescues,
+    patternName,
+  })
+
+  return actions
+}
+
+// ── Main Emergent Event Processor ────────────────────────────
+
+/**
+ * Processes emergent experience chains — multi-step reactive flows
+ * that fire in response to specific system events.
+ *
+ * Returns typed SystemActions the UI can execute directly.
+ * Each chain is independent; multiple chains can fire for one event.
+ */
+export function processEmergentEvent(
+  event: SystemEvent,
+  context: SystemContext,
+): SystemAction[] {
+  const actions: SystemAction[] = []
+
+  switch (event.type) {
+    case 'brain_dump_captured': {
+      actions.push(...handleBrainDumpToMissionChain(event, context))
+      break
+    }
+
+    case 'app_opened': {
+      actions.push(...handleDangerWindowPrecompileChain(event, context))
+      break
+    }
+
+    case 'comeback_detected': {
+      actions.push(...handleComebackCelebrationChain(event, context))
+      break
+    }
+
+    case 'session_completed':
+    case 'session_salvaged': {
+      actions.push(...handlePatternMilestoneChain(event, context))
+      break
+    }
+
+    default:
+      break
+  }
+
+  // If no chain fired, return a single no_action
+  if (actions.length === 0) {
+    actions.push({ type: 'no_action' })
+  }
+
+  return actions
 }

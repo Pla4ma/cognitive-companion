@@ -71,7 +71,7 @@ export const DangerWindowHeatmap = React.memo(function DangerWindowHeatmap({ tim
   }, [timeSlots]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityLabel="Danger window heatmap showing drift risk by day and hour" accessibilityRole="image">
       {/* Horizontal scroll for the grid */}
       <ScrollView
         horizontal
@@ -105,6 +105,8 @@ export const DangerWindowHeatmap = React.memo(function DangerWindowHeatmap({ tim
                 const bg = getCellColor(slot);
                 return (
                   <View
+                    accessible={true}
+                    accessibilityLabel={`${DAY_LABELS[dayIdx]} ${formatHour(hour)}: ${slot ? (slot.totalSessions > 0 ? `${Math.round(slot.driftRate * 100)}% drift rate` : 'no data') : 'no data'}`}
                     key={hour}
                     style={[
                       styles.cell,
@@ -210,3 +212,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 });
+
+function formatHour(h: number): string {
+  if (h === 0) return '12am';
+  if (h === 12) return '12pm';
+  return h < 12 ? `${h}am` : `${h - 12}pm`;
+}

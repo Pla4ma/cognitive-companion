@@ -1,25 +1,30 @@
 // ══════════════════════════════════════════════════════════════
-// INTENT — Home Screen v4 (Phase 30)
-// Anti-drift agent home. One decisive screen. No dashboard museum.
-// Uses v4 engines: runAntiDriftAgent, compileMission, personalDriftGraph
+// INTENT — Home Screen v5 (Pull Mechanic)
+// Anti-drift agent home with pattern naming, daily insights,
+// weekly stories, emotional colors, and motion system.
 // ══════════════════════════════════════════════════════════════
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, Dimensions, InteractionManager, AccessibilityInfo,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, Dimensions, InteractionManager, AccessibilityInfo, Share,
 } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, SlideInDown } from 'react-native-reanimated'
 import { useRouter, type Href } from 'expo-router'
 import {
-  Shield, Brain, ChevronRight, Play, Flame, TrendingUp,
+  Shield, Brain, ChevronRight, Play, Flame, TrendingUp, Settings,
 } from 'lucide-react-native'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '../../src/store'
 import { colors, spacing, radius, typography, shadows, layout } from '../../src/theme'
+import { getEmotionalColor } from '../../src/theme/emotionalColors'
+import { motion } from '../../src/theme/motion'
+import { HapticPatterns } from '../../src/services/haptics'
 import { Screen, Card } from '../../src/components'
 import { AnimatedRescueButton } from '../../src/components/AnimatedRescueButton'
 import { compileMission } from '../../src/engine/missionCompiler'
 import { getProtocolForState, RESCUE_PROTOCOLS } from '../../src/types/rescue'
+import { generatePatternName, generateInsightOfTheDay, type PatternName } from '../../src/engine/patternNaming'
+import { minutesToHumanExperience, generateWeeklyStory, generateComebackMessage, type WeeklyStory, type ComebackMessage } from '../../src/engine/humanMetrics'
 import {
   getPendingBrainDumpItems,
   getRetentionDay,
@@ -30,20 +35,22 @@ import {
   shouldShowDay30Commitment,
 } from '../../src/services/retention/retentionEngine'
 import type { UserState, EnergyLevel } from '../../src/types'
-import * as Haptics from 'expo-haptics'
 import { getHomeIntelligence, type HomeIntelligence } from '../../src/services/systemBridge'
+import { handleNoSessionsYet, handleHighAbandonRate, handleLongAbsence, detectBurnoutPattern } from '../../src/services/edgeCases'
+import { getDataConfidence } from '../../src/services/populationPriors'
+import { formatUserFacingError } from '../../src/services/errorHandling'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-const STATE_CHIPS: { id: UserState; emoji: string; label: string; color: string }[] = [
-  { id: 'avoiding', emoji: '🙈', label: 'Avoiding', color: '#EF4444' },
-  { id: 'overwhelmed', emoji: '🌊', label: 'Overwhelmed', color: '#F59E0B' },
-  { id: 'stuck', emoji: '🫠', label: 'Stuck', color: '#8B5CF6' },
-  { id: 'tired', emoji: '😴', label: 'Tired', color: '#6366F1' },
-  { id: 'distracted', emoji: '🦋', label: 'Distracted', color: '#EC4899' },
-  { id: 'anxious', emoji: '😰', label: 'Anxious', color: '#F97316' },
-  { id: 'scattered', emoji: '🌪️', label: 'Scattered', color: '#14B8A6' },
-  { id: 'ready', emoji: '🚀', label: 'Ready', color: '#10B981' },
+const STATE_CHIPS: { id: UserState; emoji: string; label: string }[] = [
+  { id: 'avoiding', emoji: '🙈', label: 'Avoiding' },
+  { id: 'overwhelmed', emoji: '🌊', label: 'Overwhelmed' },
+  { id: 'stuck', emoji: '🫠', label: 'Stuck' },
+  { id: 'tired', emoji: '😴', label: 'Tired' },
+  { id: 'distracted', emoji: '🦋', label: 'Distracted' },
+  { id: 'anxious', emoji: '😰', label: 'Anxious' },
+  { id: 'scattered', emoji: '🌪️', label: 'Scattered' },
+  { id: 'ready', emoji: '🚀', label: 'Ready' },
 ]
 
 const riskColors: Record<string, string> = { critical: '#EF4444', high: '#F59E0B', moderate: '#F97316', low: '#10B981' }
@@ -56,19 +63,20 @@ function getStateProtocolHint(state: UserState): string {
 // ── Animated State Chip ─────────────────────────────────────
 
 function AnimatedStateChip({ chip, selected, onPress }: {
-  chip: { id: string; emoji: string; label: string; color: string }
+  chip: { id: string; emoji: string; label: string }
   selected: boolean
   onPress: () => void
 }) {
   const scale = useSharedValue(1)
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
+  const eColor = getEmotionalColor(chip.id as UserState)
 
   return (
-    <Animated.View style={[styles.stateChip, animStyle, selected && { borderColor: chip.color, backgroundColor: chip.color + '15' }]}>
+    <Animated.View style={[styles.stateChip, animStyle, selected && { borderColor: eColor.primary, backgroundColor: eColor.background }]}>
       <Pressable
         onPress={() => {
-          scale.value = withSpring(0.96, { damping: 15, stiffness: 400 }, () => {
-            scale.value = withSpring(1, { damping: 12, stiffness: 300 })
+          scale.value = withSpring(motion.scale.chipPress, motion.springs.stiff, () => {
+            scale.value = withSpring(1, motion.springs.gentle)
           })
           onPress()
         }}
@@ -78,7 +86,7 @@ function AnimatedStateChip({ chip, selected, onPress }: {
         accessibilityLabel={chip.label}
       >
         <Text style={styles.stateEmoji}>{chip.emoji}</Text>
-        <Text style={[styles.stateLabel, selected && { color: chip.color }]}>{chip.label}</Text>
+        <Text style={[styles.stateLabel, selected && { color: eColor.primary }]}>{chip.label}</Text>
       </Pressable>
     </Animated.View>
   )
@@ -152,8 +160,56 @@ export default function HomeScreen() {
       : 'cooling' as const,
   }), [retentionState.momentumWindows])
 
-  // ── Comeback Detection ──
-  const comeback = useMemo(() => getComebackStatus(), [sessions, retentionState.lastRescueDate])
+  // ── Comeback Detection (enhanced with personalized message) ──
+  const comeback = useMemo(() => {
+    const status = getComebackStatus()
+    if (status.isComeback && status.daysAway > 0) {
+      const msg = generateComebackMessage(status.daysAway)
+      return { ...status, message: `${msg.headline} — ${msg.body}` }
+    }
+    return status
+  }, [sessions, retentionState.lastRescueDate])
+
+  // ── Pattern Name (Pull Mechanic 1) ──
+  const patternName = useMemo(
+    () => generatePatternName(sessions, resistancePatterns),
+    [sessions, resistancePatterns],
+  )
+
+  // ── Daily Insight (Pull Mechanic 2) ──
+  const dailyInsight = useMemo(() => generateInsightOfTheDay(sessions), [sessions])
+
+  // ── Edge Case State ──
+  const edgeCaseState = useMemo(() => {
+    const onboarding = sessions.length === 0 ? handleNoSessionsYet() : null
+    const longAbsence = comeback.isComeback && comeback.daysAway >= 30
+      ? handleLongAbsence(comeback.daysAway)
+      : null
+    const abandonAlert = sessions.length >= 7 ? handleHighAbandonRate(sessions) : null
+    const burnout = sessions.length >= 7 ? detectBurnoutPattern(sessions) : null
+    return { onboarding, longAbsence, abandonAlert, burnout }
+  }, [sessions, comeback.isComeback, comeback.daysAway])
+
+  // ── Data Confidence ──
+  const dataConfidence = useMemo(() => getDataConfidence(sessions.length), [sessions.length])
+
+  // ── Weekly Story (Pull Mechanic 3) ──
+  const weeklyStory = useMemo(
+    () => generateWeeklyStory(sessions, user?.display_name ?? undefined),
+    [sessions, user?.display_name],
+  )
+
+  // ── Human-readable focus experience ──
+  const humanExperience = useMemo(() => minutesToHumanExperience(todayMinutes), [todayMinutes])
+
+  // ── Share handler ──
+  const handleShareStory = useCallback(async () => {
+    if (!weeklyStory) return
+    HapticPatterns.confirm()
+    try {
+      await Share.share({ message: weeklyStory.shareableText })
+    } catch {}
+  }, [weeklyStory])
 
   // ── Pending Brain Dumps (Loop 6) ──
   const pendingBrainDumps = useMemo(() => {
@@ -241,6 +297,7 @@ export default function HomeScreen() {
   }
   const showComeback = comeback.isComeback && showConditional()
   const showDayTracking = dayTrackingMessage && !comeback.isComeback && showConditional()
+  const showBurnout = edgeCaseState.burnout?.detected && showConditional()
   const showRisk = homeIntel.riskLevel && homeIntel.riskLevel !== 'low' && showConditional()
   const showBrainDumps = pendingBrainDumps.count > 0 && showConditional()
   const showInsight = homeIntel.riskMessage && !homeIntel.riskLevel && showConditional()
@@ -249,7 +306,7 @@ export default function HomeScreen() {
   // ── Handlers ──
   const handleStateSelect = useCallback((state: UserState) => {
     setSelectedState(state)
-    Haptics.selectionAsync()
+    HapticPatterns.selection()
     // Accessibility: announce selection for screen reader users
     const chip = STATE_CHIPS.find(c => c.id === state)
     if (chip) {
@@ -260,49 +317,56 @@ export default function HomeScreen() {
   const handleRescueMe = useCallback(() => {
     if (!selectedState) return
 
-    const protocolId = getProtocolForState(selectedState)
-    const result = compileMission({
-      state: selectedState,
-      blocker: null,
-      energy: 'medium',
-      availableMinutes: selectedMinutes,
-      contextText: null,
-      threadId: null,
-      previousFailures: [],
-      previousSuccesses: [],
-      protocolId,
-      privacyPolicy: 'local_only',
-    })
+    try {
+      const protocolId = getProtocolForState(selectedState)
+      const result = compileMission({
+        state: selectedState,
+        blocker: null,
+        energy: 'medium',
+        availableMinutes: selectedMinutes,
+        contextText: null,
+        threadId: null,
+        previousFailures: [],
+        previousSuccesses: [],
+        protocolId,
+        privacyPolicy: 'local_only',
+      })
 
-    const storeActions = useAppStore.getState()
+      const storeActions = useAppStore.getState()
 
-    // 1. Create the mission in the store so live screen can find it
-    const mission = storeActions.addMission(
-      truncateTitle(result.primaryMission.exactAction),
-      `Protocol: ${RESCUE_PROTOCOLS[protocolId].name} · State: ${selectedState}`,
-      STATE_CHIPS.find(c => c.id === selectedState)?.color ?? colors.brand[400],
-    )
+      // 1. Create the mission in the store so live screen can find it
+      const mission = storeActions.addMission(
+        truncateTitle(result.primaryMission.exactAction),
+        `Protocol: ${RESCUE_PROTOCOLS[protocolId].name} · State: ${selectedState}`,
+        getEmotionalColor(selectedState).primary,
+      )
 
-    // 2. Add the micro-mission so live screen shows exactAction
-    storeActions.addMicroMission(
-      mission.id,
-      result.primaryMission.exactAction,
-      result.primaryMission.completionCriteria ?? undefined,
-      selectedMinutes,
-    )
+      // 2. Add the micro-mission so live screen shows exactAction
+      storeActions.addMicroMission(
+        mission.id,
+        result.primaryMission.exactAction,
+        result.primaryMission.completionCriteria ?? undefined,
+        selectedMinutes,
+      )
 
-    // 3. Start the session linked to the mission
-    storeActions.startSession(mission.id, undefined, 'focus', selectedMinutes)
-    storeActions.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
+      // 3. Start the session linked to the mission
+      storeActions.startSession(mission.id, undefined, 'focus', selectedMinutes)
+      storeActions.addMomentumEvent('rescue_started', 5, `Rescue: ${selectedState}`)
 
-    // 4. Record retention event (activation path)
-    storeActions.recordRetention('rescue_started', { state: selectedState, minutes: selectedMinutes, protocol: protocolId })
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+      // 4. Record retention event (activation path)
+      storeActions.recordRetention('rescue_started', { state: selectedState, minutes: selectedMinutes, protocol: protocolId })
+      HapticPatterns.rescue()
 
-    router.push('/live')
+      router.push('/live')
+    } catch (err) {
+      const userErr = formatUserFacingError(err)
+      HapticPatterns.error()
+      console.warn(`[Rescue] ${userErr.title}: ${userErr.message}`)
+    }
   }, [selectedState, selectedMinutes, router])
 
   const handleQuickAction = useCallback((screen: Href) => {
+    HapticPatterns.tap()
     router.push(screen)
   }, [router])
 
@@ -311,8 +375,9 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>{greeting}</Text>
+            <Text style={styles.dataConfidence}>{dataConfidence.label}</Text>
             <View style={styles.headerMeta}>
               {momentum.last7Days > 0 && (
                 <View style={styles.momentumWindowPill}>
@@ -322,11 +387,22 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               )}
+              {momentum.last7Days > 0 && (
+                <Text style={styles.momentumExplanation}>rescues matter, not perfect days</Text>
+              )}
               <View style={styles.momentumPill}>
                 <Text style={styles.momentumText}>{weeklyMomentum} pts this week</Text>
               </View>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            style={styles.settingsBtn}
+            accessibilityLabel="Settings"
+            accessibilityRole="button"
+          >
+            <Settings size={22} color={colors.text.tertiary} />
+          </TouchableOpacity>
         </View>
 
         {/* Good Timing Banner */}
@@ -336,18 +412,74 @@ export default function HomeScreen() {
           </Card>
         )}
 
-        {/* Comeback Message (Loop 3) */}
+        {/* Comeback Message (Loop 3 — enhanced with personalized message) */}
         {showComeback && (
-          <Card variant="subtle" style={styles.comebackCard}>
-            <Text style={styles.comebackText}>{comeback.message}</Text>
-          </Card>
+          <Animated.View entering={SlideInDown.springify().damping(motion.springs.slow.damping)}>
+            <Card variant="subtle" style={[styles.comebackCard, comeback.daysAway > 7 ? { borderColor: colors.accent.green + '40' } : undefined]}>
+              <Text style={styles.comebackText}>{comeback.message}</Text>
+            </Card>
+          </Animated.View>
         )}
 
         {/* Day Tracking Message (Loop 4 - Momentum) */}
         {showDayTracking && (
-          <Card variant="subtle" style={styles.comebackCard}>
-            <Text style={styles.comebackText}>{dayTrackingMessage}</Text>
-          </Card>
+          <Animated.View entering={SlideInDown.delay(100).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.comebackCard}>
+              <Text style={styles.comebackText}>{dayTrackingMessage}</Text>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Onboarding Hint (Day 0 user) */}
+        {edgeCaseState.onboarding?.showOnboarding && (
+          <Animated.View entering={SlideInDown.delay(50).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.comebackCard}>
+              <Text style={styles.comebackText}>{edgeCaseState.onboarding.message}</Text>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Long Absence Message */}
+        {edgeCaseState.longAbsence && (
+          <Animated.View entering={SlideInDown.delay(75).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.comebackCard}>
+              <Text style={styles.comebackText}>{edgeCaseState.longAbsence.message}</Text>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Burnout Warning Card */}
+        {showBurnout && edgeCaseState.burnout?.message && (
+          <Animated.View entering={SlideInDown.delay(250).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.burnoutCard}>
+              <Text style={styles.burnoutText}>{edgeCaseState.burnout.message}</Text>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Pattern Name Card (Pull Mechanic 1) */}
+        {patternName && (
+          <Animated.View entering={SlideInDown.delay(150).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.patternCard}>
+              <View style={styles.patternHeader}>
+                <Text style={styles.patternIcon}>{patternName.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.patternTitle}>{patternName.name}</Text>
+                  <Text style={styles.patternDesc}>{patternName.description}</Text>
+                </View>
+              </View>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* Daily Insight Card (Pull Mechanic 2) */}
+        {dailyInsight && (
+          <Animated.View entering={SlideInDown.delay(200).springify().damping(motion.springs.gentle.damping)}>
+            <Card variant="subtle" style={styles.dailyInsightCard}>
+              <Text style={styles.dailyInsightEmoji}>💡</Text>
+              <Text style={styles.dailyInsightText}>{dailyInsight}</Text>
+            </Card>
+          </Animated.View>
         )}
 
         {/* Risk Indicator */}
@@ -372,8 +504,14 @@ export default function HomeScreen() {
 
         {/* Main Question */}
         <View style={styles.mainQuestion}>
-          <Text style={styles.mainQuestionTitle}>About to drift?</Text>
-          <Text style={styles.mainQuestionSub}>Pick the state. I'll shrink the action.</Text>
+          <Text style={styles.mainQuestionTitle}>
+            {edgeCaseState.onboarding?.showOnboarding ? 'Ready for your first rescue?' : 'About to drift?'}
+          </Text>
+          <Text style={styles.mainQuestionSub}>
+            {edgeCaseState.onboarding?.showOnboarding
+              ? 'Pick how you feel. Start with 2 minutes.'
+              : "Pick the state. I'll shrink the action."}
+          </Text>
         </View>
 
         {/* State Chips */}
@@ -400,7 +538,7 @@ export default function HomeScreen() {
                   accessibilityState={{ selected: selectedMinutes === min }}
                   accessibilityLabel={`${min} minutes`}
                   style={[styles.timeChip, selectedMinutes === min && styles.timeChipActive]}
-                  onPress={() => setSelectedMinutes(min)}
+                  onPress={() => { HapticPatterns.selection(); setSelectedMinutes(min) }}
                 >
                   <Text style={[styles.timeText, selectedMinutes === min && styles.timeTextActive]}>
                     {min}m
@@ -414,8 +552,19 @@ export default function HomeScreen() {
               visible={!!selectedState}
               protocolHint={selectedState ? `${getStateProtocolHint(selectedState)} • ${selectedMinutes} min` : ''}
               onPress={handleRescueMe}
+              accessibilityHint="Starts your rescue session based on your current state"
             />
           </Animated.View>
+        )}
+
+        {/* Abandon Rate Alert */}
+        {edgeCaseState.abandonAlert?.alert && (
+          <Card variant="subtle" style={styles.abandonCard}>
+            <Text style={styles.abandonText}>{edgeCaseState.abandonAlert.message}</Text>
+            {edgeCaseState.abandonAlert.suggestedAction && (
+              <Text style={styles.abandonAction}>{edgeCaseState.abandonAlert.suggestedAction}</Text>
+            )}
+          </Card>
         )}
 
         {/* Quick Actions */}
@@ -472,7 +621,7 @@ export default function HomeScreen() {
         <View style={styles.todayRow}>
           <View style={styles.todayStat}>
             <Text style={styles.todayValue}>{todayMinutes}m</Text>
-            <Text style={styles.todayLabel}>Focus today</Text>
+            <Text style={styles.todayLabel}>{humanExperience}</Text>
           </View>
           <View style={styles.todayStat}>
             <Text style={styles.todayValue}>{sessions.filter(s => s.started_at.slice(0, 10) === new Date().toISOString().slice(0, 10)).length}</Text>
@@ -484,12 +633,29 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Weekly Narrative */}
-        {showNarrative && (
-          <Card variant="subtle" style={styles.narrativeCard}>
-            <Text style={styles.narrativeLabel}>YOUR WEEK</Text>
-            <Text style={styles.narrativeText}>{homeIntel.weeklyNarrative}</Text>
-          </Card>
+        {/* Your Week in Words (Pull Mechanic 3) */}
+        {weeklyStory && (
+          <Animated.View entering={SlideInDown.delay(300).springify().damping(motion.springs.slow.damping)}>
+            <Card variant="subtle" style={styles.weeklyStoryCard}>
+              <View style={styles.weeklyStoryHeader}>
+                <Text style={styles.weeklyStoryTitle}>{weeklyStory.headline}</Text>
+                <TouchableOpacity onPress={handleShareStory} style={styles.shareBtn} accessibilityLabel="Share weekly story">
+                  <Text style={styles.shareBtnText}>Share</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.weeklyStoryHighlight}>{weeklyStory.highlight}</Text>
+              <Text style={styles.weeklyStoryBody}>{weeklyStory.body}</Text>
+            </Card>
+          </Animated.View>
+        )}
+        {/* Fallback: system narrative if no weekly story */}
+        {!weeklyStory && showNarrative && (
+          <Animated.View entering={SlideInDown.delay(300).springify().damping(motion.springs.slow.damping)}>
+            <Card variant="subtle" style={styles.narrativeCard}>
+              <Text style={styles.narrativeLabel}>YOUR WEEK</Text>
+              <Text style={styles.narrativeText}>{homeIntel.weeklyNarrative}</Text>
+            </Card>
+          </Animated.View>
         )}
 
         <View style={styles.bottomSpacer} />
@@ -500,7 +666,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: { paddingBottom: spacing.xl },
-  header: { marginBottom: spacing.lg },
+  header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.lg },
+  settingsBtn: { padding: spacing.sm, marginTop: 2 },
   greeting: { ...typography.headline, color: colors.text.primary, fontSize: 24 },
   headerMeta: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   momentumWindowPill: {
@@ -509,6 +676,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2, borderRadius: radius.full,
   },
   momentumWindowText: { ...typography.caption, color: colors.accent.green, fontWeight: '600' },
+  momentumExplanation: { ...typography.caption, color: colors.text.disabled, fontSize: 10, marginTop: 1, fontStyle: 'italic' },
   comebackCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
   comebackText: { ...typography.bodyMedium, color: colors.text.secondary, fontStyle: 'italic' },
 
@@ -600,8 +768,41 @@ const styles = StyleSheet.create({
   narrativeLabel: { ...typography.labelSmall, color: colors.text.tertiary, letterSpacing: 1, marginBottom: spacing.xs },
   narrativeText: { ...typography.bodyMedium, color: colors.text.secondary, lineHeight: 22 },
 
+  // Pattern Name Card (Pull Mechanic 1)
+  patternCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.brand[400] + '25' },
+  patternHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  patternIcon: { fontSize: 28 },
+  patternTitle: { ...typography.headline, color: colors.text.primary, fontSize: 16 },
+  patternDesc: { ...typography.bodySmall, color: colors.text.secondary, marginTop: 2, lineHeight: 18 },
+
+  // Daily Insight Card (Pull Mechanic 2)
+  dailyInsightCard: { flexDirection: 'row', alignItems: 'flex-start', padding: spacing.md, marginBottom: spacing.lg, gap: spacing.sm },
+  dailyInsightEmoji: { fontSize: 20, marginTop: 1 },
+  dailyInsightText: { ...typography.bodySmall, color: colors.text.secondary, flex: 1, lineHeight: 18, fontStyle: 'italic' },
+
+  // Weekly Story Card (Pull Mechanic 3)
+  weeklyStoryCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.brand[400] + '20' },
+  weeklyStoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  weeklyStoryTitle: { ...typography.headline, color: colors.text.primary, fontSize: 16, flex: 1 },
+  shareBtn: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs, borderRadius: radius.full, backgroundColor: colors.brand[400] + '15' },
+  shareBtnText: { ...typography.caption, color: colors.brand[400], fontWeight: '600' },
+  weeklyStoryHighlight: { ...typography.labelSmall, color: colors.brand[400], letterSpacing: 0.5, marginBottom: spacing.xs },
+  weeklyStoryBody: { ...typography.bodySmall, color: colors.text.secondary, lineHeight: 20 },
+
   // Pending brain dump content wrapper (extracted from inline)
   pendingDumpContent: { flex: 1, marginLeft: spacing.sm },
+
+  // Data Confidence
+  dataConfidence: { ...typography.caption, color: colors.text.disabled, marginTop: 2, fontStyle: 'italic' },
+
+  // Burnout Warning
+  burnoutCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: '#F59E0B30', backgroundColor: '#F59E0B08' },
+  burnoutText: { ...typography.bodySmall, color: '#92400E', lineHeight: 18 },
+
+  // Abandon Rate Alert
+  abandonCard: { padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accent.orange + '30' },
+  abandonText: { ...typography.bodySmall, color: colors.text.secondary, lineHeight: 18 },
+  abandonAction: { ...typography.caption, color: colors.accent.orange, fontWeight: '600' as const, marginTop: spacing.xs },
 
   // Bottom spacer (extracted from inline)
   bottomSpacer: { height: layout.tabBarHeight + spacing.lg },

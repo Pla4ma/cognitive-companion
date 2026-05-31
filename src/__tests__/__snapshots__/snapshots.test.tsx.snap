@@ -2,6 +2,8 @@
 
 exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty timeSlots 1`] = `
 <View
+  accessibilityLabel="Danger window heatmap showing drift risk by day and hour"
+  accessibilityRole="image"
   style={
     {
       "gap": 16,
@@ -407,6 +409,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="S 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -421,6 +425,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -435,6 +441,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -449,6 +457,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -463,6 +473,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -477,6 +489,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -491,6 +505,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -505,6 +521,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -519,6 +537,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -533,6 +553,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -547,6 +569,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -561,6 +585,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -575,6 +601,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -589,6 +617,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -603,6 +633,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -617,6 +649,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -631,6 +665,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -645,6 +681,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -659,6 +697,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -673,6 +713,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -687,6 +729,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -701,6 +745,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -715,6 +761,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -729,6 +777,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -777,6 +827,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="M 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -791,6 +843,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -805,6 +859,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -819,6 +875,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -833,6 +891,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -847,6 +907,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -861,6 +923,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -875,6 +939,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -889,6 +955,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -903,6 +971,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -917,6 +987,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -931,6 +1003,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -945,6 +1019,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -959,6 +1035,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -973,6 +1051,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -987,6 +1067,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1001,6 +1083,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1015,6 +1099,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1029,6 +1115,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1043,6 +1131,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1057,6 +1147,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1071,6 +1163,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1085,6 +1179,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1099,6 +1195,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="M 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1147,6 +1245,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="T 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1161,6 +1261,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1175,6 +1277,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1189,6 +1293,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1203,6 +1309,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1217,6 +1325,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1231,6 +1341,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1245,6 +1357,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1259,6 +1373,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1273,6 +1389,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1287,6 +1405,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1301,6 +1421,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1315,6 +1437,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1329,6 +1453,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1343,6 +1469,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1357,6 +1485,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1371,6 +1501,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1385,6 +1517,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1399,6 +1533,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1413,6 +1549,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1427,6 +1565,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1441,6 +1581,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1455,6 +1597,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1469,6 +1613,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1517,6 +1663,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="W 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1531,6 +1679,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1545,6 +1695,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1559,6 +1711,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1573,6 +1727,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1587,6 +1743,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1601,6 +1759,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1615,6 +1775,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1629,6 +1791,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1643,6 +1807,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1657,6 +1823,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1671,6 +1839,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1685,6 +1855,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1699,6 +1871,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1713,6 +1887,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1727,6 +1903,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1741,6 +1919,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1755,6 +1935,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1769,6 +1951,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1783,6 +1967,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1797,6 +1983,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1811,6 +1999,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1825,6 +2015,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1839,6 +2031,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="W 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -1887,6 +2081,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="T 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1901,6 +2097,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1915,6 +2113,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1929,6 +2129,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1943,6 +2145,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1957,6 +2161,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1971,6 +2177,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1985,6 +2193,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -1999,6 +2209,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2013,6 +2225,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2027,6 +2241,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2041,6 +2257,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2055,6 +2273,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2069,6 +2289,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2083,6 +2305,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2097,6 +2321,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2111,6 +2337,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2125,6 +2353,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2139,6 +2369,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2153,6 +2385,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2167,6 +2401,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2181,6 +2417,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2195,6 +2433,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2209,6 +2449,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="T 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2257,6 +2499,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="F 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2271,6 +2515,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2285,6 +2531,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2299,6 +2547,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2313,6 +2563,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2327,6 +2579,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2341,6 +2595,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2355,6 +2611,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2369,6 +2627,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2383,6 +2643,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2397,6 +2659,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2411,6 +2675,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2425,6 +2691,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2439,6 +2707,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2453,6 +2723,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2467,6 +2739,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2481,6 +2755,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2495,6 +2771,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2509,6 +2787,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2523,6 +2803,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2537,6 +2819,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2551,6 +2835,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2565,6 +2851,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2579,6 +2867,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="F 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2627,6 +2917,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           </Text>
         </View>
         <View
+          accessibilityLabel="S 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2641,6 +2933,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2655,6 +2949,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2669,6 +2965,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2683,6 +2981,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2697,6 +2997,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2711,6 +3013,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2725,6 +3029,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2739,6 +3045,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2753,6 +3061,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2767,6 +3077,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2781,6 +3093,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -2795,6 +3109,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2809,6 +3125,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2823,6 +3141,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2837,6 +3157,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2851,6 +3173,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2865,6 +3189,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2879,6 +3205,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2893,6 +3221,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2907,6 +3237,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2921,6 +3253,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2935,6 +3269,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -2949,6 +3285,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
           }
         />
         <View
+          accessibilityLabel="S 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3209,6 +3547,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with empty tim
 
 exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated timeSlots 1`] = `
 <View
+  accessibilityLabel="Danger window heatmap showing drift risk by day and hour"
+  accessibilityRole="image"
   style={
     {
       "gap": 16,
@@ -3614,6 +3954,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="S 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3628,6 +3970,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3642,6 +3986,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3656,6 +4002,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3670,6 +4018,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3684,6 +4034,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3698,6 +4050,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3712,6 +4066,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3726,6 +4082,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3740,6 +4098,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3754,6 +4114,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3768,6 +4130,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3782,6 +4146,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3796,6 +4162,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3810,6 +4178,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3824,6 +4194,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3838,6 +4210,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3852,6 +4226,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3866,6 +4242,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3880,6 +4258,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3894,6 +4274,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3908,6 +4290,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3922,6 +4306,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3936,6 +4322,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -3984,6 +4372,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="M 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -3998,6 +4388,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4012,6 +4404,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4026,6 +4420,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4040,6 +4436,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4054,6 +4452,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4068,6 +4468,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4082,6 +4484,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4096,6 +4500,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4110,6 +4516,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4124,6 +4532,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 10am: 17% drift rate"
+          accessible={true}
           style={
             [
               {
@@ -4138,6 +4548,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4152,6 +4564,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4166,6 +4580,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4180,6 +4596,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4194,6 +4612,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4208,6 +4628,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4222,6 +4644,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4236,6 +4660,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4250,6 +4676,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4264,6 +4692,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4278,6 +4708,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4292,6 +4724,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4306,6 +4740,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="M 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4354,6 +4790,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="T 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4368,6 +4806,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4382,6 +4822,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4396,6 +4838,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4410,6 +4854,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4424,6 +4870,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4438,6 +4886,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4452,6 +4902,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4466,6 +4918,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4480,6 +4934,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4494,6 +4950,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4508,6 +4966,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4522,6 +4982,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4536,6 +4998,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4550,6 +5014,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4564,6 +5030,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4578,6 +5046,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4592,6 +5062,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4606,6 +5078,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4620,6 +5094,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4634,6 +5110,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4648,6 +5126,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4662,6 +5142,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4676,6 +5158,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4724,6 +5208,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="W 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4738,6 +5224,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4752,6 +5240,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4766,6 +5256,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4780,6 +5272,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4794,6 +5288,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4808,6 +5304,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4822,6 +5320,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4836,6 +5336,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4850,6 +5352,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4864,6 +5368,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4878,6 +5384,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -4892,6 +5400,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4906,6 +5416,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4920,6 +5432,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 2pm: 63% drift rate"
+          accessible={true}
           style={
             [
               {
@@ -4934,6 +5448,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4948,6 +5464,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4962,6 +5480,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4976,6 +5496,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -4990,6 +5512,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5004,6 +5528,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5018,6 +5544,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5032,6 +5560,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5046,6 +5576,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="W 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5094,6 +5626,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="T 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5108,6 +5642,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5122,6 +5658,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5136,6 +5674,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5150,6 +5690,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5164,6 +5706,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5178,6 +5722,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5192,6 +5738,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5206,6 +5754,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5220,6 +5770,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5234,6 +5786,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5248,6 +5802,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5262,6 +5818,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5276,6 +5834,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5290,6 +5850,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5304,6 +5866,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5318,6 +5882,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5332,6 +5898,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5346,6 +5914,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5360,6 +5930,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5374,6 +5946,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5388,6 +5962,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5402,6 +5978,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5416,6 +5994,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="T 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5464,6 +6044,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="F 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5478,6 +6060,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5492,6 +6076,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5506,6 +6092,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5520,6 +6108,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5534,6 +6124,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5548,6 +6140,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5562,6 +6156,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5576,6 +6172,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5590,6 +6188,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5604,6 +6204,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5618,6 +6220,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5632,6 +6236,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5646,6 +6252,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5660,6 +6268,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5674,6 +6284,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5688,6 +6300,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5702,6 +6316,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5716,6 +6332,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5730,6 +6348,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5744,6 +6364,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5758,6 +6380,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5772,6 +6396,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5786,6 +6412,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="F 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -5834,6 +6462,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           </Text>
         </View>
         <View
+          accessibilityLabel="S 12am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5848,6 +6478,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 1am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5862,6 +6494,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 2am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5876,6 +6510,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 3am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5890,6 +6526,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 4am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5904,6 +6542,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 5am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5918,6 +6558,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 6am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5932,6 +6574,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 7am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5946,6 +6590,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 8am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5960,6 +6606,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 9am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5974,6 +6622,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 10am: no data"
+          accessible={true}
           style={
             [
               {
@@ -5988,6 +6638,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 11am: no data"
+          accessible={true}
           style={
             [
               {
@@ -6002,6 +6654,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 12pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6016,6 +6670,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 1pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6030,6 +6686,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 2pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6044,6 +6702,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 3pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6058,6 +6718,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 4pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6072,6 +6734,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 5pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6086,6 +6750,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 6pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6100,6 +6766,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 7pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6114,6 +6782,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 8pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6128,6 +6798,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 9pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6142,6 +6814,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 10pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6156,6 +6830,8 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
           }
         />
         <View
+          accessibilityLabel="S 11pm: no data"
+          accessible={true}
           style={
             [
               {
@@ -6415,210 +7091,53 @@ exports[`Component Snapshots DangerWindowHeatmap matches snapshot with populated
 `;
 
 exports[`Component Snapshots IntelligenceCard matches snapshot with empty data 1`] = `
-<Animated.View
-  style={
-    {
-      "transform": [
-        {
-          "scale": Value {
-            "_value": 1,
-            "addListener": [MockFunction],
-            "interpolate": [MockFunction],
-            "removeListener": [MockFunction],
-            "setValue": [MockFunction],
-          },
-        },
-      ],
-    }
-  }
+<View
+  accessibilityLabel="Your patterns: 0 sessions analyzed"
+  accessible={true}
 >
-  <BlurView
-    intensity={30}
+  <Animated.View
     style={
-      [
-        {
-          "borderRadius": 24,
-          "overflow": "hidden",
-        },
-        {
-          "backgroundColor": "#16161A",
-          "borderColor": "rgba(255,255,255,0.10)",
-          "borderWidth": 1,
-          "elevation": 4,
-          "shadowColor": "#000",
-          "shadowOffset": {
-            "height": 4,
-            "width": 0,
+      {
+        "transform": [
+          {
+            "scale": Value {
+              "_value": 1,
+              "addListener": [MockFunction],
+              "interpolate": [MockFunction],
+              "removeListener": [MockFunction],
+              "setValue": [MockFunction],
+            },
           },
-          "shadowOpacity": 0.4,
-          "shadowRadius": 8,
-        },
-        {
-          "gap": 16,
-          "padding": 24,
-        },
-      ]
+        ],
+      }
     }
   >
-    <View
+    <BlurView
+      intensity={30}
       style={
-        {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "justifyContent": "space-between",
-          "marginBottom": 8,
-        }
-      }
-    >
-      <View
-        style={
+        [
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 8,
-          }
-        }
-      >
-        <Brain
-          color="#8B5CF6"
-          size={16}
-        />
-        <Text
-          style={
-            {
-              "color": "#B4B4C8",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 1.2,
-              "lineHeight": 14,
-            }
-          }
-        >
-          YOUR PATTERNS
-        </Text>
-      </View>
-      <Text
-        style={
+            "borderRadius": 24,
+            "overflow": "hidden",
+          },
           {
-            "color": "#7E7E96",
-            "fontFamily": "System",
-            "fontSize": 12,
-            "fontWeight": "500",
-            "lineHeight": 16,
-          }
-        }
-      >
-        0
-         sessions
-      </Text>
-    </View>
-    <View
-      style={
-        {
-          "gap": 8,
-        }
-      }
-    >
-      <View
-        style={
+            "backgroundColor": "#16161A",
+            "borderColor": "rgba(255,255,255,0.10)",
+            "borderWidth": 1,
+            "elevation": 4,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 4,
+              "width": 0,
+            },
+            "shadowOpacity": 0.4,
+            "shadowRadius": 8,
+          },
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 4,
-          }
-        }
-      >
-        <TrendingUp
-          color="#7E7E96"
-          size={14}
-        />
-        <Text
-          style={
-            {
-              "color": "#7E7E96",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 0.8,
-              "lineHeight": 14,
-            }
-          }
-        >
-          COMEBACK RATE
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "alignItems": "baseline",
-            "flexDirection": "row",
-            "gap": 12,
-          }
-        }
-      >
-        <Text
-          style={
-            {
-              "color": "#FFFFFF",
-              "fontFamily": "System",
-              "fontSize": 24,
-              "fontWeight": "700",
-              "letterSpacing": -0.5,
-              "lineHeight": 30,
-            }
-          }
-        >
-          0
-          %
-        </Text>
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "gap": 4,
-            }
-          }
-        >
-          <Text
-            style={
-              [
-                {
-                  "fontSize": 16,
-                  "fontWeight": "700",
-                },
-                {
-                  "color": "#7E7E96",
-                },
-              ]
-            }
-          >
-            →
-          </Text>
-          <Text
-            style={
-              {
-                "color": "#7E7E96",
-                "fontFamily": "System",
-                "fontSize": 14,
-                "fontWeight": "400",
-                "lineHeight": 20,
-                "textTransform": "capitalize",
-              }
-            }
-          >
-            stable
-          </Text>
-        </View>
-      </View>
-    </View>
-    <View
-      style={
-        {
-          "gap": 4,
-          "marginTop": 8,
-        }
+            "gap": 16,
+            "padding": 24,
+          },
+        ]
       }
     >
       <View
@@ -6627,9 +7146,38 @@ exports[`Component Snapshots IntelligenceCard matches snapshot with empty data 1
             "alignItems": "center",
             "flexDirection": "row",
             "justifyContent": "space-between",
+            "marginBottom": 8,
           }
         }
       >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Brain
+            color="#8B5CF6"
+            size={16}
+          />
+          <Text
+            style={
+              {
+                "color": "#B4B4C8",
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 1.2,
+                "lineHeight": 14,
+              }
+            }
+          >
+            YOUR PATTERNS
+          </Text>
+        </View>
         <Text
           style={
             {
@@ -6641,204 +7189,52 @@ exports[`Component Snapshots IntelligenceCard matches snapshot with empty data 1
             }
           }
         >
-          Current risk
-        </Text>
-        <Text
-          style={
-            [
-              {
-                "fontFamily": "System",
-                "fontSize": 11,
-                "fontWeight": "600",
-                "letterSpacing": 0.6,
-                "lineHeight": 14,
-              },
-              {
-                "color": "#10B981",
-              },
-            ]
-          }
-        >
-          LOW
+          0
+           sessions
         </Text>
       </View>
       <View
+        accessibilityLabel="Comeback rate: 0%, trend stable"
         style={
           {
-            "backgroundColor": "#1E1E24",
-            "borderRadius": 9999,
-            "height": 6,
-            "overflow": "hidden",
-          }
-        }
-      >
-        <View
-          style={
-            [
-              {
-                "borderRadius": 9999,
-                "height": "100%",
-              },
-              {
-                "backgroundColor": "#10B981",
-                "width": "0%",
-              },
-            ]
-          }
-        />
-      </View>
-    </View>
-  </BlurView>
-</Animated.View>
-`;
-
-exports[`Component Snapshots IntelligenceCard matches snapshot with full profile and prediction 1`] = `
-<Animated.View
-  style={
-    {
-      "transform": [
-        {
-          "scale": Value {
-            "_value": 1,
-            "addListener": [MockFunction],
-            "interpolate": [MockFunction],
-            "removeListener": [MockFunction],
-            "setValue": [MockFunction],
-          },
-        },
-      ],
-    }
-  }
->
-  <BlurView
-    intensity={30}
-    style={
-      [
-        {
-          "borderRadius": 24,
-          "overflow": "hidden",
-        },
-        {
-          "backgroundColor": "#16161A",
-          "borderColor": "rgba(255,255,255,0.10)",
-          "borderWidth": 1,
-          "elevation": 4,
-          "shadowColor": "#000",
-          "shadowOffset": {
-            "height": 4,
-            "width": 0,
-          },
-          "shadowOpacity": 0.4,
-          "shadowRadius": 8,
-        },
-        {
-          "gap": 16,
-          "padding": 24,
-        },
-      ]
-    }
-  >
-    <View
-      style={
-        {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "justifyContent": "space-between",
-          "marginBottom": 8,
-        }
-      }
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
             "gap": 8,
           }
         }
       >
-        <Brain
-          color="#8B5CF6"
-          size={16}
-        />
-        <Text
-          style={
-            {
-              "color": "#B4B4C8",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 1.2,
-              "lineHeight": 14,
-            }
-          }
-        >
-          YOUR PATTERNS
-        </Text>
-      </View>
-      <Text
-        style={
-          {
-            "color": "#7E7E96",
-            "fontFamily": "System",
-            "fontSize": 12,
-            "fontWeight": "500",
-            "lineHeight": 16,
-          }
-        }
-      >
-        25
-         sessions
-      </Text>
-    </View>
-    <View
-      style={
-        {
-          "gap": 8,
-        }
-      }
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 4,
-          }
-        }
-      >
-        <Clock
-          color="#7E7E96"
-          size={14}
-        />
-        <Text
-          style={
-            {
-              "color": "#7E7E96",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 0.8,
-              "lineHeight": 14,
-            }
-          }
-        >
-          TOP DANGER WINDOW
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-          }
-        }
-      >
         <View
           style={
             {
-              "gap": 2,
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
+          }
+        >
+          <TrendingUp
+            color="#7E7E96"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            COMEBACK RATE
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "baseline",
+              "flexDirection": "row",
+              "gap": 12,
             }
           }
         >
@@ -6847,35 +7243,114 @@ exports[`Component Snapshots IntelligenceCard matches snapshot with full profile
               {
                 "color": "#FFFFFF",
                 "fontFamily": "System",
-                "fontSize": 18,
-                "fontWeight": "600",
-                "lineHeight": 24,
+                "fontSize": 24,
+                "fontWeight": "700",
+                "letterSpacing": -0.5,
+                "lineHeight": 30,
               }
             }
           >
-            Wed
+            0
+            %
           </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 4,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 16,
+                    "fontWeight": "700",
+                  },
+                  {
+                    "color": "#7E7E96",
+                  },
+                ]
+              }
+            >
+              →
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#7E7E96",
+                  "fontFamily": "System",
+                  "fontSize": 14,
+                  "fontWeight": "400",
+                  "lineHeight": 20,
+                  "textTransform": "capitalize",
+                }
+              }
+            >
+              stable
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="Current risk level: low, 0%"
+        style={
+          {
+            "gap": 4,
+            "marginTop": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
           <Text
             style={
               {
-                "color": "#B4B4C8",
+                "color": "#7E7E96",
                 "fontFamily": "System",
-                "fontSize": 14,
-                "fontWeight": "400",
-                "lineHeight": 20,
+                "fontSize": 12,
+                "fontWeight": "500",
+                "lineHeight": 16,
               }
             }
           >
-            2pm
-             – 
-            4pm
+            Current risk
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "System",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.6,
+                  "lineHeight": 14,
+                },
+                {
+                  "color": "#10B981",
+                },
+              ]
+            }
+          >
+            LOW
           </Text>
         </View>
         <View
           style={
             {
-              "alignItems": "flex-end",
-              "gap": 4,
+              "backgroundColor": "#1E1E24",
+              "borderRadius": 9999,
+              "height": 6,
+              "overflow": "hidden",
             }
           }
         >
@@ -6883,298 +7358,111 @@ exports[`Component Snapshots IntelligenceCard matches snapshot with full profile
             style={
               [
                 {
-                  "alignItems": "center",
                   "borderRadius": 9999,
-                  "borderWidth": 1,
-                  "flexDirection": "row",
-                  "gap": 4,
-                  "paddingHorizontal": 12,
-                  "paddingVertical": 4,
+                  "height": "100%",
                 },
                 {
-                  "backgroundColor": "rgba(249,115,22,0.12)",
-                  "borderColor": "#F9731633",
+                  "backgroundColor": "#10B981",
+                  "width": "0%",
                 },
               ]
             }
-          >
-            <AlertTriangle
-              color="#F97316"
-              size={10}
-            />
-            <Text
-              style={
-                [
-                  {
-                    "fontFamily": "System",
-                    "fontSize": 11,
-                    "fontWeight": "600",
-                    "letterSpacing": 0.6,
-                    "lineHeight": 14,
-                  },
-                  {
-                    "color": "#F97316",
-                  },
-                ]
-              }
-            >
-              HIGH
-            </Text>
-          </View>
-          <Text
-            style={
-              {
-                "color": "#7E7E96",
-                "fontFamily": "System",
-                "fontSize": 12,
-                "fontWeight": "400",
-                "lineHeight": 16,
-              }
-            }
-          >
-            72
-            % drift
-          </Text>
+          />
         </View>
       </View>
-    </View>
-    <View
+    </BlurView>
+  </Animated.View>
+</View>
+`;
+
+exports[`Component Snapshots IntelligenceCard matches snapshot with full profile and prediction 1`] = `
+<View
+  accessibilityLabel="Your patterns: 25 sessions analyzed"
+  accessible={true}
+>
+  <Animated.View
+    style={
+      {
+        "transform": [
+          {
+            "scale": Value {
+              "_value": 1,
+              "addListener": [MockFunction],
+              "interpolate": [MockFunction],
+              "removeListener": [MockFunction],
+              "setValue": [MockFunction],
+            },
+          },
+        ],
+      }
+    }
+  >
+    <BlurView
+      intensity={30}
       style={
-        {
-          "gap": 8,
-        }
+        [
+          {
+            "borderRadius": 24,
+            "overflow": "hidden",
+          },
+          {
+            "backgroundColor": "#16161A",
+            "borderColor": "rgba(255,255,255,0.10)",
+            "borderWidth": 1,
+            "elevation": 4,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 4,
+              "width": 0,
+            },
+            "shadowOpacity": 0.4,
+            "shadowRadius": 8,
+          },
+          {
+            "gap": 16,
+            "padding": 24,
+          },
+        ]
       }
     >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 4,
-          }
-        }
-      >
-        <Shield
-          color="#7E7E96"
-          size={14}
-        />
-        <Text
-          style={
-            {
-              "color": "#7E7E96",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 0.8,
-              "lineHeight": 14,
-            }
-          }
-        >
-          TOP BATTLE
-        </Text>
-      </View>
       <View
         style={
           {
             "alignItems": "center",
             "flexDirection": "row",
             "justifyContent": "space-between",
+            "marginBottom": 8,
           }
         }
       >
-        <View
-          style={
-            {
-              "gap": 2,
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#FFFFFF",
-                "fontFamily": "System",
-                "fontSize": 18,
-                "fontWeight": "600",
-                "lineHeight": 24,
-                "textTransform": "capitalize",
-              }
-            }
-          >
-            Avoiding
-          </Text>
-          <Text
-            style={
-              {
-                "color": "#B4B4C8",
-                "fontFamily": "System",
-                "fontSize": 14,
-                "fontWeight": "400",
-                "lineHeight": 20,
-                "textTransform": "capitalize",
-              }
-            }
-          >
-            + 
-            Unknown
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "alignItems": "flex-end",
-              "gap": 2,
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#8B5CF6",
-                "fontFamily": "System",
-                "fontSize": 18,
-                "fontWeight": "600",
-                "lineHeight": 24,
-              }
-            }
-          >
-            8
-            ×
-          </Text>
-          <Text
-            style={
-              {
-                "color": "#7E7E96",
-                "fontFamily": "System",
-                "fontSize": 12,
-                "fontWeight": "400",
-                "lineHeight": 16,
-              }
-            }
-          >
-            65
-            % win
-          </Text>
-        </View>
-      </View>
-    </View>
-    <View
-      style={
-        {
-          "gap": 8,
-        }
-      }
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 4,
-          }
-        }
-      >
-        <TrendingUp
-          color="#7E7E96"
-          size={14}
-        />
-        <Text
-          style={
-            {
-              "color": "#7E7E96",
-              "fontFamily": "System",
-              "fontSize": 11,
-              "fontWeight": "600",
-              "letterSpacing": 0.8,
-              "lineHeight": 14,
-            }
-          }
-        >
-          COMEBACK RATE
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "alignItems": "baseline",
-            "flexDirection": "row",
-            "gap": 12,
-          }
-        }
-      >
-        <Text
-          style={
-            {
-              "color": "#FFFFFF",
-              "fontFamily": "System",
-              "fontSize": 24,
-              "fontWeight": "700",
-              "letterSpacing": -0.5,
-              "lineHeight": 30,
-            }
-          }
-        >
-          0
-          %
-        </Text>
         <View
           style={
             {
               "alignItems": "center",
               "flexDirection": "row",
-              "gap": 4,
+              "gap": 8,
             }
           }
         >
-          <Text
-            style={
-              [
-                {
-                  "fontSize": 16,
-                  "fontWeight": "700",
-                },
-                {
-                  "color": "#7E7E96",
-                },
-              ]
-            }
-          >
-            →
-          </Text>
+          <Brain
+            color="#8B5CF6"
+            size={16}
+          />
           <Text
             style={
               {
-                "color": "#7E7E96",
+                "color": "#B4B4C8",
                 "fontFamily": "System",
-                "fontSize": 14,
-                "fontWeight": "400",
-                "lineHeight": 20,
-                "textTransform": "capitalize",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 1.2,
+                "lineHeight": 14,
               }
             }
           >
-            stable
+            YOUR PATTERNS
           </Text>
         </View>
-      </View>
-    </View>
-    <View
-      style={
-        {
-          "gap": 4,
-          "marginTop": 8,
-        }
-      }
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-          }
-        }
-      >
         <Text
           style={
             {
@@ -7186,53 +7474,457 @@ exports[`Component Snapshots IntelligenceCard matches snapshot with full profile
             }
           }
         >
-          Current risk
-        </Text>
-        <Text
-          style={
-            [
-              {
-                "fontFamily": "System",
-                "fontSize": 11,
-                "fontWeight": "600",
-                "letterSpacing": 0.6,
-                "lineHeight": 14,
-              },
-              {
-                "color": "#F59E0B",
-              },
-            ]
-          }
-        >
-          MODERATE
+          25
+           sessions
         </Text>
       </View>
       <View
+        accessibilityLabel="Top danger window: Wed 2pm to 4pm, high risk, 72% drift rate"
         style={
           {
-            "backgroundColor": "#1E1E24",
-            "borderRadius": 9999,
-            "height": 6,
-            "overflow": "hidden",
+            "gap": 8,
           }
         }
       >
         <View
           style={
-            [
-              {
-                "borderRadius": 9999,
-                "height": "100%",
-              },
-              {
-                "backgroundColor": "#F59E0B",
-                "width": "35%",
-              },
-            ]
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
           }
-        />
+        >
+          <Clock
+            color="#7E7E96"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            TOP DANGER WINDOW
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "gap": 2,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "System",
+                  "fontSize": 18,
+                  "fontWeight": "600",
+                  "lineHeight": 24,
+                }
+              }
+            >
+              Wed
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#B4B4C8",
+                  "fontFamily": "System",
+                  "fontSize": 14,
+                  "fontWeight": "400",
+                  "lineHeight": 20,
+                }
+              }
+            >
+              2pm
+               – 
+              4pm
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "alignItems": "flex-end",
+                "gap": 4,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "borderRadius": 9999,
+                    "borderWidth": 1,
+                    "flexDirection": "row",
+                    "gap": 4,
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 4,
+                  },
+                  {
+                    "backgroundColor": "rgba(249,115,22,0.12)",
+                    "borderColor": "#F9731633",
+                  },
+                ]
+              }
+            >
+              <AlertTriangle
+                color="#F97316"
+                size={10}
+              />
+              <Text
+                style={
+                  [
+                    {
+                      "fontFamily": "System",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.6,
+                      "lineHeight": 14,
+                    },
+                    {
+                      "color": "#F97316",
+                    },
+                  ]
+                }
+              >
+                HIGH
+              </Text>
+            </View>
+            <Text
+              style={
+                {
+                  "color": "#7E7E96",
+                  "fontFamily": "System",
+                  "fontSize": 12,
+                  "fontWeight": "400",
+                  "lineHeight": 16,
+                }
+              }
+            >
+              72
+              % drift
+            </Text>
+          </View>
+        </View>
       </View>
-    </View>
-  </BlurView>
-</Animated.View>
+      <View
+        accessibilityLabel="Top battle: Avoiding with Unknown blocker, 8 times, 65% win rate"
+        style={
+          {
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
+          }
+        >
+          <Shield
+            color="#7E7E96"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            TOP BATTLE
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "gap": 2,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "System",
+                  "fontSize": 18,
+                  "fontWeight": "600",
+                  "lineHeight": 24,
+                  "textTransform": "capitalize",
+                }
+              }
+            >
+              Avoiding
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#B4B4C8",
+                  "fontFamily": "System",
+                  "fontSize": 14,
+                  "fontWeight": "400",
+                  "lineHeight": 20,
+                  "textTransform": "capitalize",
+                }
+              }
+            >
+              + 
+              Unknown
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "alignItems": "flex-end",
+                "gap": 2,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#8B5CF6",
+                  "fontFamily": "System",
+                  "fontSize": 18,
+                  "fontWeight": "600",
+                  "lineHeight": 24,
+                }
+              }
+            >
+              8
+              ×
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#7E7E96",
+                  "fontFamily": "System",
+                  "fontSize": 12,
+                  "fontWeight": "400",
+                  "lineHeight": 16,
+                }
+              }
+            >
+              65
+              % win
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="Comeback rate: 0%, trend stable"
+        style={
+          {
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            }
+          }
+        >
+          <TrendingUp
+            color="#7E7E96"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 11,
+                "fontWeight": "600",
+                "letterSpacing": 0.8,
+                "lineHeight": 14,
+              }
+            }
+          >
+            COMEBACK RATE
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "baseline",
+              "flexDirection": "row",
+              "gap": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#FFFFFF",
+                "fontFamily": "System",
+                "fontSize": 24,
+                "fontWeight": "700",
+                "letterSpacing": -0.5,
+                "lineHeight": 30,
+              }
+            }
+          >
+            0
+            %
+          </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 4,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 16,
+                    "fontWeight": "700",
+                  },
+                  {
+                    "color": "#7E7E96",
+                  },
+                ]
+              }
+            >
+              →
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#7E7E96",
+                  "fontFamily": "System",
+                  "fontSize": 14,
+                  "fontWeight": "400",
+                  "lineHeight": 20,
+                  "textTransform": "capitalize",
+                }
+              }
+            >
+              stable
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="Current risk level: moderate, 35%"
+        style={
+          {
+            "gap": 4,
+            "marginTop": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#7E7E96",
+                "fontFamily": "System",
+                "fontSize": 12,
+                "fontWeight": "500",
+                "lineHeight": 16,
+              }
+            }
+          >
+            Current risk
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "System",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.6,
+                  "lineHeight": 14,
+                },
+                {
+                  "color": "#F59E0B",
+                },
+              ]
+            }
+          >
+            MODERATE
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#1E1E24",
+              "borderRadius": 9999,
+              "height": 6,
+              "overflow": "hidden",
+            }
+          }
+        >
+          <View
+            style={
+              [
+                {
+                  "borderRadius": 9999,
+                  "height": "100%",
+                },
+                {
+                  "backgroundColor": "#F59E0B",
+                  "width": "35%",
+                },
+              ]
+            }
+          />
+        </View>
+      </View>
+    </BlurView>
+  </Animated.View>
+</View>
 `;

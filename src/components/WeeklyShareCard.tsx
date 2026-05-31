@@ -13,14 +13,33 @@ interface WeeklyShareCardProps {
   completionRate: number
   narrative: string
   userName: string
+  headline?: string
+  patternName?: string
+  patternIcon?: string
 }
 
 export const WeeklyShareCard = React.forwardRef<View, WeeklyShareCardProps>(
-  ({ rescues, minutes, completionRate, narrative, userName }, ref) => {
+  ({ rescues, minutes, completionRate, narrative, userName, headline, patternName, patternIcon }, ref) => {
     return (
       <View ref={ref} style={styles.card}>
         <Text style={styles.brand}>INTENT</Text>
-        <Text style={styles.title}>{userName}'s Week</Text>
+
+        {/* Headline from weekly story */}
+        {headline ? (
+          <Text style={styles.headline}>{headline}</Text>
+        ) : (
+          <Text style={styles.title}>{userName}'s Week</Text>
+        )}
+
+        {/* Pattern name badge */}
+        {patternName && (
+          <View style={styles.patternBadge}>
+            <Text style={styles.patternBadgeText}>
+              {patternIcon ? `${patternIcon} ` : ''}{patternName}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.stats}>
           <View style={styles.stat}>
             <Text style={styles.statValue}>{rescues}</Text>
@@ -57,10 +76,30 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: spacing.md,
   },
+  headline: {
+    ...typography.h2,
+    color: colors.brand[300],
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
   title: {
     ...typography.h2,
     color: colors.text.primary,
     marginBottom: spacing.lg,
+  },
+  patternBadge: {
+    backgroundColor: colors.brand[500] + '18',
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.brand[500] + '30',
+  },
+  patternBadgeText: {
+    ...typography.caption,
+    color: colors.brand[300],
+    textAlign: 'center',
   },
   stats: {
     flexDirection: 'row',

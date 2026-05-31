@@ -17,6 +17,9 @@ import {
   MessageSquare, Clock, Brain,
 } from 'lucide-react-native'
 import { colors, spacing, radius, typography } from '../src/theme'
+import { HapticPatterns } from '../src/services/haptics'
+import { motion, getAnimationDuration } from '../src/theme/motion'
+import { announceForScreenReader } from '../src/utils/accessibility'
 import { compileMission } from '../src/engine/missionCompiler'
 import { getProtocolForState } from '../src/types/rescue'
 import { useAppStore } from '../src/store'
@@ -80,6 +83,8 @@ export default function BeforeYouScrollScreen() {
   }, [resetSkipCount])
 
   const handleStateSelect = useCallback((state: string) => {
+    HapticPatterns.tap()
+    announceForScreenReader(`Selected: ${state}. Generating your mission.`)
     setSelectedState(state)
     const result = compileMission({
       state: state as any,
@@ -103,6 +108,8 @@ export default function BeforeYouScrollScreen() {
   }, [incrementSkipCount, router])
 
   const handleStartTimer = useCallback(() => {
+    HapticPatterns.confirm()
+    announceForScreenReader('2-minute timer started. Go!')
     setStep('timer')
     setTimerActive(true)
     setSecondsRemaining(TIMER_SECONDS)
@@ -124,6 +131,8 @@ export default function BeforeYouScrollScreen() {
   }, [timerActive, secondsRemaining])
 
   const handleComplete = useCallback(() => {
+    HapticPatterns.success()
+    announceForScreenReader('2 minutes complete. You rescued this time.')
     setTimerActive(false)
     setDidAnything(true)
     setStep('choice')

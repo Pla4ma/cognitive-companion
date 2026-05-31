@@ -22,6 +22,10 @@ import { useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import { buildIntelligenceProfile } from '../src/engine/predictiveEngine'
 import { scheduleDangerWindowNotifications } from '../src/services/notifications'
+import { attemptStoreRecovery } from '../src/store/integrity'
+import { initConnectivity } from '../src/services/connectivity'
+import { registerShortcuts } from '../src/services/shortcuts'
+import { initReduceMotion } from '../src/utils/accessibility'
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? null
 
@@ -148,6 +152,23 @@ export default function RootLayout() {
     }
     setConsentMode(checkConsent('crash_reporting'))
   }, [checkConsent])
+
+  // Core startup services: accessibility, connectivity, shortcuts, store integrity
+  useEffect(() => {
+    ;(async () => {
+      try {
+        initReduceMotion()
+        initConnectivity()
+        registerShortcuts().catch(() => {})
+        const result = await attemptStoreRecovery()
+        if (result.status === 'wiped') {
+          console.warn('[startup] Store was wiped due to corruption:', result.errors)
+        }
+      } catch (err) {
+        console.warn('[startup] Service initialization error:', err)
+      }
+    })()
+  }, [])
 
   return (
     <GlobalErrorBoundary>

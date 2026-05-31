@@ -19,9 +19,10 @@ interface AnimatedRescueButtonProps {
   visible: boolean
   protocolHint: string
   onPress: () => void
+  accessibilityHint?: string
 }
 
-export function AnimatedRescueButton({ visible, protocolHint, onPress }: AnimatedRescueButtonProps) {
+export function AnimatedRescueButton({ visible, protocolHint, onPress, accessibilityHint }: AnimatedRescueButtonProps) {
   const scale = useSharedValue(1)
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -42,6 +43,8 @@ export function AnimatedRescueButton({ visible, protocolHint, onPress }: Animate
           style={styles.btn}
           accessibilityRole="button"
           accessibilityLabel="Start rescue session"
+          accessibilityHint={accessibilityHint}
+          accessibilityState={{ busy: false }}
         >
           <LinearGradient colors={colors.gradients.brand} style={styles.gradient}>
             <Zap size={22} color={colors.text.inverse} />

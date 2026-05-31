@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import { Tabs } from 'expo-router'
-import { Home, Target, MessageCircle, TrendingUp, Settings } from 'lucide-react-native'
+import { Home, Target, MessageCircle, TrendingUp } from 'lucide-react-native'
 import { colors, typography } from '../../src/theme'
 
 export default function TabLayout() {
@@ -57,11 +57,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TrendingUp size={22} color={color} />,
         }}
       />
+      {/* Settings removed from tab bar — accessible via gear icon in home header */}
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
+          href: null, // Hide from tab bar
         }}
       />
     </Tabs>

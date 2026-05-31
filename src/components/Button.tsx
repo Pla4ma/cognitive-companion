@@ -16,12 +16,14 @@ interface ButtonProps {
   iconRight?: ReactNode;
   children?: ReactNode;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export function Button({
   title, onPress, variant = 'primary', size = 'md',
   disabled = false, loading = false, style, icon, iconRight, children,
   accessibilityLabel,
+  accessibilityHint,
 }: ButtonProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -74,6 +76,7 @@ export function Button({
           accessibilityRole="button"
           accessibilityState={{ disabled: disabled || loading, busy: loading }}
           accessibilityLabel={accessibilityLabel}
+          accessibilityHint={accessibilityHint}
           style={[styles.base, { height }, disabled && { opacity: 0.4 }, style]}
         >
           <LinearGradient colors={colors.gradients.brand} style={[styles.gradientFill, { height }]}>
@@ -93,6 +96,7 @@ export function Button({
         accessibilityRole="button"
         accessibilityState={{ disabled: disabled || loading, busy: loading }}
         accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
         style={[styles.base, bg[variant], { height }, disabled && { opacity: 0.4 }, style]}
       >
         {content}

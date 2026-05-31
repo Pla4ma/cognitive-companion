@@ -3,19 +3,19 @@
 // Reusable, animated, theme-aware
 // ══════════════════════════════════════════════════════════════
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
+  View, Text, StyleSheet, TouchableOpacity,
   ScrollView, TextInput, Pressable, ViewStyle, TextStyle,
   ActivityIndicator, Dimensions,
 } from 'react-native'
-import ReanimatedAnimated, { useSharedValue, withTiming, useAnimatedProps } from 'react-native-reanimated'
+import Animated, { useSharedValue, withTiming, withSpring, useAnimatedStyle, useAnimatedProps, withRepeat } from 'react-native-reanimated'
 import { Svg, Circle } from 'react-native-svg'
 import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
 
-const AnimatedCircle = ReanimatedAnimated.createAnimatedComponent(Circle)
-import { colors, spacing, radius, typography, shadows, animation, glass } from '../theme'
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+import { colors, spacing, radius, typography, shadows, glass } from '../theme'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -31,18 +31,21 @@ interface ScreenProps {
 }
 
 export function Screen({ children, style, scrollable = true, gradient }: ScreenProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
+  const opacity = useSharedValue(0)
+  const translateY = useSharedValue(12)
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: animation.normal, useNativeDriver: true }),
-      Animated.spring(slideAnim, { toValue: 0, ...animation.spring, useNativeDriver: true }),
-    ]).start()
+    opacity.value = withTiming(1, { duration: 200 })
+    translateY.value = withSpring(0, { damping: 20, stiffness: 300 })
   }, [])
 
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }))
+
   const content = (
-    <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }, style]}>
+    <Animated.View style={[animStyle, style]}>
       {children}
     </Animated.View>
   )
@@ -91,19 +94,19 @@ interface CardProps {
 }
 
 export function Card({ children, style, variant = 'default', onPress, haptic = true, accessibilityLabel, accessibilityRole, accessibilityHint }: CardProps) {
-  const scaleAnim = useRef(new Animated.Value(1)).current
+  const scale = useSharedValue(1)
 
   const handlePressIn = useCallback(() => {
-    if (onPress) {
-      Animated.spring(scaleAnim, { toValue: 0.97, ...animation.spring, useNativeDriver: true }).start()
-    }
+    if (onPress) scale.value = withSpring(0.97, { damping: 15, stiffness: 400 })
   }, [onPress])
 
   const handlePressOut = useCallback(() => {
-    if (onPress) {
-      Animated.spring(scaleAnim, { toValue: 1, ...animation.spring, useNativeDriver: true }).start()
-    }
+    if (onPress) scale.value = withSpring(1, { damping: 12, stiffness: 300 })
   }, [onPress])
+
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }))
 
   const variantStyles: Record<string, ViewStyle> = {
     default: {
@@ -131,7 +134,7 @@ export function Card({ children, style, variant = 'default', onPress, haptic = t
   }
 
   const content = (
-    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View style={[scaleStyle]}>
       <BlurView intensity={glass.medium.blur} style={[cardStyles.base, variantStyles[variant], style]}>
         {children}
       </BlurView>
@@ -188,13 +191,16 @@ export function Button({
   icon, iconRight, disabled = false, loading = false, style,
   accessibilityLabel, accessibilityHint, accessibilityRole = 'button',
 }: ButtonProps) {
-  const scaleAnim = useRef(new Animated.Value(1)).current
+  const scale = useSharedValue(1)
+
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }))
 
   const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.95, duration: animation.instant, useNativeDriver: true }),
-      Animated.spring(scaleAnim, { toValue: 1, ...animation.springBouncy, useNativeDriver: true }),
-    ]).start()
+    scale.value = withTiming(0.95, { duration: 80 }, () => {
+      scale.value = withSpring(1, { damping: 10, stiffness: 400 })
+    })
     onPress()
   }
 
@@ -218,7 +224,7 @@ export function Button({
   }
 
   return (
-    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View style={[scaleStyle]}>
       <TouchableOpacity
         onPress={handlePress}
         disabled={disabled || loading}
@@ -279,30 +285,23 @@ interface BarChartProps {
 }
 
 export function BarChart({ data, height = 100, showValues = true, animated = true }: BarChartProps) {
-  const animValuesRef = useRef<Animated.Value[]>(data.map(() => new Animated.Value(0)))
-  const animValues = animValuesRef.current
   const maxValue = Math.max(...data.map((d) => d.value), 1)
-
-  // Sync animated values array when data length changes
-  useEffect(() => {
-    while (animValues.length < data.length) {
-      animValues.push(new Animated.Value(0))
-    }
-  }, [data.length])
+  const values = useSharedValue(data.map(d => animated ? 0 : d.value / maxValue))
 
   useEffect(() => {
     if (animated) {
-      const animations = animValues.map((anim, i) =>
-        Animated.timing(anim, {
-          toValue: data[i].value / maxValue,
-          duration: animation.slower,
-          delay: i * 80,
-          useNativeDriver: false,
-        })
-      )
-      Animated.stagger(60, animations).start()
+      // Animate each bar with staggered delay via JS
+      data.forEach((d, i) => {
+        setTimeout(() => {
+          values.modify((prev) => {
+            const next = [...prev]
+            next[i] = d.value / maxValue
+            return next
+          })
+        }, i * 80)
+      })
     } else {
-      animValues.forEach((anim, i) => anim.setValue(data[i].value / maxValue))
+      values.value = data.map(d => d.value / maxValue)
     }
   }, [data])
 
@@ -310,32 +309,43 @@ export function BarChart({ data, height = 100, showValues = true, animated = tru
     <View style={chartStyles.container}>
       <View style={[chartStyles.chart, { height }]}>
         {data.map((item, i) => (
-          <View key={item.label} style={chartStyles.bar}>
-            <View style={chartStyles.barContainer}>
-              <Animated.View
-                style={[
-                  chartStyles.barFill,
-                  {
-                    height: animValues[i].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [2, height - 24],
-                    }),
-                    backgroundColor: item.color ?? colors.brand[500],
-                  },
-                ]}
-              />
-            </View>
-            {showValues && item.value > 0 && (
-              <Text style={[typography.labelSmall, { color: colors.text.tertiary }]}>
-                {item.value}
-              </Text>
-            )}
-            <Text style={[typography.caption, { color: colors.text.tertiary }]}>
-              {item.label}
-            </Text>
-          </View>
+          <BarItem key={item.label} item={item} index={i} height={height} showValues={showValues} />
         ))}
       </View>
+    </View>
+  )
+}
+
+function BarItem({ item, index, height, showValues }: { item: { label: string; value: number; color?: string }; index: number; height: number; showValues: boolean }) {
+  const barHeight = useSharedValue(0)
+  
+  useEffect(() => {
+    barHeight.value = withTiming(item.value > 0 ? Math.max(2, (item.value / Math.max(...[item.value])) * (height - 24)) : 2, { duration: 600, delay: index * 80 })
+  }, [item.value])
+
+  const barStyle = useAnimatedStyle(() => ({
+    height: barHeight.value,
+  }))
+
+  return (
+    <View style={chartStyles.bar}>
+      <View style={chartStyles.barContainer}>
+        <Animated.View
+          style={[
+            chartStyles.barFill,
+            barStyle,
+            { backgroundColor: item.color ?? colors.brand[500] },
+          ]}
+        />
+      </View>
+      {showValues && item.value > 0 && (
+        <Text style={[typography.labelSmall, { color: colors.text.tertiary }]}>
+          {item.value}
+        </Text>
+      )}
+      <Text style={[typography.caption, { color: colors.text.tertiary }]}>
+        {item.label}
+      </Text>
     </View>
   )
 }
@@ -438,24 +448,31 @@ interface StreakBadgeProps {
 }
 
 export function StreakBadge({ days, size = 'md' }: StreakBadgeProps) {
-  const pulseAnim = useRef(new Animated.Value(1)).current
+  const pulse = useSharedValue(1)
 
   useEffect(() => {
     if (days > 0) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.1, duration: 1500, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        ])
-      ).start()
+      pulse.value = withRepeat(
+        withTiming(1.1, { duration: 1500 }, () => {
+          pulse.value = withTiming(1, { duration: 1500 })
+        }),
+        -1,
+        true,
+      )
+    } else {
+      pulse.value = 1
     }
   }, [days])
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }))
 
   const sizes = { sm: 32, md: 48, lg: 72 }
   const s = sizes[size]
 
   return (
-    <Animated.View style={[{ transform: [{ scale: pulseAnim }] }]}>
+    <Animated.View style={[pulseStyle]}>
       <View style={{
         width: s, height: s, borderRadius: s / 2,
         backgroundColor: days > 0 ? `${colors.accent.orange}22` : colors.bg.surface,

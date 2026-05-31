@@ -36,7 +36,13 @@ export function ProgressRing({
   });
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View
+      style={[styles.container, { width: size, height: size }]}
+      accessible={true}
+      accessibilityRole="progressbar"
+      accessibilityLabel={label ? `${label}: ${Math.round(clamped * 100)}% complete` : `${Math.round(clamped * 100)}% complete`}
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
+    >
       <Svg width={size} height={size} style={styles.svg}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor} strokeWidth={strokeWidth} fill="none" />
         <AnimatedCircle
